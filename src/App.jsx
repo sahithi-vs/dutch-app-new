@@ -332,7 +332,7 @@ export default function DutchLearningGame() {
             <>
               <div className="text-center mb-8">
                 <h1 className="text-5xl font-bold text-orange-600 mb-2">🇳🇱 Leer Nederlands</h1>
-                <p className="text-gray-600 text-lg">1000 Most Common Dutch Words - Lessons 1-20</p>
+                <p className="text-gray-600 text-lg">1000 Most Common Dutch Words - A1 & A2 </p>
                 <div className="mt-4 inline-flex items-center gap-2 bg-green-100 px-4 py-2 rounded-full">
                   <GraduationCap className="w-5 h-5 text-green-600" />
                   <span className="text-green-700 font-bold">{getTotalWordCount()} Words Available!</span>
@@ -447,7 +447,7 @@ export default function DutchLearningGame() {
                   />
                   <div className="text-center mt-4">
                     <span className="text-5xl font-bold text-orange-600">{numQuestions}</span>
-                    <span className="text-2xl text-gray-600 ml-2">questions</span>
+                    <span className="text-5xl text-gray-600 ml-2">Questions</span>
                   </div>
                   <div className="flex justify-between text-sm text-gray-500 mt-2">
                     <span>Min: 10</span>
@@ -515,7 +515,8 @@ export default function DutchLearningGame() {
                   <span className={`px-3 py-1 rounded-full text-sm font-bold ${
                     currentLearnWord.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
                   }`}>
-                    {currentLearnWord.level} Level
+                    {currentLearnWord.level} Level  
+                   &nbsp; {currentLearnWord.category.replace(/_/g, ' ')}
                   </span>
                 </div>
                 
@@ -535,8 +536,10 @@ export default function DutchLearningGame() {
                   </div>
                   
                   <div className="text-lg text-gray-500 capitalize">
-                    {currentLearnWord.category.replace(/_/g, ' ')}
+                   
+
                   </div>
+                  <span>&nbsp; Eg: {currentLearnWord.example}</span>
                 </div>
 
                 <div className="flex gap-4 justify-center mt-8">
