@@ -3,7 +3,7 @@ import { Volume2, Check, X, Trophy, RefreshCw, Home, BookOpen, GraduationCap, Ch
 
 // Complete Dutch Word Bank - 1000 Most Common Words (Lessons 1-20)
 const dutchWordBank = {
-   'thema_1_hallo': [
+   'thema_1_hallo_part1': [
     { dutch: 'getrouwd', english: 'married', level: 'A1' },
     { dutch: 'hallo', english: 'hello', level: 'A1' },
     { dutch: 'het jaar', english: 'year', level: 'A1' },
@@ -49,7 +49,9 @@ const dutchWordBank = {
     { dutch: 'jullie', english: 'you (plural)', level: 'A1' },
     { dutch: 'goed', english: 'good', level: 'A1' },
     { dutch: 'Het gaat wel', english: "It's okay", level: 'A1' },
-    { dutch: 'Hoe gaat het?', english: 'How are you?', level: 'A1' },
+    { dutch: 'Hoe gaat het?', english: 'How are you?', level: 'A1' }
+  ],
+  'thema_1_hallo_part2': [
     { dutch: 'Hoe is het?', english: 'How is it going?', level: 'A1' },
     { dutch: 'ook', english: 'also', level: 'A1' },
     { dutch: 'niet', english: 'not', level: 'A1' },
@@ -94,15 +96,9 @@ const dutchWordBank = {
     { dutch: 'hebben', english: 'to have', level: 'A1' },
     { dutch: 'ik heb', english: 'I have', level: 'A1' },
     { dutch: 'jij hebt', english: 'you have', level: 'A1' },
-    { dutch: 'heb jij?', english: 'do you have?', level: 'A1' },
-    { dutch: 'u hebt', english: 'you have', level: 'A1' },
-    { dutch: 'hij heeft', english: 'he has', level: 'A1' },
-    { dutch: 'zij heeft', english: 'she has', level: 'A1' },
-    { dutch: 'wij hebben', english: 'we have', level: 'A1' },
-    { dutch: 'jullie hebben', english: 'you have (plural)', level: 'A1' },
-    { dutch: 'zij hebben', english: 'they have', level: 'A1' }
+    { dutch: 'heb jij?', english: 'do you have?', level: 'A1' }
   ],
-  'thema_2_school': [
+  'thema_2_school_part1': [
     { dutch: 'binnen', english: 'inside', level: 'A1' },
     { dutch: 'buiten', english: 'outside, outdoors', level: 'A1' },
     { dutch: 'de cursist', english: 'student, pupil', level: 'A1' },
@@ -152,6 +148,8 @@ const dutchWordBank = {
     { dutch: 'morgen', english: 'tomorrow', level: 'A1' },
     { dutch: 'vandaag', english: 'today', level: 'A1' },
     { dutch: 'de week', english: 'week', level: 'A1' },
+  ],
+  'thema_2_school_part2': [
     { dutch: 'het weekend', english: 'weekend', level: 'A1' },
     { dutch: 'maandag', english: 'Monday', level: 'A1' },
     { dutch: 'dinsdag', english: 'Tuesday', level: 'A1' },
@@ -200,6 +198,8 @@ const dutchWordBank = {
     { dutch: 'het jaar', english: 'year', level: 'A1' },
     { dutch: 'laatste', english: 'last', level: 'A1' },
     { dutch: 'de maand', english: 'month', level: 'A1' },
+  ],
+  'thema_2_school_part3': [
     { dutch: 'januari', english: 'January', level: 'A1' },
     { dutch: 'februari', english: 'February', level: 'A1' },
     { dutch: 'maart', english: 'March', level: 'A1' },
@@ -241,7 +241,7 @@ const dutchWordBank = {
     { dutch: 'krijgen', english: 'to get, to receive', level: 'A1' },
     { dutch: 'vragen', english: 'to ask', level: 'A1' }
   ],
-  'thema_3_wonen': [
+  'thema_3_wonen_part1': [
     { dutch: 'het balkon', english: 'balcony', level: 'A1' },
     { dutch: 'het dak', english: 'roof', level: 'A1' },
     { dutch: 'de deur', english: 'door', level: 'A1' },
@@ -286,7 +286,9 @@ const dutchWordBank = {
     { dutch: 'de televisie', english: 'television', level: 'A1' },
     { dutch: 'blauw', english: 'blue', level: 'A1' },
     { dutch: 'bruin', english: 'brown', level: 'A1' },
-    { dutch: 'geel', english: 'yellow', level: 'A1' },
+    { dutch: 'geel', english: 'yellow', level: 'A1' }
+  ],
+  'thema_3_wonen_part2': [
     { dutch: 'grijs', english: 'gray', level: 'A1' },
     { dutch: 'groen', english: 'green', level: 'A1' },
     { dutch: 'de kleur', english: 'color', level: 'A1' },
@@ -340,7 +342,7 @@ const dutchWordBank = {
     { dutch: 'vergeten', english: 'to forget', level: 'A1' },
     { dutch: 'vinden', english: 'to find', level: 'A1' }
   ],
-  'thema_4_eten_drinken': [
+  'thema_4_eten_drinken_part1': [
     { dutch: 'de appel', english: 'apple', level: 'A1' },
     { dutch: 'de bakker', english: 'baker, bakery', level: 'A1' },
     { dutch: 'boodschappen doen', english: 'to shop, to buy groceries', level: 'A1' },
@@ -387,6 +389,16 @@ const dutchWordBank = {
     { dutch: 'op', english: 'used up', level: 'A1' },
     { dutch: 'roepen', english: 'to call, to call somebody', level: 'A1' },
     { dutch: 'de vork', english: 'fork', level: 'A1' },
+    { dutch: 'de citroen', english: 'lemon', level: 'A1' },
+    { dutch: 'het fruit', english: 'fruit', level: 'A1' },
+    { dutch: 'gratis', english: 'free', level: 'A1' },
+    { dutch: 'de peer', english: 'pear', level: 'A1' },
+    { dutch: 'de sinaasappel', english: 'orange', level: 'A1' },
+    { dutch: 'de sla', english: 'lettuce', level: 'A1' },
+    { dutch: 'het soort', english: 'kind, type', level: 'A1' },
+    { dutch: 'de wortel', english: 'carrot', level: 'A1' },
+  ],
+  'thema_4_eten_drinken_part2': [
     { dutch: 'zetten', english: 'to put, to place', level: 'A1' },
     { dutch: 'altijd', english: 'always', level: 'A1' },
     { dutch: 'de bloemkool', english: 'cauliflower', level: 'A1' },
@@ -434,14 +446,6 @@ const dutchWordBank = {
     { dutch: 'alle', english: 'all', level: 'A1' },
     { dutch: 'de banaan', english: 'banana', level: 'A1' },
     { dutch: 'de boon', english: 'bean', level: 'A1' },
-    { dutch: 'de citroen', english: 'lemon', level: 'A1' },
-    { dutch: 'het fruit', english: 'fruit', level: 'A1' },
-    { dutch: 'gratis', english: 'free', level: 'A1' },
-    { dutch: 'de peer', english: 'pear', level: 'A1' },
-    { dutch: 'de sinaasappel', english: 'orange', level: 'A1' },
-    { dutch: 'de sla', english: 'lettuce', level: 'A1' },
-    { dutch: 'het soort', english: 'kind, type', level: 'A1' },
-    { dutch: 'de wortel', english: 'carrot', level: 'A1' },
     { dutch: 'de zak', english: 'bag', level: 'A1' },
     { dutch: 'daarna', english: 'thereafter', level: 'A1' },
     { dutch: 'het geld', english: 'money', level: 'A1' },
@@ -454,7 +458,7 @@ const dutchWordBank = {
     { dutch: 'pinnen', english: 'to pay with a debit card', level: 'A1' },
     { dutch: 'want', english: 'because', level: 'A1' }
   ],
-  'thema_5_dokter': [
+  'thema_5_dokter_part1': [
     { dutch: 'de arm', english: 'arm', level: 'A1' },
     { dutch: 'het been', english: 'leg', level: 'A1' },
     { dutch: 'de bil', english: 'buttock', level: 'A1' },
@@ -499,6 +503,9 @@ const dutchWordBank = {
     { dutch: 'de dokter', english: 'doctor', level: 'A1' },
     { dutch: 'halen', english: 'to get, to fetch', level: 'A1' },
     { dutch: 'Ik heb last van', english: 'I suffer from', level: 'A1' },
+    { dutch: 'de apotheek', english: 'pharmacy', level: 'A1' },
+  ],
+  'thema_5_dokter_part2': [
     { dutch: 'het medicijn', english: 'medicine', level: 'A1' },
     { dutch: 'het probleem', english: 'problem', level: 'A1' },
     { dutch: 'soms', english: 'sometimes', level: 'A1' },
@@ -544,11 +551,11 @@ const dutchWordBank = {
     { dutch: 'misschien', english: 'maybe', level: 'A1' },
     { dutch: 'poetsen', english: 'to brush', level: 'A1' },
     { dutch: 'vervelend', english: 'tedious, annoying', level: 'A1' },
-    { dutch: 'vullen', english: 'to fill', level: 'A1' }
   ],
-  'thema_6_kleding': [
-    { dutch: 'de broek', english: 'pants', level: 'A1' },
+  'thema_6_kleding_part1': [
     { dutch: 'het hemd', english: 'shirt', level: 'A1' },
+    { dutch: 'vullen', english: 'to fill', level: 'A1' },
+    { dutch: 'de broek', english: 'pants', level: 'A1' },
     { dutch: 'de jas', english: 'jacket', level: 'A1' },
     { dutch: 'de onderbroek', english: 'underpants', level: 'A1' },
     { dutch: 'het overhemd', english: 'shirt', level: 'A1' },
@@ -591,16 +598,18 @@ const dutchWordBank = {
     { dutch: 'het horloge', english: 'watch', level: 'A1' },
     { dutch: 'de ketting', english: 'chain, necklace', level: 'A1' },
     { dutch: 'de muts', english: 'cap, hat', level: 'A1' },
-    { dutch: 'de oorbel', english: 'earring', level: 'A1' },
-    { dutch: 'de ring', english: 'ring', level: 'A1' },
-    { dutch: 'het sieraad', english: 'ornament', level: 'A1' },
-    { dutch: 'de sjaal', english: 'scarf', level: 'A1' },
     { dutch: 'dezelfde', english: 'the same', level: 'A1' },
     { dutch: 'Een ogenblik alstublieft', english: 'One moment please', level: 'A1' },
     { dutch: 'even', english: 'just, just a moment', level: 'A1' },
     { dutch: 'het gat', english: 'hole', level: 'A1' },
     { dutch: 'heel', english: 'very', level: 'A1' },
     { dutch: 'jammer', english: 'pity, shame', level: 'A1' },
+  ],
+  'thema_6_kleding_part2': [
+    { dutch: 'de oorbel', english: 'earring', level: 'A1' },
+    { dutch: 'de ring', english: 'ring', level: 'A1' },
+    { dutch: 'het sieraad', english: 'ornament', level: 'A1' },
+    { dutch: 'de sjaal', english: 'scarf', level: 'A1' },
     { dutch: 'kapot', english: 'broken', level: 'A1' },
     { dutch: 'meenemen', english: 'to take along', level: 'A1' },
     { dutch: 'ruilen', english: 'to exchange, to swap', level: 'A1' },
@@ -650,7 +659,7 @@ const dutchWordBank = {
     { dutch: 'wassen', english: 'to wash', level: 'A1' },
     { dutch: 'zelf', english: 'self, myself', level: 'A1' }
   ],
-  'thema_7_reizen': [
+  'thema_7_reizen_part1': [
     { dutch: 'de auto', english: 'car', level: 'A1' },
     { dutch: 'de boot', english: 'boat', level: 'A1' },
     { dutch: 'de bus', english: 'bus, coach', level: 'A1' },
@@ -699,6 +708,8 @@ const dutchWordBank = {
     { dutch: 'tussen', english: 'between', level: 'A1' },
     { dutch: 'uit', english: 'out of', level: 'A1' },
     { dutch: 'voor', english: 'in front of', level: 'A1' },
+  ],
+  'thema_7_reizen_part2': [
     { dutch: 'alvast', english: 'already', level: 'A1' },
     { dutch: 'de collega', english: 'colleague', level: 'A1' },
     { dutch: 'denken', english: 'to think', level: 'A1' },
@@ -801,8 +812,10 @@ const dutchWordBank = {
     { dutch: 'inschrijven', english: 'to register, to sign up', level: 'A1' },
     { dutch: 'invullen', english: 'to fill in', level: 'A1' },
     { dutch: 'het nummer', english: 'number', level: 'A1' },
-    { dutch: 'de postcode', english: 'zip code', level: 'A1' },
+  ],
+  'thema_8_vrije_tijd_part2': [
     { dutch: 'starten', english: 'to start', level: 'A1' },
+    { dutch: 'de postcode', english: 'zip code', level: 'A1' },
     { dutch: 'de telefoon', english: 'phone', level: 'A1' },
     { dutch: 'als', english: 'if', level: 'A1' },
     { dutch: 'het concert', english: 'concert', level: 'A1' },
@@ -848,59 +861,16 @@ const dutchWordBank = {
     { dutch: 'zin hebben in', english: 'to feel like', level: 'A1' }
   ],
   'lesson_1_basics': [
-    { dutch: 'ik', english: 'I', level: 'A1' },
-    { dutch: 'ik heet', english: 'my name is', level: 'A1' },
-    { dutch: 'ik ben', english: 'I am', level: 'A1' },
     { dutch: 'een', english: 'a', level: 'A1' },
     { dutch: 'de', english: 'the', level: 'A1' },
     { dutch: 'het', english: 'the', level: 'A1' },
-    { dutch: 'de man', english: 'the man', level: 'A1' },
-    { dutch: 'de vrouw', english: 'the woman', level: 'A1' },
-    { dutch: 'de jongen', english: 'the boy', level: 'A1' },
-    { dutch: 'het meisje', english: 'the girl', level: 'A1' },
-    { dutch: 'het huis', english: 'the house', level: 'A1' },
-    { dutch: 'hallo', english: 'hello', level: 'A1' },
-    { dutch: 'hoi', english: 'hi', level: 'A1' },
-    { dutch: 'goed', english: 'good', level: 'A1' },
     { dutch: 'slecht', english: 'bad', level: 'A1' },
-    { dutch: 'morgen', english: 'morning', level: 'A1' },
-    { dutch: 'morgen', english: 'tomorrow', level: 'A1' },
-    { dutch: 'goedemorgen', english: 'good morning', level: 'A1' },
-    { dutch: 'avond', english: 'evening', level: 'A1' },
-    { dutch: 'goedenavond', english: 'good evening', level: 'A1' },
-    { dutch: 'dag', english: 'day', level: 'A1' },
-    { dutch: 'goedendag', english: 'good day', level: 'A1' },
-    { dutch: 'tot ziens', english: 'see you', level: 'A1' },
-    { dutch: 'tot', english: 'until', level: 'A1' },
-    { dutch: 'doei', english: 'bye', level: 'A1' }
+    { dutch: 'goedendag', english: 'good day', level: 'A1' }
   ],
   'lesson_2_pronouns': [
-    { dutch: 'alsjeblieft', english: 'here you are', level: 'A1' },
-    { dutch: 'alstublieft', english: 'here you are', level: 'A1' },
-    { dutch: 'alsjeblieft', english: 'please', level: 'A1' },
     { dutch: 'a.u.b.', english: 'please', level: 'A1' },
-    { dutch: 'dank je wel', english: 'thank you', level: 'A1' },
-    { dutch: 'ja', english: 'yes', level: 'A1' },
-    { dutch: 'nee', english: 'no', level: 'A1' },
-    { dutch: 'niet', english: 'not', level: 'A1' },
     { dutch: 'roken', english: 'to smoke', level: 'A1' },
-    { dutch: 'wel', english: 'confirmative', level: 'A1' },
-    { dutch: 'misschien', english: 'maybe', level: 'A1' },
-    { dutch: 'links', english: 'left', level: 'A1' },
-    { dutch: 'rechts', english: 'right', level: 'A1' },
-    { dutch: 'of', english: 'or', level: 'A1' },
-    { dutch: 'en', english: 'and', level: 'A1' },
-    { dutch: 'jij', english: 'you', level: 'A1' },
-    { dutch: 'je', english: 'you', level: 'A1' },
-    { dutch: 'hij', english: 'he', level: 'A1' },
-    { dutch: 'zij', english: 'she', level: 'A1' },
-    { dutch: 'ze', english: 'she', level: 'A1' },
-    { dutch: 'wij', english: 'we', level: 'A1' },
-    { dutch: 'we', english: 'we', level: 'A1' },
-    { dutch: 'jullie', english: 'you', level: 'A1' },
-    { dutch: 'zij', english: 'they', level: 'A1' },
-    { dutch: 'ze', english: 'they', level: 'A1' },
-    { dutch: 'u', english: 'you', level: 'A1' }
+    { dutch: 'wel', english: 'confirmative', level: 'A1' }
   ],
   'lesson_3_professions': [
     { dutch: 'zijn', english: 'to be', level: 'A1' },
@@ -931,24 +901,9 @@ const dutchWordBank = {
     { dutch: 'de vertegenwoordiger', english: 'the representative', level: 'A2' }
   ],
   'lesson_4_food_drinks': [
-    { dutch: 'eten & drinken', english: 'food & drinks', level: 'A1' },
-    { dutch: 'de groente', english: 'the vegetables', level: 'A1' },
-    { dutch: 'het fruit', english: 'the fruits', level: 'A1' },
-    { dutch: 'het brood', english: 'the bread', level: 'A1' },
-    { dutch: 'de boterham', english: 'the slice of bread', level: 'A1' },
-    { dutch: 'de kaas', english: 'the cheese', level: 'A1' },
     { dutch: 'de hagelslag', english: 'the chocolate sprinkles', level: 'A1' },
     { dutch: 'de pindakaas', english: 'the peanut butter', level: 'A1' },
-    { dutch: 'de melk', english: 'the milk', level: 'A1' },
-    { dutch: 'de koffie', english: 'the coffee', level: 'A1' },
-    { dutch: 'de thee', english: 'the tea', level: 'A1' },
-    { dutch: 'de aardappel', english: 'the potato', level: 'A1' },
     { dutch: 'de aardappeleter', english: 'the potato-eater', level: 'A2' },
-    { dutch: 'het bier', english: 'the beer', level: 'A1' },
-    { dutch: 'de wijn', english: 'the wine', level: 'A1' },
-    { dutch: 'het water', english: 'the water', level: 'A1' },
-    { dutch: 'het vlees', english: 'the meat', level: 'A1' },
-    { dutch: 'de kip', english: 'the chicken', level: 'A1' },
     { dutch: 'de friet', english: 'the French fries', level: 'A1' },
     { dutch: 'frietje met', english: 'French fries with mayonnaise', level: 'A1' },
     { dutch: 'de frikadel', english: 'Dutch meat sausage', level: 'A1' },
@@ -986,30 +941,12 @@ const dutchWordBank = {
     { dutch: 'de fiets', english: 'the bike', level: 'A1' }
   ],
   'lesson_6_transport_places': [
-    { dutch: 'de straat', english: 'the street', level: 'A1' },
-    { dutch: 'de weg', english: 'the road', level: 'A1' },
-    { dutch: 'de snelweg', english: 'the highway', level: 'A2' },
-    { dutch: 'de auto', english: 'the car', level: 'A1' },
-    { dutch: 'de bus', english: 'the bus', level: 'A1' },
-    { dutch: 'de trein', english: 'the train', level: 'A1' },
-    { dutch: 'de tram', english: 'the tram', level: 'A1' },
-    { dutch: 'de halte', english: 'the stopping place', level: 'A1' },
-    { dutch: 'de metro', english: 'the metro', level: 'A1' },
-    { dutch: 'de boot', english: 'the boat', level: 'A1' },
-    { dutch: 'het vliegtuig', english: 'the airplane', level: 'A1' },
     { dutch: 'het vliegveld', english: 'the airport', level: 'A1' },
     { dutch: 'de haven', english: 'the port', level: 'A1' },
-    { dutch: 'het station', english: 'the railway station', level: 'A1' },
     { dutch: 'het kantoor', english: 'the office', level: 'A1' },
-    { dutch: 'de winkel', english: 'the shop', level: 'A1' },
-    { dutch: 'de supermarkt', english: 'the supermarket', level: 'A1' },
-    { dutch: 'het ziekenhuis', english: 'the hospital', level: 'A1' },
-    { dutch: 'de apotheek', english: 'the pharmacy', level: 'A1' },
-    { dutch: 'het zwembad', english: 'the swimming pool', level: 'A1' },
     { dutch: 'de sporthal', english: 'the sports hall', level: 'A1' },
     { dutch: 'het politiebureau', english: 'the police station', level: 'A1' },
     { dutch: 'de bibliotheek', english: 'the library', level: 'A1' },
-    { dutch: 'de school', english: 'the school', level: 'A1' },
     { dutch: 'de universiteit', english: 'the university', level: 'A1' }
   ],
   'lesson_7_numbers': [
@@ -1230,89 +1167,31 @@ const dutchWordBank = {
   ],
   'lesson_15_house': [
     { dutch: 'de woning', english: 'the house', level: 'A1' },
-    { dutch: 'de deur', english: 'the door', level: 'A1' },
-    { dutch: 'het raam', english: 'the window', level: 'A1' },
-    { dutch: 'de stoel', english: 'the chair', level: 'A1' },
     { dutch: 'de kruk', english: 'the stool', level: 'A1' },
-    { dutch: 'de tafel', english: 'the table', level: 'A1' },
-    { dutch: 'de lamp', english: 'the lamp', level: 'A1' },
-    { dutch: 'de televisie', english: 'the television', level: 'A1' },
-    { dutch: 'de kast', english: 'the closet', level: 'A1' },
-    { dutch: 'de wc', english: 'the toilet', level: 'A1' },
-    { dutch: 'de keuken', english: 'the kitchen', level: 'A1' },
     { dutch: 'het fornuis', english: 'the cooker', level: 'A1' },
     { dutch: 'de koelkast', english: 'the fridge', level: 'A1' },
-    { dutch: 'de kamer', english: 'the room', level: 'A1' },
-    { dutch: 'de woonkamer', english: 'the living room', level: 'A1' },
-    { dutch: 'de bank', english: 'the couch', level: 'A1' },
-    { dutch: 'de slaapkamer', english: 'the sleeping room', level: 'A1' },
-    { dutch: 'het bed', english: 'the bed', level: 'A1' },
-    { dutch: 'de badkamer', english: 'the bathroom', level: 'A1' },
-    { dutch: 'de douche', english: 'the shower', level: 'A1' },
-    { dutch: 'het bad', english: 'the bath tub', level: 'A1' },
-    { dutch: 'de bijkeuken', english: 'the scullery', level: 'A2' },
-    { dutch: 'de garage', english: 'the garage', level: 'A1' },
-    { dutch: 'de tuin', english: 'the garden', level: 'A1' },
-    { dutch: 'de zolder', english: 'the attic', level: 'A1' }
+    { dutch: 'de bijkeuken', english: 'the scullery', level: 'A2' }
   ],
   'lesson_16_body': [
-    { dutch: 'het lichaam', english: 'the body', level: 'A1' },
     { dutch: 'het lijf', english: 'the body', level: 'A1' },
-    { dutch: 'het hoofd', english: 'the head', level: 'A1' },
     { dutch: 'de kop', english: 'the head', level: 'A1' },
-    { dutch: 'de mond', english: 'the mouth', level: 'A1' },
-    { dutch: 'de tand', english: 'the tooth', level: 'A1' },
-    { dutch: 'het oor', english: 'the ear', level: 'A1' },
-    { dutch: 'het oog', english: 'the eye', level: 'A1' },
-    { dutch: 'de bril', english: 'the glasses', level: 'A1' },
     { dutch: 'de zonnebril', english: 'the sunglasses', level: 'A1' },
-    { dutch: 'de neus', english: 'the nose', level: 'A1' },
-    { dutch: 'het haar', english: 'the hair', level: 'A1' },
-    { dutch: 'de arm', english: 'the arm', level: 'A1' },
     { dutch: 'de elleboog', english: 'the elbow', level: 'A1' },
-    { dutch: 'de hand', english: 'the hand', level: 'A1' },
-    { dutch: 'de vinger', english: 'the finger', level: 'A1' },
-    { dutch: 'het been', english: 'the leg', level: 'A1' },
-    { dutch: 'de knie', english: 'the knee', level: 'A1' },
-    { dutch: 'de voet', english: 'the foot', level: 'A1' },
-    { dutch: 'de teen', english: 'the toe', level: 'A1' },
-    { dutch: 'de rug', english: 'the spine', level: 'A1' },
-    { dutch: 'de buik', english: 'the belly, the stomach', level: 'A1' },
-    { dutch: 'de schouder', english: 'the shoulder', level: 'A1' },
     { dutch: 'de kont', english: 'the ass', level: 'A2' },
     { dutch: 'de borst', english: 'the chest, the breast', level: 'A1' },
-    { dutch: 'de baard', english: 'the beard', level: 'A1' },
-    { dutch: 'de snor', english: 'the moustache', level: 'A1' },
     { dutch: 'het hart', english: 'the heart', level: 'A1' }
   ],
   'lesson_17_clothes': [
-    { dutch: 'de kleren', english: 'the clothes', level: 'A1' },
-    { dutch: 'de kleding', english: 'the clothing', level: 'A1' },
     { dutch: 'de kledingwinkel', english: 'the clothes shop', level: 'A1' },
-    { dutch: 'de broek', english: 'the pants', level: 'A1' },
     { dutch: 'de spijkerbroek', english: 'the jeans', level: 'A1' },
-    { dutch: 'de trui', english: 'the sweater', level: 'A1' },
-    { dutch: 'de jas', english: 'the coat', level: 'A1' },
-    { dutch: 'de rok', english: 'the skirt', level: 'A1' },
-    { dutch: 'de jurk', english: 'the robe', level: 'A1' },
-    { dutch: 'de sok', english: 'the sock (short)', level: 'A1' },
     { dutch: 'de kous', english: 'the sock (long)', level: 'A1' },
-    { dutch: 'de schoen', english: 'the shoe', level: 'A1' },
     { dutch: 'de klomp', english: 'the wooden shoe', level: 'A1' },
     { dutch: 'de riem', english: 'the belt', level: 'A1' },
-    { dutch: 'het T-shirt', english: 'the T-shirt', level: 'A1' },
-    { dutch: 'het hemd', english: 'the undershirt', level: 'A1' },
-    { dutch: 'het overhemd', english: 'the shirt', level: 'A1' },
-    { dutch: 'de blouse', english: 'the blouse, the shirt', level: 'A1' },
-    { dutch: 'het pak', english: 'the suit', level: 'A1' },
     { dutch: 'de colbert', english: 'the suit jacket', level: 'A1' },
     { dutch: 'de stropdas', english: 'the tie', level: 'A1' },
     { dutch: 'de strik', english: 'the bow', level: 'A1' },
     { dutch: 'de pyjama', english: 'the pyjamas', level: 'A1' },
-    { dutch: 'de onderbroek', english: 'the undershorts', level: 'A1' },
-    { dutch: 'de bh', english: 'the bra', level: 'A1' },
-    { dutch: 'de hoed', english: 'the hat', level: 'A1' },
-    { dutch: 'de das', english: 'the scarf', level: 'A1' }
+    { dutch: 'de bh', english: 'the bra', level: 'A1' }
   ],
   'lesson_18_verbs_more': [
     { dutch: 'doen', english: 'to do', level: 'A1' },
@@ -1374,29 +1253,13 @@ const dutchWordBank = {
     { dutch: 'ontslaan', english: 'to fire', level: 'A2' }
   ],
   'lesson_20_family': [
-    { dutch: 'de vader', english: 'the father', level: 'A1' },
     { dutch: 'papa', english: 'dad', level: 'A1' },
-    { dutch: 'de moeder', english: 'the mother', level: 'A1' },
     { dutch: 'mama', english: 'mom', level: 'A1' },
-    { dutch: 'de broer', english: 'the brother', level: 'A1' },
-    { dutch: 'de zus', english: 'the sister', level: 'A1' },
-    { dutch: 'de opa', english: 'the grandfather', level: 'A1' },
-    { dutch: 'de oma', english: 'the grandmother', level: 'A1' },
-    { dutch: 'de tante', english: 'the aunt', level: 'A1' },
-    { dutch: 'de oom', english: 'the uncle', level: 'A1' },
-    { dutch: 'de neef', english: 'the cousin, the nephew', level: 'A1' },
-    { dutch: 'de nicht', english: 'the cousin, the niece', level: 'A1' },
-    { dutch: 'het kind', english: 'the child', level: 'A1' },
-    { dutch: 'het kleinkind', english: 'the grandchild', level: 'A1' },
-    { dutch: 'de vriend', english: 'the friend', level: 'A1' },
-    { dutch: 'de vriendin', english: 'the girlfriend', level: 'A1' },
     { dutch: 'de kennis', english: 'the acquaintance', level: 'A1' },
     { dutch: 'de bekende', english: 'the acquaintance', level: 'A1' },
     { dutch: 'de klasgenoot', english: 'the classmate', level: 'A1' },
     { dutch: 'de verkering', english: 'the relationship (love)', level: 'A2' },
-    { dutch: 'verliefd', english: 'in love', level: 'A1' },
     { dutch: 'verloofd', english: 'to be engaged', level: 'A2' },
-    { dutch: 'trouwen', english: 'to marry', level: 'A1' },
     { dutch: 'scheiden', english: 'to divorce', level: 'A2' },
     { dutch: 'gescheiden zijn', english: 'to be divorced', level: 'A2' }
   ]
@@ -1499,8 +1362,8 @@ export default function DutchLearningGame() {
   };
 
   const startGameWithQuestions = () => {
-    if (numQuestions < 10 || numQuestions > 25) {
-      alert('Please select between 10 and 25 questions.');
+    if (numQuestions < 10 || numQuestions > 45) {
+      alert('Please select between 10 and 45 questions.');
       return;
     }
     if (pendingGameMode === 'learn') {
@@ -1760,17 +1623,17 @@ export default function DutchLearningGame() {
                 
                 <div className="bg-gray-50 p-6 rounded-xl">
                   <label className="block text-gray-700 font-semibold mb-3 text-center">
-                    Number of Questions (10-25):
+                    Number of Questions (10-45):
                   </label>
                   <input
                     type="range"
                     min="10"
-                    max="25"
+                    max="45"
                     value={numQuestions}
                     onChange={(e) => setNumQuestions(parseInt(e.target.value))}
                     className="w-full h-3 bg-orange-200 rounded-lg appearance-none cursor-pointer"
                     style={{
-                      background: `linear-gradient(to right, #f97316 0%, #f97316 ${((numQuestions - 10) / 15) * 100}%, #fed7aa ${((numQuestions - 10) / 15) * 100}%, #fed7aa 100%)`
+                      background: `linear-gradient(to right, #f97316 0%, #f97316 ${((numQuestions - 10) / 35) * 100}%, #fed7aa ${((numQuestions - 10) / 35) * 100}%, #fed7aa 100%)`
                     }}
                   />
                   <div className="text-center mt-4">
@@ -1779,7 +1642,7 @@ export default function DutchLearningGame() {
                   </div>
                   <div className="flex justify-between text-sm text-gray-500 mt-2">
                     <span>Min: 10</span>
-                    <span>Max: 25</span>
+                    <span>Max: 45</span>
                   </div>
                 </div>
               </div>
