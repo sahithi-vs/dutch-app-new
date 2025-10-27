@@ -45,13 +45,13 @@ export default function DutchLearningGame() {
     loadUserProgress();
   }, [user]);
 
-  const loadUserProgress = async () => {
+  const loadUserProgress = () => {
     if (!user) return;
     
     try {
-      const result = await window.storage.get(`progress_${user.sub}`);
-      if (result && result.value) {
-        setUserProgress(JSON.parse(result.value));
+      const saved = localStorage.getItem(`progress_${user.sub}`);
+      if (saved) {
+        setUserProgress(JSON.parse(saved));
       }
     } catch (error) {
       console.log('No existing progress found');
@@ -59,11 +59,11 @@ export default function DutchLearningGame() {
     }
   };
 
-  const saveUserProgress = async (progress) => {
+  const saveUserProgress = (progress) => {
     if (!user) return;
     
     try {
-      await window.storage.set(`progress_${user.sub}`, JSON.stringify(progress));
+      localStorage.setItem(`progress_${user.sub}`, JSON.stringify(progress));
       setUserProgress(progress);
     } catch (error) {
       console.error('Failed to save progress:', error);
@@ -82,7 +82,7 @@ export default function DutchLearningGame() {
     goToMenu();
   };
 
-  const checkAndUpdateProgress = async (category, mode, score, totalQuestions) => {
+  const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
     if (!user || category === 'all') return;
 
     const percentage = (score / totalQuestions) * 100;
@@ -117,7 +117,7 @@ export default function DutchLearningGame() {
       updatedProgress[category].multipleChoice.passed && 
       updatedProgress[category].spelling.passed;
 
-    await saveUserProgress(updatedProgress);
+    saveUserProgress(updatedProgress);
   };
 
   const isCategoryCompleted = (category) => {
