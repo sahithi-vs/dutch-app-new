@@ -1448,9 +1448,14 @@ export default function DutchLearningGame() {
       alert('Not enough words in this category.');
       return;
     }
-    setLearnWords(words);
+    if (words.length < numQuestions) {
+      alert(`Not enough words in this category. Please select a category with at least ${numQuestions} words or reduce the number of questions.`);
+      return;
+    }
+    setLearnWords(words.slice(0, numQuestions));
     setLearnIndex(0);
     setGameMode('learn');
+    setShowQuestionSelector(false);
   };
 
   const startGame = (mode = 'play') => {
@@ -1498,7 +1503,11 @@ export default function DutchLearningGame() {
       alert('Please select between 10 and 25 questions.');
       return;
     }
-    startGame(pendingGameMode);
+    if (pendingGameMode === 'learn') {
+      startLearnMode();
+    } else {
+      startGame(pendingGameMode);
+    }
   };
 
   const generateQuestion = (words = wordBank, used = usedWords) => {
@@ -1700,7 +1709,7 @@ export default function DutchLearningGame() {
 
               <div className="space-y-3">
                 <button
-                  onClick={startLearnMode}
+                  onClick={() => openQuestionSelector('learn')}
                   className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xl font-bold py-4 rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                 >
                   <BookOpen className="w-6 h-6" />
@@ -1737,9 +1746,11 @@ export default function DutchLearningGame() {
             <>
               <div className="text-center mb-8">
                 <h2 className="text-4xl font-bold text-orange-600 mb-2">
-                  {pendingGameMode === 'play' ? '📝 Multiple Choice Quiz' : '✍️ Spelling Challenge'}
+                  {pendingGameMode === 'play' ? '📝 Multiple Choice Quiz' : 
+                   pendingGameMode === 'spelling' ? '✍️ Spelling Challenge' : 
+                   '📚 Learn Mode - Study Vocabulary'}
                 </h2>
-                <p className="text-gray-600 text-lg">How many questions would you like?</p>
+                <p className="text-gray-600 text-lg">How many words would you like to study?</p>
               </div>
 
               <div className="mb-8">
@@ -1778,7 +1789,7 @@ export default function DutchLearningGame() {
                   onClick={startGameWithQuestions}
                   className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xl font-bold py-4 rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                 >
-                  Start Quiz with {numQuestions} Questions
+                  {pendingGameMode === 'learn' ? 'Start Learning' : 'Starts quiz with'} {numQuestions} {pendingGameMode === 'learn' ? 'Words' : 'Questions'}
                   <ChevronRight className="w-6 h-6" />
                 </button>
                 
@@ -1897,7 +1908,7 @@ export default function DutchLearningGame() {
   }
 
   if (gameMode === 'results') {
-    const percentage = Math.round((score / 10) * 100);
+    const percentage = Math.round((score / numQuestions) * 100);
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center">
