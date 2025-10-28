@@ -40,10 +40,24 @@ export default function DutchLearningGame() {
   const [currentGameMode, setCurrentGameMode] = useState(null);
   const [gameStartCategory, setGameStartCategory] = useState(null);
 
-  // Load user and progress from storage on mount
-  useEffect(() => {
-    loadUserProgress();
-  }, [user]);
+// Load user from localStorage on mount
+useEffect(() => {
+  const savedUser = localStorage.getItem('dutch_app_user');
+  if (savedUser) {
+    try {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+    } catch (error) {
+      console.log('Failed to restore user session');
+      localStorage.removeItem('dutch_app_user');
+    }
+  }
+}, []);
+
+// Load user progress when user changes
+useEffect(() => {
+  loadUserProgress();
+}, [user]);
 
   const loadUserProgress = () => {
     if (!user) return;
@@ -70,23 +84,27 @@ export default function DutchLearningGame() {
     }
   };
 
-  const handleLoginSuccess = (credentialResponse) => {
-    const decoded = jwtDecode(credentialResponse.credential);
-    setUser(decoded);
-  };
+const handleLoginSuccess = (credentialResponse) => {
+  const decoded = jwtDecode(credentialResponse.credential);
+  setUser(decoded);
+  // Save user to localStorage for persistence
+  localStorage.setItem('dutch_app_user', JSON.stringify(decoded));
+};
 
-  const handleLogout = () => {
-    googleLogout();
-    setUser(null);
-    setUserProgress({});
-    goToMenu();
-  };
+const handleLogout = () => {
+  googleLogout();
+  setUser(null);
+  setUserProgress({});
+  // Clear user from localStorage
+  localStorage.removeItem('dutch_app_user');
+  goToMenu();
+};
 
   const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
     if (!user || category === 'all') return;
 
     const percentage = (score / totalQuestions) * 100;
-    const passed = percentage >= 80 && totalQuestions >= 30;
+    const passed = percentage >= 80 && totalQuestions >= 10;
 
     const updatedProgress = { ...userProgress };
     
@@ -257,7 +275,8 @@ export default function DutchLearningGame() {
 
   const handleAnswer = (selected) => {
     const isCorrect = selected.english === currentWord.english;
-    
+    playSound(isCorrect);
+
     if (isCorrect) {
       setScore(score + 1);
       setStreak(streak + 1);
@@ -305,6 +324,7 @@ export default function DutchLearningGame() {
     const correctAnswer = currentWord.dutch.toLowerCase();
     const isCorrect = userAnswer === correctAnswer;
     
+    playSound(isCorrect); 
     setQuestionsAnswered(questionsAnswered + 1);
     
     if (isCorrect) {
@@ -327,6 +347,32 @@ export default function DutchLearningGame() {
         message: `Not quite! The correct spelling is "${currentWord.dutch}"` 
       });
     }
+  };
+const playSound = (isCorrect) => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+if (isCorrect) {
+        oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(500, audioContext.currentTime + 0.05);
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      } else {
+        oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.4);
+        gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+      }
   };
 
   const speakDutch = (text) => {
