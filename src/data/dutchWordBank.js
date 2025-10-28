@@ -1,5 +1,6 @@
+
 // Complete Dutch Word Bank - 1000 Most Common Words (Lessons 1-20)
-export const dutchWordBank = {   
+export const dutchWordBankA1 = {   
   'thema_1_hallo_part1': [
     { dutch: 'getrouwd', english: 'married', level: 'A1', example:'Zij zijn getrouwd. (They are married.)' },
     { dutch: 'hallo', english: 'hello', level: 'A1', example:'Hallo, hoe gaat het? (Hello, how are you?)' },
@@ -1058,4 +1059,10 @@ export const dutchWordBank = {
 { dutch: 'gescheiden zijn', english: 'to be divorced', level: 'A2', example: 'Hij is gescheiden en woont alleen. (He is divorced and lives alone.)' },
 
 ]
+};
+
+import { dutchWordBankA2 } from './dutchWordBankA2';
+export const dutchWordBank = {
+  ...dutchWordBankA1,
+  ...dutchWordBankA2
 };

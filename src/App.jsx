@@ -50,7 +50,7 @@ useEffect(() => {
     try {
       const parsedUser = JSON.parse(savedUser);
       const timeDifference = Date.now() - parseInt(loginTime);
-      const oneHour = 5 * 60 * 1000; // 1 hour in milliseconds
+      const oneHour = 60 * 60 * 1000; // 1 hour in milliseconds
       
       // Check if session is less than 1 hour old
       if (timeDifference < oneHour) {
@@ -68,6 +68,20 @@ useEffect(() => {
     }
   }
 }, []);
+
+// ✅ Run once when reaching results screen
+useEffect(() => {
+  if (gameMode === 'results' && user && gameStartCategory && currentGameMode) {
+    checkAndUpdateProgress(gameStartCategory, currentGameMode, score, numQuestions);
+    
+    // Auto-return to menu after 2 seconds (optional, smoother UX)
+    setTimeout(() => {
+      goToMenu();
+    }, 2000);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [gameMode]);
+
 
 // Load user progress when user changes
 useEffect(() => {
@@ -121,7 +135,7 @@ const handleLogout = () => {
     if (!user || category === 'all') return;
 
     const percentage = (score / totalQuestions) * 100;
-    const passed = percentage >= 80 && totalQuestions >= 10;
+    const passed = percentage >= 80 && totalQuestions >= 40;
 
     const updatedProgress = { ...userProgress };
     
@@ -159,6 +173,14 @@ const handleLogout = () => {
     if (!user || category === 'all') return false;
     return userProgress[category]?.completed || false;
   };
+
+const getCategoryProgress = (category) => {
+  if (!user || category === 'all') return { multipleChoice: false, spelling: false };
+  return {
+    multipleChoice: userProgress[category]?.multipleChoice?.passed || false,
+    spelling: userProgress[category]?.spelling?.passed || false
+  };
+};
 
   const categories = ['all', ...Object.keys(dutchWordBank)];
 
@@ -431,7 +453,7 @@ if (isCorrect) {
           <div className="bg-orange-50 rounded-xl p-6 mb-8">
             <p className="text-gray-700 mb-4">✓ Track your learning progress</p>
             <p className="text-gray-700 mb-4">✓ Unlock categories with 80%+ score</p>
-            <p className="text-gray-700">✓ Complete 30+ words per challenge</p>
+            <p className="text-gray-700">✓ Complete 40+ words per challenge</p>
           </div>
 
           <div className="flex justify-center">
@@ -534,7 +556,7 @@ if (isCorrect) {
                   </button>
                 </div>
                 <h1 className="text-5xl font-bold text-orange-600 mb-2">🇳🇱 Leer Nederlands</h1>
-                <p className="text-gray-600 text-lg">1000 Most Common Dutch Words - A1 & A2</p>
+                <p className="text-gray-600 text-lg">1000+ Most Common Dutch Words - A1 🟢 & A2 🔵</p>
                 <div className="mt-4 inline-flex items-center gap-2 bg-green-100 px-4 py-2 rounded-full">
                   <GraduationCap className="w-5 h-5 text-green-600" />
                   <span className="text-green-700 font-bold">{getTotalWordCount()} Words Available!</span>
@@ -542,37 +564,53 @@ if (isCorrect) {
               </div>
               
               <div className="mb-6">
-                <label className="block text-gray-700 font-semibold mb-3">Choose a lesson category:</label>
+                <label className="block text-gray-700 font-semibold mb-3">Choose a Thema category: </label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
                   {categories.map(cat => {
                     const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
                     const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
                     const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
                     const isCompleted = isCategoryCompleted(cat);
+                    const progress = getCategoryProgress(cat);
+                    const hasPartialProgress = (progress.multipleChoice || progress.spelling) && !isCompleted;
                     
                     return (
                       <button
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
                         className={`p-3 rounded-xl font-medium transition-all text-xs relative ${
+                          // REPLACE THE ENTIRE className LOGIC WITH #3 FROM ABOVE
                           selectedCategory === cat
-                            ? 'bg-orange-500 text-white shadow-lg scale-105'
+                            ? (isCompleted 
+                                ? 'bg-green-600 text-white shadow-lg scale-105 border-2 border-yellow-400' 
+                                : hasPartialProgress
+                                ? 'bg-yellow-500 text-white shadow-lg scale-105'
+                                : 'bg-orange-500 text-white shadow-lg scale-105')
                             : isCompleted
-                            ? 'bg-green-500 text-white hover:bg-green-600 border border-green-600'
+                            ? 'bg-green-500 text-white hover:bg-green-600 border-2 border-green-600'
+                            : hasPartialProgress
+                            ? 'bg-yellow-400 text-gray-800 hover:bg-yellow-500 border-2 border-yellow-500'
                             : 'bg-white text-gray-700 hover:bg-orange-50 border border-gray-200'
                         }`}
                       >
-                        {isCompleted && (
-                          <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
-                            <Trophy className="w-3 h-3 text-white" />
-                          </div>
-                        )}
+                            {isCompleted && (
+                            <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-1">
+                              <Trophy className="w-3 h-3 text-white" />
+                            </div>
+                          )}
+                          {!isCompleted && hasPartialProgress && (
+                            <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1.5 py-0.5">
+                              <span className="text-white text-xs font-bold">
+                                {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✏' : ''}
+                              </span>
+                            </div>
+                          )}
                         <div className="font-bold text-sm">{cat === 'all' ? 'All Lessons' : cat.replace(/_/g, ' ').replace(/lesson /g, 'L').toUpperCase()}</div>
                         <div className="opacity-75 mt-1">
                           {wordCount} words
                           {(hasA1 || hasA2) && (
                             <span className="ml-1">
-                              {hasA1 && '🟢'} {hasA2 && '🔵'}
+                              {hasA1 && 'A1 🟢'} {hasA2 && 'A2 🔵'}
                             </span>
                           )}
                         </div>
@@ -615,12 +653,12 @@ if (isCorrect) {
 
               <div className="mt-6 p-4 bg-orange-50 rounded-xl">
                 <div className="text-sm text-gray-600 space-y-2">
-                  <p className="text-center font-bold text-orange-600 mb-2">Official "1000 Most Common Words in Dutch" Course</p>
+                  <p className="text-center font-bold text-orange-600 mb-2">Official "1000+ Most Common Words in Dutch" Course</p>
                   <p><span className="font-bold">🟢 A1 Level:</span> Basic essential words for beginners</p>
                   <p><span className="font-bold">🔵 A2 Level:</span> Intermediate vocabulary</p>
                   <p className="mt-3 text-center font-semibold">📚 Learn Mode → ✅ Multiple Choice → ✏️ Spelling Challenge</p>
                   <p className="mt-2 text-center italic">Master Dutch vocabulary step by step!</p>
-                  <p className="mt-3 text-center font-bold text-green-600">🏆 Complete both quizzes with 80%+ and 30+ words to unlock category!</p>
+                  <p className="mt-3 text-center font-bold text-green-600">🏆 Complete both quizzes with 80%+ and 40+ words to unlock category!</p>
                 </div>
               </div>
             </>
@@ -642,28 +680,45 @@ if (isCorrect) {
                 
                 <div className="bg-gray-50 p-6 rounded-xl">
                   <label className="block text-gray-700 font-semibold mb-3 text-center">
-                    Number of Questions (10-45):
+                    Number of Questions/Words
                   </label>
-                  <input
-                    type="range"
-                    min="10"
-                    max="45"
-                    value={numQuestions}
-                    onChange={(e) => setNumQuestions(parseInt(e.target.value))}
-                    className="w-full h-3 bg-orange-200 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, #f97316 0%, #f97316 ${((numQuestions - 10) / 35) * 100}%, #fed7aa ${((numQuestions - 10) / 35) * 100}%, #fed7aa 100%)`
-                    }}
-                  />
-                  <div className="text-center mt-4">
-                    <span className="text-5xl font-bold text-orange-600">{numQuestions}</span>
-                    <span className="text-5xl text-gray-600 ml-2">Questions</span>
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-500 mt-2">
-                    <span>Min: 10</span>
-                    <span>Max: 45</span>
-                  </div>
-                  {pendingGameMode !== 'learn' && numQuestions >= 30 && (
+{(() => {
+  const availableWords = selectedCategory === 'all' 
+    ? getTotalWordCount() 
+    : (dutchWordBank[selectedCategory]?.length || 0);
+  const maxQuestions = availableWords; // Cap at 45 or available words
+  const minQuestions = 10;
+  
+  // Adjust numQuestions if it exceeds new max
+  if (numQuestions > maxQuestions) {
+    setNumQuestions(maxQuestions);
+  }
+  
+  return (
+    <>
+      <input
+        type="range"
+        min={minQuestions}
+        max={maxQuestions}
+        value={Math.min(numQuestions, maxQuestions)}
+        onChange={(e) => setNumQuestions(parseInt(e.target.value))}
+        className="w-full h-3 bg-orange-200 rounded-lg appearance-none cursor-pointer"
+        style={{
+          background: `linear-gradient(to right, #f97316 0%, #f97316 ${((Math.min(numQuestions, maxQuestions) - minQuestions) / (maxQuestions - minQuestions)) * 100}%, #fed7aa ${((Math.min(numQuestions, maxQuestions) - minQuestions) / (maxQuestions - minQuestions)) * 100}%, #fed7aa 100%)`
+        }}
+      />
+      <div className="text-center mt-4">
+        <span className="text-5xl font-bold text-orange-600">{Math.min(numQuestions, maxQuestions)}</span>
+        <span className="text-5xl text-gray-600 ml-2">Questions</span>
+      </div>
+      <div className="flex justify-between text-sm text-gray-500 mt-2">
+        <span>Min: {minQuestions}</span>
+        <span>Max: {maxQuestions} (of {availableWords} words)</span>
+      </div>
+    </>
+  );
+})()}
+                  {pendingGameMode !== 'learn' && numQuestions >= 40 && (
                     <div className="mt-4 p-3 bg-green-100 rounded-lg text-center">
                       <p className="text-green-700 font-semibold">✓ Score 80%+ to unlock this category!</p>
                     </div>
@@ -799,7 +854,14 @@ if (isCorrect) {
   
     if (gameMode === 'results') {
       const percentage = Math.round((score / numQuestions) * 100);
-      return (
+      // useEffect(() => {
+      //   if (gameMode === 'results' && user && gameStartCategory && currentGameMode) {
+      //     checkAndUpdateProgress(gameStartCategory, currentGameMode, score, numQuestions);
+      //   }
+      //   // eslint-disable-next-line react-hooks/exhaustive-deps
+      // }, [gameMode]);
+
+          return (
         <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center">
             <Trophy className="w-24 h-24 text-yellow-500 mx-auto mb-4" />
