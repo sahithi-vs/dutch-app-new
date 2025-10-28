@@ -131,13 +131,15 @@ const handleLogout = () => {
   goToMenu();
 };
 
-  const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
-    if (!user || category === 'all') return;
+const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
+  if (!user || category === 'all') return;
 
-    const percentage = (score / totalQuestions) * 100;
-    const passed = percentage >= 80 && totalQuestions >= 40;
+  const percentage = (score / totalQuestions) * 100;
+  const availableWords = dutchWordBank[category]?.length || 0;
+  const requiredQuestions = Math.ceil(availableWords * 0.8); // 80% of category words
+  const passed = percentage >= 80 && totalQuestions >= requiredQuestions;
 
-    const updatedProgress = { ...userProgress };
+  const updatedProgress = { ...userProgress };
     
     if (!updatedProgress[category]) {
       updatedProgress[category] = {
@@ -658,7 +660,7 @@ if (isCorrect) {
                   <p><span className="font-bold">🔵 A2 Level:</span> Intermediate vocabulary</p>
                   <p className="mt-3 text-center font-semibold">📚 Learn Mode → ✅ Multiple Choice → ✏️ Spelling Challenge</p>
                   <p className="mt-2 text-center italic">Master Dutch vocabulary step by step!</p>
-                  <p className="mt-3 text-center font-bold text-green-600">🏆 Complete both quizzes with 80%+ and 40+ words to unlock category!</p>
+                  <p className="mt-3 text-center font-bold text-green-600">🏆 Complete both quizzes with 80% score on 80% of category words to unlock!</p>
                 </div>
               </div>
             </>
@@ -682,47 +684,54 @@ if (isCorrect) {
                   <label className="block text-gray-700 font-semibold mb-3 text-center">
                     Number of Questions/Words
                   </label>
+                    {(() => {
+                      const availableWords = selectedCategory === 'all' 
+                        ? getTotalWordCount() 
+                        : (dutchWordBank[selectedCategory]?.length || 0);
+                      const maxQuestions = availableWords; // Cap at 45 or available words
+                      const minQuestions = 10;
+                      
+                      // Adjust numQuestions if it exceeds new max
+                      if (numQuestions > maxQuestions) {
+                        setNumQuestions(maxQuestions);
+                      }
+                      
+                      return (
+                        <>
+                          <input
+                            type="range"
+                            min={minQuestions}
+                            max={maxQuestions}
+                            value={Math.min(numQuestions, maxQuestions)}
+                            onChange={(e) => setNumQuestions(parseInt(e.target.value))}
+                            className="w-full h-3 bg-orange-200 rounded-lg appearance-none cursor-pointer"
+                            style={{
+                              background: `linear-gradient(to right, #f97316 0%, #f97316 ${((Math.min(numQuestions, maxQuestions) - minQuestions) / (maxQuestions - minQuestions)) * 100}%, #fed7aa ${((Math.min(numQuestions, maxQuestions) - minQuestions) / (maxQuestions - minQuestions)) * 100}%, #fed7aa 100%)`
+                            }}
+                          />
+                          <div className="text-center mt-4">
+                            <span className="text-5xl font-bold text-orange-600">{Math.min(numQuestions, maxQuestions)}</span>
+                            <span className="text-5xl text-gray-600 ml-2">Questions</span>
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-500 mt-2">
+                            <span>Min: {minQuestions}</span>
+                            <span>Max: {maxQuestions} (of {availableWords} words)</span>
+                          </div>
+                        </>
+                      );
+                    })()}
 {(() => {
   const availableWords = selectedCategory === 'all' 
     ? getTotalWordCount() 
     : (dutchWordBank[selectedCategory]?.length || 0);
-  const maxQuestions = availableWords; // Cap at 45 or available words
-  const minQuestions = 10;
+  const requiredQuestions = Math.ceil(availableWords * 0.8); // 80% of available words
   
-  // Adjust numQuestions if it exceeds new max
-  if (numQuestions > maxQuestions) {
-    setNumQuestions(maxQuestions);
-  }
-  
-  return (
-    <>
-      <input
-        type="range"
-        min={minQuestions}
-        max={maxQuestions}
-        value={Math.min(numQuestions, maxQuestions)}
-        onChange={(e) => setNumQuestions(parseInt(e.target.value))}
-        className="w-full h-3 bg-orange-200 rounded-lg appearance-none cursor-pointer"
-        style={{
-          background: `linear-gradient(to right, #f97316 0%, #f97316 ${((Math.min(numQuestions, maxQuestions) - minQuestions) / (maxQuestions - minQuestions)) * 100}%, #fed7aa ${((Math.min(numQuestions, maxQuestions) - minQuestions) / (maxQuestions - minQuestions)) * 100}%, #fed7aa 100%)`
-        }}
-      />
-      <div className="text-center mt-4">
-        <span className="text-5xl font-bold text-orange-600">{Math.min(numQuestions, maxQuestions)}</span>
-        <span className="text-5xl text-gray-600 ml-2">Questions</span>
-      </div>
-      <div className="flex justify-between text-sm text-gray-500 mt-2">
-        <span>Min: {minQuestions}</span>
-        <span>Max: {maxQuestions} (of {availableWords} words)</span>
-      </div>
-    </>
+  return pendingGameMode !== 'learn' && numQuestions >= requiredQuestions && (
+    <div className="mt-4 p-3 bg-green-100 rounded-lg text-center">
+      <p className="text-green-700 font-semibold">✓ Score 80%+ on {requiredQuestions}+ questions to unlock this category!</p>
+    </div>
   );
 })()}
-                  {pendingGameMode !== 'learn' && numQuestions >= 40 && (
-                    <div className="mt-4 p-3 bg-green-100 rounded-lg text-center">
-                      <p className="text-green-700 font-semibold">✓ Score 80%+ to unlock this category!</p>
-                    </div>
-                  )}
                 </div>
               </div>
 
