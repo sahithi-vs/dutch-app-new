@@ -41,15 +41,30 @@ export default function DutchLearningGame() {
   const [gameStartCategory, setGameStartCategory] = useState(null);
 
 // Load user from localStorage on mount
+// Load user from localStorage on mount
 useEffect(() => {
   const savedUser = localStorage.getItem('dutch_app_user');
-  if (savedUser) {
+  const loginTime = localStorage.getItem('dutch_app_login_time');
+  
+  if (savedUser && loginTime) {
     try {
       const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
+      const timeDifference = Date.now() - parseInt(loginTime);
+      const oneHour = 5 * 60 * 1000; // 1 hour in milliseconds
+      
+      // Check if session is less than 1 hour old
+      if (timeDifference < oneHour) {
+        setUser(parsedUser);
+      } else {
+        // Session expired, clear everything
+        console.log('Session expired');
+        localStorage.removeItem('dutch_app_user');
+        localStorage.removeItem('dutch_app_login_time');
+      }
     } catch (error) {
       console.log('Failed to restore user session');
       localStorage.removeItem('dutch_app_user');
+      localStorage.removeItem('dutch_app_login_time');
     }
   }
 }, []);
@@ -87,16 +102,18 @@ useEffect(() => {
 const handleLoginSuccess = (credentialResponse) => {
   const decoded = jwtDecode(credentialResponse.credential);
   setUser(decoded);
-  // Save user to localStorage for persistence
+  // Save user and login time to localStorage for persistence
   localStorage.setItem('dutch_app_user', JSON.stringify(decoded));
+  localStorage.setItem('dutch_app_login_time', Date.now().toString());
 };
 
 const handleLogout = () => {
   googleLogout();
   setUser(null);
   setUserProgress({});
-  // Clear user from localStorage
+  // Clear user and login time from localStorage
   localStorage.removeItem('dutch_app_user');
+  localStorage.removeItem('dutch_app_login_time');
   goToMenu();
 };
 
