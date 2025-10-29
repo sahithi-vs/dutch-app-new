@@ -17,6 +17,11 @@ const getAllWords = () => {
 const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
+  const [storyQuestions, setStoryQuestions] = useState([]);
+  const [currentStoryQuestion, setCurrentStoryQuestion] = useState(0);
+  const [storyScore, setStoryScore] = useState(0);
+  const [showStoryQuiz, setShowStoryQuiz] = useState(false);
+  const [storyQuizFeedback, setStoryQuizFeedback] = useState(null);
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   const [user, setUser] = useState(null);
   const [userProgress, setUserProgress] = useState({});
@@ -40,7 +45,8 @@ export default function DutchLearningGame() {
   const [selectedStory, setSelectedStory] = useState(null);
   const [currentGameMode, setCurrentGameMode] = useState(null);
   const [gameStartCategory, setGameStartCategory] = useState(null);
-
+  const [fillBlankAnswer, setFillBlankAnswer] = useState('');
+  const [fillBlankSentence, setFillBlankSentence] = useState('');
 
   // Add global styles
 if (typeof document !== 'undefined') {
@@ -233,43 +239,60 @@ const getCategoryProgress = (category) => {
     setShowQuestionSelector(false);
   };
 
-  const startGame = (mode = 'play') => {
-    const words = loadWords(selectedCategory);
+const startGame = (mode = 'play') => {
+  const words = loadWords(selectedCategory);
+  
+  if (mode === 'play' && words.length < 4) {
+    alert('Not enough words in this category.');
+    return;
+  }
+  
+  if ((mode === 'spelling' || mode === 'fillblank') && words.length < 1) {
+    alert('Not enough words in this category.');
+    return;
+  }
+  
+  // Special validation for fill-blank mode
+  if (mode === 'fillblank') {
+    const wordsWithValidExamples = words.filter(w => {
+      if (!w.example) return false;
+      const exampleLower = w.example.toLowerCase();
+      const dutchLower = w.dutch.toLowerCase();
+      return exampleLower.includes(dutchLower);
+    });
     
-    if (mode === 'play' && words.length < 4) {
-      alert('Not enough words in this category.');
+    if (wordsWithValidExamples.length < numQuestions) {
+      alert(`Not enough words with suitable examples for Fill in the Blank mode. Only ${wordsWithValidExamples.length} words available. Please reduce the number of questions or choose a different category.`);
       return;
     }
-    
-    if (mode === 'spelling' && words.length < 1) {
-      alert('Not enough words in this category.');
-      return;
-    }
-    
-    if (words.length < numQuestions) {
-      alert(`Not enough words in this category. Please select a category with at least ${numQuestions} words or reduce the number of questions.`);
-      return;
-    }
-    
-    setWordBank(words);
-    setUsedWords([]);
-    setGameMode(mode);
-    setCurrentGameMode(mode);
-    setGameStartCategory(selectedCategory);
-    setScore(0);
-    setStreak(0);
-    setQuestionsAnswered(0);
-    setFeedback(null);
-    setSpellingAnswer('');
-    setShowQuestionSelector(false);
-    
-    if (mode === 'spelling') {
-      generateSpellingQuestion(words, []);
-    } else {
-      generateQuestion(words, []);
-    }
-  };
-
+  }
+  
+  if (words.length < numQuestions) {
+    alert(`Not enough words in this category. Please select a category with at least ${numQuestions} words or reduce the number of questions.`);
+    return;
+  }
+  
+  setWordBank(words);
+  setUsedWords([]);
+  setGameMode(mode);
+  setCurrentGameMode(mode);
+  setGameStartCategory(selectedCategory);
+  setScore(0);
+  setStreak(0);
+  setQuestionsAnswered(0);
+  setFeedback(null);
+  setSpellingAnswer('');
+  setFillBlankAnswer('');
+  setShowQuestionSelector(false);
+  
+  if (mode === 'spelling') {
+    generateSpellingQuestion(words, []);
+  } else if (mode === 'fillblank') {
+    generateFillBlankQuestion(words, []);
+  } else {
+    generateQuestion(words, []);
+  }
+};
   const openQuestionSelector = (mode) => {
     setPendingGameMode(mode);
     setShowQuestionSelector(true);
@@ -339,6 +362,68 @@ const startGameWithQuestions = () => {
     setUsedWords([...used, correct]);
   };
 
+const generateFillBlankQuestion = (words = wordBank, used = usedWords) => {
+  if (words.length === 0) return;
+  
+  // Filter words that have examples AND the Dutch word appears in the example
+  const availableWords = words.filter(w => {
+    if (!w.example || !used.every(u => u.dutch !== w.dutch || u.english !== w.english)) {
+      return false;
+    }
+    // Check if the Dutch word (case-insensitive) exists in the example
+    const exampleLower = w.example.toLowerCase();
+    const dutchLower = w.dutch.toLowerCase();
+    return exampleLower.includes(dutchLower);
+  });
+  
+  if (availableWords.length === 0) {
+    // If no suitable words with examples, reset and try again
+    const wordsWithExamples = words.filter(w => {
+      if (!w.example) return false;
+      const exampleLower = w.example.toLowerCase();
+      const dutchLower = w.dutch.toLowerCase();
+      return exampleLower.includes(dutchLower);
+    });
+    
+    if (wordsWithExamples.length === 0) {
+      alert('Not enough words with suitable examples for Fill in the Blank mode in this category.');
+      goToMenu();
+      return;
+    }
+    
+    setUsedWords([]);
+    generateFillBlankQuestion(words, []);
+    return;
+  }
+  
+const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
+  
+// Create the fill-in-the-blank sentence by replacing the Dutch word
+// Remove the English translation part (anything in parentheses)
+const regex = new RegExp(`\\b${correct.dutch}\\b`, 'gi');
+let sentence = correct.example.replace(/\s*\([^)]+\)\s*/g, '').trim(); // Remove (English translation)
+let blankCreated = false;
+
+sentence = sentence.replace(regex, (match) => {
+  if (!blankCreated) {
+    blankCreated = true;
+    return '____';
+  }
+  return match; // Keep other occurrences as is
+});
+  
+  // If no blank was created, skip this word
+  if (!blankCreated) {
+    return generateFillBlankQuestion(words, [...used, correct]);
+  }
+  
+  setCurrentWord(correct);
+  setFillBlankSentence(sentence);
+  setFillBlankAnswer('');
+  setFeedback(null);
+  setUsedWords([...used, correct]);
+};
+
   const handleAnswer = (selected) => {
     const isCorrect = selected.english === currentWord.english;
     playSound(isCorrect);
@@ -366,18 +451,21 @@ const startGameWithQuestions = () => {
     setQuestionsAnswered(questionsAnswered + 1);
   };
 
-  const handleNext = () => {
-    setSpellingAnswer('');
-    if (questionsAnswered >= numQuestions) {
-      setGameMode('results');
+const handleNext = () => {
+  setSpellingAnswer('');
+  setFillBlankAnswer('');
+  if (questionsAnswered >= numQuestions) {
+    setGameMode('results');
+  } else {
+    if (gameMode === 'spelling') {
+      generateSpellingQuestion();
+    } else if (gameMode === 'fillblank') {
+      generateFillBlankQuestion();
     } else {
-      if (gameMode === 'spelling') {
-        generateSpellingQuestion();
-      } else {
-        generateQuestion();
-      }
+      generateQuestion();
     }
-  };
+  }
+};
 
   const handleSpellingSubmit = (e) => {
     if (e) e.preventDefault();
@@ -414,6 +502,42 @@ const startGameWithQuestions = () => {
       });
     }
   };
+
+const handleFillBlankSubmit = (e) => {
+  if (e) e.preventDefault();
+  
+  if (!fillBlankAnswer.trim()) {
+    return;
+  }
+  
+  const userAnswer = fillBlankAnswer.trim().toLowerCase();
+  const correctAnswer = currentWord.dutch.toLowerCase();
+  const isCorrect = userAnswer === correctAnswer;
+  
+  playSound(isCorrect); 
+  setQuestionsAnswered(questionsAnswered + 1);
+  
+  if (isCorrect) {
+    setScore(score + 1);
+    setStreak(streak + 1);
+    setFeedback({ correct: true, message: 'Perfect! Goed gedaan! (Well done!)' });
+    
+    setTimeout(() => {
+      if (questionsAnswered + 1 >= numQuestions) {
+        setGameMode('results');
+      } else {
+        setFillBlankAnswer('');
+        generateFillBlankQuestion();
+      }
+    }, 1500);
+  } else {
+    setStreak(0);
+    setFeedback({ 
+      correct: false, 
+      message: `Not quite! The correct word is "${currentWord.dutch}"` 
+    });
+  }
+};
 const playSound = (isCorrect) => {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -449,25 +573,27 @@ if (isCorrect) {
     window.speechSynthesis.speak(utterance);
   };
 
-  const goToMenu = () => {
-    setGameMode('menu');
-    setScore(0);
-    setStreak(0);
-    setQuestionsAnswered(0);
-    setFeedback(null);
-    setUsedWords([]);
-    setLearnIndex(0);
-    setLearnWords([]);
-    setCurrentWord(null);
-    setOptions([]);
-    setWordBank([]);
-    setSpellingAnswer('');
-    setShowQuestionSelector(false);
-    setPendingGameMode(null);
-    setNumQuestions(10);
-    setCurrentGameMode(null);
-    setGameStartCategory(null);
-  };
+const goToMenu = () => {
+  setGameMode('menu');
+  setScore(0);
+  setStreak(0);
+  setQuestionsAnswered(0);
+  setFeedback(null);
+  setUsedWords([]);
+  setLearnIndex(0);
+  setLearnWords([]);
+  setCurrentWord(null);
+  setOptions([]);
+  setWordBank([]);
+  setSpellingAnswer('');
+  setFillBlankAnswer('');
+  setFillBlankSentence('');
+  setShowQuestionSelector(false);
+  setPendingGameMode(null);
+  setNumQuestions(10);
+  setCurrentGameMode(null);
+  setGameStartCategory(null);
+};
 
   // Add global CSS for mobile hover fix
 const mobileHoverFix = (
@@ -478,6 +604,21 @@ const mobileHoverFix = (
         color: inherit !important;
         transform: none !important;
         scale: none !important;
+      }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
   `}</style>
@@ -550,34 +691,213 @@ const mobileHoverFix = (
     );
   }
 
-  if (gameMode === 'stories' && selectedStory) {
+if (gameMode === 'stories' && selectedStory) {
+  // Show story quiz results
+  if (showStoryQuiz && currentStoryQuestion >= selectedStory.questions.length) {
+    const percentage = Math.round((storyScore / selectedStory.questions.length) * 100);
+    
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full">
-          <h2 className="text-3xl font-bold text-yellow-700 mb-6 text-center">{selectedStory.title}</h2>
-          <div className="prose prose-lg max-w-none text-gray-800 mb-8" style={{ whiteSpace: 'pre-line' }}>
-            {selectedStory.text}
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-lg w-full text-center">
+          <Trophy className="w-24 h-24 text-yellow-500 mx-auto mb-4" />
+          <h2 className="text-4xl font-bold text-gray-800 mb-4">
+            {percentage >= 80 ? 'Uitstekend! Perfect begrip!' :
+             percentage >= 60 ? 'Goed gedaan! Je begrijpt het verhaal!' :
+             'Lees het verhaal nog een keer!'}
+          </h2>
+          <div className="mb-6">
+            <div className="text-6xl font-bold text-yellow-600 mb-2">{storyScore}/{selectedStory.questions.length}</div>
+            <div className="text-2xl text-gray-600">{percentage}% Correct</div>
           </div>
-          <div className="flex gap-4">
+          
+          <div className="space-y-3">
             <button
-              onClick={() => setSelectedStory(null)}
-              className="w-full bg-yellow-400 text-white text-lg font-bold py-3 rounded-xl hover:bg-yellow-500 transition-all flex items-center justify-center gap-2"
+              onClick={() => {
+                setShowStoryQuiz(false);
+                setCurrentStoryQuestion(0);
+                setStoryScore(0);
+                setStoryQuizFeedback(null);
+              }}
+              className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-lg font-bold py-3 rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-2"
             >
-              <ChevronLeft className="w-5 h-5" />
-              Back to Stories
+              <RefreshCw className="w-5 h-5" />
+              Probeer Opnieuw (Try Again)
             </button>
             <button
-              onClick={() => { setGameMode('menu'); setShowStories(false); setSelectedStory(null); }}
+              onClick={() => setSelectedStory(null)}
               className="w-full bg-gray-200 text-gray-700 text-lg font-bold py-3 rounded-xl hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
             >
-              <Home className="w-5 h-5" />
-              Back to Menu
+              <ChevronLeft className="w-5 h-5" />
+              Terug naar Verhalen (Back to Stories)
             </button>
           </div>
         </div>
       </div>
     );
   }
+  
+  // Show story quiz questions
+  // Show story quiz questions
+if (showStoryQuiz) {
+  const question = selectedStory.questions[currentStoryQuestion];
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full">
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (confirm('Weet je zeker dat je wilt stoppen? (Are you sure you want to quit?)')) {
+                    setShowStoryQuiz(false);
+                    setCurrentStoryQuestion(0);
+                    setStoryScore(0);
+                    setStoryQuizFeedback(null);
+                    setGameMode('menu');
+                    setSelectedStory(null);
+                    setShowStories(false);
+                  }
+                }}
+                className="bg-gray-100 hover:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-2"
+                title="Back to Menu"
+              >
+                <Home className="w-5 h-5 text-gray-700" />
+                <span className="font-semibold">Menu</span>
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm('Terug naar het verhaal? (Back to story?)')) {
+                    setShowStoryQuiz(false);
+                    setCurrentStoryQuestion(0);
+                    setStoryScore(0);
+                    setStoryQuizFeedback(null);
+                  }
+                }}
+                className="bg-yellow-100 hover:bg-yellow-200 p-2 rounded-lg transition-all flex items-center gap-2"
+                title="Back to Story"
+              >
+                <ChevronLeft className="w-5 h-5 text-yellow-700" />
+                <span className="font-semibold">Verhaal (Story)</span>
+              </button>
+            </div>
+            <div className="flex gap-3 items-center">
+              <div className="bg-yellow-100 px-4 py-2 rounded-lg">
+                <span className="text-yellow-700 font-bold">Score: {storyScore}/{selectedStory.questions.length}</span>
+              </div>
+              <div className="text-gray-600 font-semibold">
+                Vraag {currentStoryQuestion + 1}/{selectedStory.questions.length}
+              </div>
+            </div>
+          </div>
+          
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 transition-all duration-300"
+              style={{ width: `${((currentStoryQuestion) / selectedStory.questions.length) * 100}%` }}
+            />
+          </div>
+        </div>
+        
+        <h3 className="text-2xl font-bold text-gray-800 mb-6 text-center">{question.question}</h3>
+        
+        <div className="grid grid-cols-1 gap-3 mb-6">
+          {question.options.map((option, idx) => (
+            <button
+              key={idx}
+              onClick={() => {
+                const isCorrect = option === question.correct;
+                playSound(isCorrect);
+                
+                if (isCorrect) {
+                  setStoryScore(storyScore + 1);
+                  setStoryQuizFeedback({ correct: true, message: 'Goed gedaan! (Well done!)' });
+                } else {
+                  setStoryQuizFeedback({ 
+                    correct: false, 
+                    message: `Niet helemaal! Het juiste antwoord is "${question.correct}"` 
+                  });
+                }
+                
+                setTimeout(() => {
+                  setStoryQuizFeedback(null);
+                  setCurrentStoryQuestion(currentStoryQuestion + 1);
+                }, 2000);
+              }}
+              disabled={storyQuizFeedback !== null}
+              className={`p-4 text-lg font-semibold rounded-xl transition-all transform ${
+                storyQuizFeedback === null
+                  ? `bg-gray-100 text-gray-800 ${!isTouchDevice ? 'hover:bg-yellow-100 hover:text-yellow-600' : ''}`
+                  : storyQuizFeedback.correct && option === question.correct
+                  ? 'bg-green-500 text-white'
+                  : !storyQuizFeedback.correct && option === question.correct
+                  ? 'bg-green-500 text-white'
+                  : 'bg-gray-100 text-gray-400'
+              }`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        
+        {storyQuizFeedback && (
+          <div className={`p-4 rounded-xl ${
+            storyQuizFeedback.correct ? 'bg-green-100' : 'bg-red-100'
+          }`}>
+            <div className="flex items-center gap-3">
+              {storyQuizFeedback.correct ? (
+                <Check className="w-6 h-6 text-green-600" />
+              ) : (
+                <X className="w-6 h-6 text-red-600" />
+              )}
+              <p className={`font-semibold ${
+                storyQuizFeedback.correct ? 'text-green-700' : 'text-red-700'
+              }`}>
+                {storyQuizFeedback.message}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+  
+  // Show story text
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full">
+        <h2 className="text-3xl font-bold text-yellow-700 mb-6 text-center">{selectedStory.title}</h2>
+        <div className="prose prose-lg max-w-none text-gray-800 mb-8" style={{ whiteSpace: 'pre-line' }}>
+          {selectedStory.text}
+        </div>
+        <div className="flex gap-4">
+          {selectedStory.questions && selectedStory.questions.length > 0 && (
+            <button
+              onClick={() => {
+                setShowStoryQuiz(true);
+                setCurrentStoryQuestion(0);
+                setStoryScore(0);
+                setStoryQuizFeedback(null);
+              }}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-lg font-bold py-3 rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-2"
+            >
+              <GraduationCap className="w-5 h-5" />
+              Start Quiz
+            </button>
+          )}
+          <button
+            onClick={() => setSelectedStory(null)}
+            className="w-full bg-yellow-400 text-white text-lg font-bold py-3 rounded-xl hover:bg-yellow-500 transition-all flex items-center justify-center gap-2"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Terug (Back)
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
   if (gameMode === 'menu') {
     return (
@@ -687,6 +1007,12 @@ const mobileHoverFix = (
                   ✏️ Spelling Challenge
                 </button>
                 <button
+                  onClick={() => openQuestionSelector('fillblank')}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xl font-bold py-4 rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+                >
+                  📝 Fill in the Blank
+                </button>
+                <button
                   onClick={() => { setShowStories(true); setGameMode('stories'); }}
                   className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-xl font-bold py-4 rounded-xl hover:shadow-xl transition-all transform hover:scale-105 flex items-center justify-center gap-2"
                 >
@@ -699,7 +1025,7 @@ const mobileHoverFix = (
                   <p className="text-center font-bold text-orange-600 mb-2">Official "1000+ Most Common Words in Dutch" Course</p>
                   <p><span className="font-bold">🟢 A1 Level:</span> Basic essential words for beginners</p>
                   <p><span className="font-bold">🔵 A2 Level:</span> Intermediate vocabulary</p>
-                  <p className="mt-3 text-center font-semibold">📚 Learn Mode → ✅ Multiple Choice → ✏️ Spelling Challenge</p>
+                  <p className="mt-3 text-center font-semibold">📚 Learn Mode → ✅ Multiple Choice → ✏️ Spelling → 📝 Fill in Blank</p>
                   <p className="mt-2 text-center italic">Master Dutch vocabulary step by step!</p>
                   <p className="mt-3 text-center font-bold text-green-600">🏆 Complete both quizzes with 80% score on 80% of category words to unlock!</p>
                 </div>
@@ -709,9 +1035,10 @@ const mobileHoverFix = (
             <>
               <div className="text-center mb-8">
                 <h2 className="text-4xl font-bold text-orange-600 mb-2">
-                  {pendingGameMode === 'play' ? '📝 Multiple Choice Quiz' : 
-                   pendingGameMode === 'spelling' ? '✏️ Spelling Challenge' : 
-                   '📚 Learn Mode - Study Vocabulary'}
+                  {pendingGameMode === 'play' ? '🎯 Multiple Choice Quiz' : 
+                  pendingGameMode === 'spelling' ? '✏️ Spelling Challenge' : 
+                  pendingGameMode === 'fillblank' ? '📝 Fill in the Blank' :
+                  '📚 Learn Mode - Study Vocabulary'}
                 </h2>
                 <p className="text-gray-600 text-lg">How many words would you like to study?</p>
               </div>
@@ -725,12 +1052,25 @@ const mobileHoverFix = (
                   <label className="block text-gray-700 font-semibold mb-3 text-center">
                     Number of Questions/Words
                   </label>
-                    {(() => {
-                      const availableWords = selectedCategory === 'all' 
-                        ? getTotalWordCount() 
-                        : (dutchWordBank[selectedCategory]?.length || 0);
-                      const maxQuestions = availableWords; // Cap at 45 or available words
-                      const minQuestions = 10;
+{(() => {
+  let availableWords = selectedCategory === 'all' 
+    ? getTotalWordCount() 
+    : (dutchWordBank[selectedCategory]?.length || 0);
+  
+  // For fill-in-the-blank mode, count only words with valid examples
+  if (pendingGameMode === 'fillblank') {
+    const words = loadWords(selectedCategory);
+    const wordsWithValidExamples = words.filter(w => {
+      if (!w.example) return false;
+      const exampleLower = w.example.toLowerCase();
+      const dutchLower = w.dutch.toLowerCase();
+      return exampleLower.includes(dutchLower);
+    });
+    availableWords = wordsWithValidExamples.length;
+  }
+  
+  const maxQuestions = availableWords;
+  const minQuestions = 10;
                       
                       // Adjust numQuestions if it exceeds new max
                       if (numQuestions > maxQuestions) {
@@ -761,18 +1101,18 @@ const mobileHoverFix = (
                         </>
                       );
                     })()}
-{(() => {
-  const availableWords = selectedCategory === 'all' 
-    ? getTotalWordCount() 
-    : (dutchWordBank[selectedCategory]?.length || 0);
-  const requiredQuestions = Math.ceil(availableWords * 0.8); // 80% of available words
-  
-  return pendingGameMode !== 'learn' && numQuestions >= requiredQuestions && (
-    <div className="mt-4 p-3 bg-green-100 rounded-lg text-center">
-      <p className="text-green-700 font-semibold">✓ Score 80%+ on {requiredQuestions}+ questions to unlock this category!</p>
-    </div>
-  );
-})()}
+                    {(() => {
+                      const availableWords = selectedCategory === 'all' 
+                        ? getTotalWordCount() 
+                        : (dutchWordBank[selectedCategory]?.length || 0);
+                      const requiredQuestions = Math.ceil(availableWords * 0.8); // 80% of available words
+                      
+                      return pendingGameMode !== 'learn' && numQuestions >= requiredQuestions && (
+                        <div className="mt-4 p-3 bg-green-100 rounded-lg text-center">
+                          <p className="text-green-700 font-semibold">✓ Score 80%+ on {requiredQuestions}+ questions to unlock this category!</p>
+                        </div>
+                      );
+                    })()}
                 </div>
               </div>
 
@@ -996,7 +1336,7 @@ const mobileHoverFix = (
           </div>
   
           <div className="bg-white rounded-2xl shadow-xl p-8">
-            {currentWord && gameMode !== 'spelling' && (
+            {currentWord && gameMode === 'play' && (
               <>
                 <div className="text-center mb-8">
                   <div className="mb-3">
@@ -1155,6 +1495,126 @@ const mobileHoverFix = (
                 )}
               </>
             )}
+           {currentWord && gameMode === 'fillblank' && (
+  <>
+    <div className="text-center mb-8">
+      <div className="mb-3">
+        <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+          currentWord.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+        }`}>
+          {currentWord.level} Level - Fill in the Blank
+        </span>
+      </div>
+      <p className="text-gray-600 mb-4">Complete the sentence with the correct Dutch word:</p>
+      
+      <div className="bg-teal-50 p-6 rounded-xl mb-6">
+        <p className="text-2xl font-semibold text-gray-800 leading-relaxed">
+          {fillBlankSentence}
+        </p>
+      </div>
+      
+      <div className="flex gap-3 justify-center mb-6">
+        <button
+          onClick={() => {
+            const hintBox = document.getElementById('hint-box');
+            if (hintBox) {
+              hintBox.classList.toggle('hidden');
+            }
+          }}
+          className="bg-blue-100 hover:bg-blue-200 px-6 py-3 rounded-xl transition-all inline-flex items-center gap-2"
+          title="Show English hint"
+        >
+          💡 <span className="text-blue-600 font-semibold">Show Hint</span>
+        </button>
+        
+        <button
+          onClick={() => speakDutch(currentWord.dutch)}
+          className="bg-teal-100 hover:bg-teal-200 px-6 py-3 rounded-xl transition-all inline-flex items-center gap-2"
+          title="Hear the pronunciation"
+        >
+          <Volume2 className="w-5 h-5 text-teal-600" />
+          <span className="text-teal-600 font-semibold">Hear pronunciation</span>
+        </button>
+      </div>
+      
+      <div id="hint-box" className="hidden bg-blue-50 p-4 rounded-lg mb-4 animate-fadeIn">
+        <p className="text-gray-600 text-sm mb-2">English word:</p>
+        <p className="text-blue-600 font-bold text-xl mb-3">{currentWord.english}</p>
+        <p className="text-gray-600 text-sm mb-1">English sentence:</p>
+        <p className="text-blue-700 font-medium text-lg">
+          {currentWord.example.match(/\(([^)]+)\)/)?.[1] || currentWord.example}
+        </p>
+      </div>
+    </div>
+
+    <form onSubmit={handleFillBlankSubmit} className="space-y-4">
+      <input
+        type="text"
+        value={fillBlankAnswer}
+        onChange={(e) => setFillBlankAnswer(e.target.value)}
+        disabled={feedback !== null}
+        placeholder="Type the Dutch word here..."
+        className="w-full p-4 text-2xl text-center font-semibold border-4 border-teal-300 rounded-xl focus:border-teal-500 focus:outline-none disabled:bg-gray-100"
+        autoFocus
+      />
+      
+      {feedback === null && (
+        <button
+          type="submit"
+          disabled={!fillBlankAnswer.trim()}
+          className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-xl font-bold py-4 rounded-xl hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Submit Answer
+        </button>
+      )}
+    </form>
+
+    {feedback && (
+      <div className={`mt-6 p-4 rounded-xl ${
+        feedback.correct ? 'bg-green-100' : 'bg-red-100'
+      }`}>
+        <div className="flex items-center gap-3 mb-3">
+          {feedback.correct ? (
+            <Check className="w-6 h-6 text-green-600" />
+          ) : (
+            <X className="w-6 h-6 text-red-600" />
+          )}
+          <p className={`font-semibold ${
+            feedback.correct ? 'text-green-700' : 'text-red-700'
+          }`}>
+            {feedback.message}
+          </p>
+        </div>
+        
+        {!feedback.correct && (
+          <div className="mb-3 p-3 bg-white rounded-lg">
+            <p className="text-gray-600 text-sm mb-1">You wrote:</p>
+            <p className="text-red-600 font-bold text-xl line-through">{fillBlankAnswer}</p>
+            <p className="text-gray-600 text-sm mt-2 mb-1">Correct answer:</p>
+            <p className="text-green-600 font-bold text-xl">{currentWord.dutch}</p>
+            <p className="text-gray-600 text-sm mt-3 mb-1">Complete sentence:</p>
+            <p className="text-gray-800 font-medium text-lg">{currentWord.example}</p>
+          </div>
+        )}
+        
+        <button
+          onClick={() => {
+            // Hide hint box when moving to next question
+            const hintBox = document.getElementById('hint-box');
+            if (hintBox) {
+              hintBox.classList.add('hidden');
+            }
+            handleNext();
+          }}
+          className="w-full mt-3 bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+        >
+          Next Question
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    )}
+  </>
+)}
           </div>
         </div>
       </div>
