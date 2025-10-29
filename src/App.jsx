@@ -669,23 +669,39 @@ const mobileHoverFix = (
             </button>
           </div>
           <div className="space-y-4">
-            {stories.map(story => (
-              <button
-                key={story.id}
-                onClick={() => setSelectedStory(story)}
-                className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-lg font-bold py-4 rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-2"
-              >
-                {story.title}
-              </button>
-            ))}
+{stories.map(story => (
+  <button
+    key={story.id}
+    onClick={() => {
+      setSelectedStory(story);
+      // Reset quiz state when selecting a story
+      setShowStoryQuiz(false);
+      setCurrentStoryQuestion(0);
+      setStoryScore(0);
+      setStoryQuizFeedback(null);
+    }}
+    className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-lg font-bold py-4 rounded-xl hover:shadow-xl transition-all flex items-center justify-center gap-2"
+  >
+    {story.title}
+  </button>
+))}
           </div>
-          <button
-            onClick={() => { setGameMode('menu'); setShowStories(false); }}
-            className="mt-8 w-full bg-gray-200 text-gray-700 text-lg font-bold py-3 rounded-xl hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            Back to Menu
-          </button>
+<button
+  onClick={() => { 
+    setGameMode('menu'); 
+    setShowStories(false);
+    setSelectedStory(null);
+    // Reset game state
+    setScore(0);
+    setStreak(0);
+    setQuestionsAnswered(0);
+    setFeedback(null);
+  }}
+  className="mt-8 w-full bg-gray-200 text-gray-700 text-lg font-bold py-3 rounded-xl hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
+>
+  <ChevronLeft className="w-5 h-5" />
+  Back to Menu
+</button>
         </div>
       </div>
     );
@@ -723,13 +739,19 @@ if (gameMode === 'stories' && selectedStory) {
               <RefreshCw className="w-5 h-5" />
               Probeer Opnieuw (Try Again)
             </button>
-            <button
-              onClick={() => setSelectedStory(null)}
-              className="w-full bg-gray-200 text-gray-700 text-lg font-bold py-3 rounded-xl hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
-            >
-              <ChevronLeft className="w-5 h-5" />
-              Terug naar Verhalen (Back to Stories)
-            </button>
+<button
+  onClick={() => {
+    setSelectedStory(null);
+    setShowStoryQuiz(false);
+    setCurrentStoryQuestion(0);
+    setStoryScore(0);
+    setStoryQuizFeedback(null);
+  }}
+  className="w-full bg-gray-200 text-gray-700 text-lg font-bold py-3 rounded-xl hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
+>
+  <ChevronLeft className="w-5 h-5" />
+  Terug naar Verhalen (Back to Stories)
+</button>
           </div>
         </div>
       </div>
@@ -744,6 +766,16 @@ if (showStoryQuiz) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-2xl w-full">
+                {/* Story Text Section */}
+        <div className="mb-6 p-6 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-2xl">📖</span>
+            <h3 className="text-xl font-bold text-yellow-700">{selectedStory.title}</h3>
+          </div>
+          <div className="prose prose-sm max-w-none text-gray-700 max-h-60 overflow-y-auto p-4 bg-white rounded-lg" style={{ whiteSpace: 'pre-line' }}>
+            {selectedStory.text}
+          </div>
+        </div>
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
             <div className="flex gap-2">
@@ -886,13 +918,37 @@ if (showStoryQuiz) {
               Start Quiz
             </button>
           )}
-          <button
-            onClick={() => setSelectedStory(null)}
-            className="w-full bg-yellow-400 text-white text-lg font-bold py-3 rounded-xl hover:bg-yellow-500 transition-all flex items-center justify-center gap-2"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            Terug (Back)
-          </button>
+<button
+  onClick={() => {
+    setSelectedStory(null);
+    setGameMode('stories');
+    // Reset all quiz state
+    setShowStoryQuiz(false);
+    setCurrentStoryQuestion(0);
+    setStoryScore(0);
+    setStoryQuizFeedback(null);
+  }}
+  className="w-full bg-yellow-400 text-white text-lg font-bold py-3 rounded-xl hover:bg-yellow-500 transition-all flex items-center justify-center gap-2"
+>
+  <ChevronLeft className="w-5 h-5" />
+  Back to Stories
+</button>
+<button
+  onClick={() => { 
+    setGameMode('menu'); 
+    setShowStories(false); 
+    setSelectedStory(null);
+    // Reset any game state
+    setScore(0);
+    setStreak(0);
+    setQuestionsAnswered(0);
+    setFeedback(null);
+  }}
+  className="w-full bg-gray-200 text-gray-700 text-lg font-bold py-3 rounded-xl hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
+>
+  <Home className="w-5 h-5" />
+  Back to Menu
+</button>
         </div>
       </div>
     </div>
