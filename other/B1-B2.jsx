@@ -1,5 +1,5 @@
-export const dutchWordBank = {
-  'b1_b2_verbs_part1': [
+export const dutchWordBank3 = {
+  'b1_b2_words': [
     { dutch: 'aanraden', english: 'to recommend', level: 'B1', example: 'Ik kan dit restaurant aanraden. (I can recommend this restaurant.)' },
     { dutch: 'aanbieden', english: 'to offer', level: 'B1', example: 'Hij biedt zijn hulp aan. (He offers his help.)' },
     { dutch: 'aannemen', english: 'to assume, to accept', level: 'B1', example: 'Ik neem aan dat je gelijk hebt. (I assume you are right.)' },
@@ -25,9 +25,6 @@ export const dutchWordBank = {
     { dutch: 'bereiken', english: 'to reach, to achieve', level: 'B1', example: 'We hebben ons doel bereikt. (We have reached our goal.)' },
     { dutch: 'beschermen', english: 'to protect', level: 'B1', example: 'We moeten het milieu beschermen. (We must protect the environment.)' },
     { dutch: 'beschikken', english: 'to have available', level: 'B2', example: 'We beschikken over alle middelen. (We have all the resources available.)' },
-  ],
-  
-  'b1_b2_verbs_part2': [
     { dutch: 'beschouwen', english: 'to consider', level: 'B2', example: 'Ik beschouw hem als een vriend. (I consider him a friend.)' },
     { dutch: 'beschrijven', english: 'to describe', level: 'B1', example: 'Kun je het probleem beschrijven? (Can you describe the problem?)' },
     { dutch: 'beschuldigen', english: 'to accuse', level: 'B2', example: 'Hij beschuldigt mij van diefstal. (He accuses me of theft.)' },
@@ -53,9 +50,7 @@ export const dutchWordBank = {
     { dutch: 'bijdragen', english: 'to contribute', level: 'B2', example: 'Iedereen draagt bij aan het project. (Everyone contributes to the project.)' },
     { dutch: 'bijhouden', english: 'to keep up with', level: 'B1', example: 'Ik kan de ontwikkelingen niet bijhouden. (I can\'t keep up with the developments.)' },
     { dutch: 'bijwonen', english: 'to attend', level: 'B2', example: 'Ik woon de vergadering bij. (I attend the meeting.)' },
-  ],
-  
-  'b1_b2_verbs_part3': [
+ 
     { dutch: 'blokkeren', english: 'to block', level: 'B1', example: 'De weg is geblokkeerd. (The road is blocked.)' },
     { dutch: 'boeien', english: 'to fascinate', level: 'B1', example: 'Dit onderwerp boeit me enorm. (This subject fascinates me enormously.)' },
     { dutch: 'boeken', english: 'to book', level: 'B1', example: 'Ik heb een hotelkamer geboekt. (I booked a hotel room.)' },
@@ -81,9 +76,7 @@ export const dutchWordBank = {
     { dutch: 'ervaren', english: 'to experience', level: 'B2', example: 'Ik heb veel problemen ervaren. (I have experienced many problems.)' },
     { dutch: 'falen', english: 'to fail', level: 'B2', example: 'Hij faalde in zijn poging. (He failed in his attempt.)' },
     { dutch: 'formuleren', english: 'to formulate', level: 'B2', example: 'Kun je je vraag anders formuleren? (Can you formulate your question differently?)' },
-  ],
-  
-  'b1_b2_verbs_part4': [
+
     { dutch: 'functioneren', english: 'to function', level: 'B2', example: 'De machine functioneert niet goed. (The machine is not functioning well.)' },
     { dutch: 'gelden', english: 'to be valid, to apply', level: 'B2', example: 'Deze regel geldt voor iedereen. (This rule applies to everyone.)' },
     { dutch: 'geleiden', english: 'to lead', level: 'B2', example: 'De gids leidde ons door het museum. (The guide led us through the museum.)' },
@@ -109,9 +102,7 @@ export const dutchWordBank = {
     { dutch: 'herzien', english: 'to revise', level: 'B2', example: 'We moeten het plan herzien. (We need to revise the plan.)' },
     { dutch: 'heten', english: 'to be called', level: 'A2', example: 'Hoe heet je? (What are you called?)' },
     { dutch: 'hinderen', english: 'to hinder', level: 'B2', example: 'De bouwwerkzaamheden hinderen het verkeer. (The construction works hinder traffic.)' },
-  ],
 
-  'b1_b2_nouns_part1': [
     { dutch: 'aanbeveling', english: 'recommendation', level: 'B2', example: 'Op aanbeveling van mijn arts. (On my doctor\'s recommendation.)' },
     { dutch: 'aanbod', english: 'offer, supply', level: 'B1', example: 'Het aanbod is groot. (The supply is large.)' },
     { dutch: 'aandacht', english: 'attention', level: 'B1', example: 'Let goed op! (Pay attention!)' },
@@ -137,9 +128,7 @@ export const dutchWordBank = {
     { dutch: 'aarzeling', english: 'hesitation', level: 'B2', example: 'Zonder aarzeling zei hij ja. (Without hesitation he said yes.)' },
     { dutch: 'academie', english: 'academy', level: 'B2', example: 'Hij studeert aan de academie. (He studies at the academy.)' },
     { dutch: 'accent', english: 'accent', level: 'B1', example: 'Hij heeft een Frans accent. (He has a French accent.)' },
-  ],
 
-  'b1_b2_nouns_part2': [
     { dutch: 'achtergrond', english: 'background', level: 'B1', example: 'Wat is je achtergrond? (What is your background?)' },
     { dutch: 'achternaam', english: 'surname', level: 'A2', example: 'Wat is uw achternaam? (What is your surname?)' },
     { dutch: 'achterstand', english: 'backlog, disadvantage', level: 'B2', example: 'We hebben een achterstand in het werk. (We have a backlog in the work.)' },
@@ -165,40 +154,7 @@ export const dutchWordBank = {
     { dutch: 'afval', english: 'waste, garbage', level: 'B1', example: 'Gooi het afval weg. (Throw away the garbage.)' },
     { dutch: 'afwezigheid', english: 'absence', level: 'B2', example: 'Uw afwezigheid is opgemerkt. (Your absence has been noted.)' },
     { dutch: 'afwijking', english: 'deviation', level: 'B2', example: 'Er is een afwijking van de norm. (There is a deviation from the norm.)' },
-  ],
 
-  'b1_b2_adjectives_part1': [
-    { dutch: 'aangenaam', english: 'pleasant', level: 'B1', example: 'Een aangename verrassing. (A pleasant surprise.)' },
-    { dutch: 'aanstaande', english: 'next, upcoming', level: 'B1', example: 'Aanstaande week. (Next week.)' },
-    { dutch: 'aantrekkelijk', english: 'attractive', level: 'B1', example: 'Een aantrekkelijk aanbod. (An attractive offer.)' },
-    { dutch: 'aanwezig', english: 'present', level: 'B1', example: 'Alle studenten zijn aanwezig. (All students are present.)' },
-    { dutch: 'aardig', english: 'nice, kind', level: 'A2', example: 'Ze is erg aardig. (She is very nice.)' },
-    { dutch: 'absoluut', english: 'absolute', level: 'B2', example: 'Dat is absoluut noodzakelijk. (That is absolutely necessary.)' },
-    { dutch: 'abstract', english: 'abstract', level: 'B2', example: 'Een abstract begrip. (An abstract concept.)' },
-    { dutch: 'academisch', english: 'academic', level: 'B2', example: 'Een academische opleiding. (An academic education.)' },
-    { dutch: 'acceptabel', english: 'acceptable', level: 'B2', example: 'Dit gedrag is niet acceptabel. (This behavior is not acceptable.)' },
-    { dutch: 'actief', english: 'active', level: 'B1', example: 'Hij is erg actief. (He is very active.)' },
-    { dutch: 'actueel', english: 'current, topical', level: 'B2', example: 'Een actueel probleem. (A current problem.)' },
-    { dutch: 'adequaat', english: 'adequate', level: 'B2', example: 'Een adequate oplossing. (An adequate solution.)' },
-    { dutch: 'administratief', english: 'administrative', level: 'B2', example: 'Administratieve taken. (Administrative tasks.)' },
-    { dutch: 'afgelegen', english: 'remote', level: 'B2', example: 'Een afgelegen dorp. (A remote village.)' },
-    { dutch: 'afgunstig', english: 'envious', level: 'B2', example: 'Hij is afgunstig op mijn succes. (He is envious of my success.)' },
-    { dutch: 'afhankelijk', english: 'dependent', level: 'B1', example: 'Ik ben afhankelijk van openbaar vervoer. (I am dependent on public transport.)' },
-    { dutch: 'afschuwelijk', english: 'horrible', level: 'B1', example: 'Het weer is afschuwelijk. (The weather is horrible.)' },
-    { dutch: 'afwezig', english: 'absent', level: 'B1', example: 'Hij was afwezig op school. (He was absent from school.)' },
-    { dutch: 'agressief', english: 'aggressive', level: 'B1', example: 'Agressief gedrag. (Aggressive behavior.)' },
-    { dutch: 'akelig', english: 'nasty, creepy', level: 'B1', example: 'Een akelig gevoel. (A nasty feeling.)' },
-    { dutch: 'alert', english: 'alert', level: 'B2', example: 'Blijf alert! (Stay alert!)' },
-    { dutch: 'algemeen', english: 'general, common', level: 'B1', example: 'In het algemeen. (In general.)' },
-    { dutch: 'alledaags', english: 'everyday, ordinary', level: 'B2', example: 'Alledaagse problemen. (Everyday problems.)' },
-    { dutch: 'alternatief', english: 'alternative', level: 'B2', example: 'Een alternatieve oplossing. (An alternative solution.)' },
-    { dutch: 'ambitieus', english: 'ambitious', level: 'B2', example: 'Een ambitieus project. (An ambitious project.)' },
-    { dutch: 'amper', english: 'barely', level: 'B2', example: 'Ik heb amper tijd. (I barely have time.)' },
-    { dutch: 'analytisch', english: 'analytical', level: 'B2', example: 'Een analytische benadering. (An analytical approach.)' },
-    { dutch: 'anders', english: 'different, otherwise', level: 'A2', example: 'Dit is anders. (This is different.)' },
-  ],
-
-  'b1_b2_adjectives_part2': [
     { dutch: 'angstig', english: 'anxious, fearful', level: 'B1', example: 'Hij is angstig voor de tandarts. (He is anxious about the dentist.)' },
     { dutch: 'anoniem', english: 'anonymous', level: 'B2', example: 'Een anonieme brief. (An anonymous letter.)' },
     { dutch: 'antiek', english: 'antique', level: 'B1', example: 'Antieke meubels. (Antique furniture.)' },
@@ -224,9 +180,7 @@ export const dutchWordBank = {
     { dutch: 'beperkt', english: 'limited', level: 'B2', example: 'Beperkte middelen. (Limited resources.)' },
     { dutch: 'bereikbaar', english: 'reachable', level: 'B1', example: 'Ik ben bereikbaar per telefoon. (I am reachable by phone.)' },
     { dutch: 'beroemd', english: 'famous', level: 'B1', example: 'Een beroemde acteur. (A famous actor.)' },
-  ],
 
-  'b1_b2_adjectives_part3': [
     { dutch: 'beschaafd', english: 'civilized', level: 'B2', example: 'Een beschaafde samenleving. (A civilized society.)' },
     { dutch: 'bescheiden', english: 'modest', level: 'B1', example: 'Hij is erg bescheiden. (He is very modest.)' },
     { dutch: 'beschikbaar', english: 'available', level: 'B1', example: 'Is er nog plek beschikbaar? (Is there still space available?)' },
@@ -252,9 +206,7 @@ export const dutchWordBank = {
     { dutch: 'bovendien', english: 'moreover, besides', level: 'B2', example: 'Bovendien is het te duur. (Moreover, it is too expensive.)' },
     { dutch: 'breed', english: 'wide, broad', level: 'B1', example: 'Een brede straat. (A wide street.)' },
     { dutch: 'breekbaar', english: 'fragile', level: 'B1', example: 'Breekbare spullen. (Fragile items.)' },
-  ],
 
-  'b1_b2_adjectives_part4': [
     { dutch: 'buitenlands', english: 'foreign', level: 'B1', example: 'Buitenlandse talen. (Foreign languages.)' },
     { dutch: 'buitengewoon', english: 'extraordinary', level: 'B2', example: 'Een buitengewoon talent. (An extraordinary talent.)' },
     { dutch: 'burgerlijk', english: 'civil, bourgeois', level: 'B2', example: 'De burgerlijke stand. (The civil registry.)' },
@@ -280,9 +232,7 @@ export const dutchWordBank = {
     { dutch: 'corrupt', english: 'corrupt', level: 'B2', example: 'Een corrupt systeem. (A corrupt system.)' },
     { dutch: 'creatief', english: 'creative', level: 'B1', example: 'Een creatieve oplossing. (A creative solution.)' },
     { dutch: 'crimineel', english: 'criminal', level: 'B2', example: 'Criminele activiteiten. (Criminal activities.)' },
-  ],
 
-  'b1_b2_mixed_part1': [
     { dutch: 'cruciaal', english: 'crucial', level: 'B2', example: 'Dit is cruciaal voor ons succes. (This is crucial for our success.)' },
     { dutch: 'cultureel', english: 'cultural', level: 'B1', example: 'Culturele verschillen. (Cultural differences.)' },
     { dutch: 'dagelijks', english: 'daily', level: 'B1', example: 'Mijn dagelijkse routine. (My daily routine.)' },
@@ -308,9 +258,7 @@ export const dutchWordBank = {
     { dutch: 'doorlopend', english: 'continuous', level: 'B2', example: 'Doorlopende verbeteringen. (Continuous improvements.)' },
     { dutch: 'doorzichtig', english: 'transparent', level: 'B2', example: 'Doorzichtig plastic. (Transparent plastic.)' },
     { dutch: 'drastisch', english: 'drastic', level: 'B2', example: 'Drastische maatregelen. (Drastic measures.)' },
-  ],
 
-  'b1_b2_mixed_part2': [
     { dutch: 'dreigend', english: 'threatening', level: 'B2', example: 'Een dreigende situatie. (A threatening situation.)' },
     { dutch: 'dringend', english: 'urgent', level: 'B2', example: 'Een dringende kwestie. (An urgent matter.)' },
     { dutch: 'droevig', english: 'sad', level: 'B1', example: 'Een droevig verhaal. (A sad story.)' },
@@ -336,9 +284,7 @@ export const dutchWordBank = {
     { dutch: 'eerst', english: 'first', level: 'A2', example: 'Eerst eten, dan werken. (First eat, then work.)' },
     { dutch: 'effectief', english: 'effective', level: 'B2', example: 'Een effectieve strategie. (An effective strategy.)' },
     { dutch: 'efficiënt', english: 'efficient', level: 'B2', example: 'Een efficiënte werkwijze. (An efficient method.)' },
-  ],
 
-  'b1_b2_mixed_part3': [
     { dutch: 'eigen', english: 'own', level: 'B1', example: 'Mijn eigen huis. (My own house.)' },
     { dutch: 'eigenaardig', english: 'strange, peculiar', level: 'B2', example: 'Een eigenaardig geluid. (A strange sound.)' },
     { dutch: 'eigenlijk', english: 'actually, really', level: 'B1', example: 'Eigenlijk wil ik niet gaan. (Actually, I don\'t want to go.)' },
@@ -364,9 +310,6 @@ export const dutchWordBank = {
     { dutch: 'evident', english: 'obvious', level: 'B2', example: 'Dat is evident. (That is obvious.)' },
     { dutch: 'exact', english: 'exact', level: 'B2', example: 'Het exacte bedrag. (The exact amount.)' },
     { dutch: 'exclusief', english: 'exclusive', level: 'B2', example: 'Een exclusief aanbod. (An exclusive offer.)' },
-  ],
-
-  'b1_b2_mixed_part4': [
     { dutch: 'experimenteel', english: 'experimental', level: 'B2', example: 'Experimenteel onderzoek. (Experimental research.)' },
     { dutch: 'expliciet', english: 'explicit', level: 'B2', example: 'Een expliciete waarschuwing. (An explicit warning.)' },
     { dutch: 'explosief', english: 'explosive', level: 'B2', example: 'Explosief materiaal. (Explosive material.)' },
@@ -394,9 +337,6 @@ export const dutchWordBank = {
     { dutch: 'fundamenteel', english: 'fundamental', level: 'B2', example: 'Fundamentele rechten. (Fundamental rights.)' },
     { dutch: 'functioneel', english: 'functional', level: 'B2', example: 'Een functioneel ontwerp. (A functional design.)' },
     { dutch: 'furieus', english: 'furious', level: 'B2', example: 'Hij is furieus. (He is furious.)' },
-  ],
-
-  'b1_b2_nouns_part3': [
     { dutch: 'gebaar', english: 'gesture', level: 'B1', example: 'Een vriendelijk gebaar. (A friendly gesture.)' },
     { dutch: 'gebied', english: 'area, field', level: 'B1', example: 'Op het gebied van technologie. (In the field of technology.)' },
     { dutch: 'geboorte', english: 'birth', level: 'B1', example: 'De geboorte van een kind. (The birth of a child.)' },
@@ -422,9 +362,7 @@ export const dutchWordBank = {
     { dutch: 'gemeenschap', english: 'community', level: 'B2', example: 'De lokale gemeenschap. (The local community.)' },
     { dutch: 'gemeente', english: 'municipality', level: 'B1', example: 'De gemeente Amsterdam. (The municipality of Amsterdam.)' },
     { dutch: 'gemiddeld', english: 'average', level: 'B1', example: 'Het gemiddelde cijfer. (The average grade.)' },
-  ],
 
-  'b1_b2_nouns_part4': [
     { dutch: 'geneeskunde', english: 'medicine', level: 'B2', example: 'Hij studeert geneeskunde. (He studies medicine.)' },
     { dutch: 'genegenheid', english: 'affection', level: 'B2', example: 'Genegenheid tonen. (To show affection.)' },
     { dutch: 'genezing', english: 'cure, healing', level: 'B2', example: 'De genezing duurt lang. (The healing takes long.)' },
@@ -450,9 +388,6 @@ export const dutchWordBank = {
     { dutch: 'gevoel', english: 'feeling', level: 'B1', example: 'Een vreemd gevoel. (A strange feeling.)' },
     { dutch: 'gewas', english: 'crop, plant', level: 'B2', example: 'Het gewas groeit goed. (The crop is growing well.)' },
     { dutch: 'geweer', english: 'rifle, gun', level: 'B2', example: 'Een geweer laden. (To load a rifle.)' },
-  ],
-
-  'b1_b2_nouns_part5': [
     { dutch: 'geweld', english: 'violence, force', level: 'B2', example: 'Geweld is geen oplossing. (Violence is not a solution.)' },
     { dutch: 'geweten', english: 'conscience', level: 'B2', example: 'Een zuiver geweten. (A clear conscience.)' },
     { dutch: 'gewicht', english: 'weight', level: 'B1', example: 'Wat is je gewicht? (What is your weight?)' },
@@ -478,9 +413,7 @@ export const dutchWordBank = {
     { dutch: 'gracht', english: 'canal', level: 'B1', example: 'De grachten van Amsterdam. (The canals of Amsterdam.)' },
     { dutch: 'grafiek', english: 'graph', level: 'B2', example: 'De grafiek laat zien... (The graph shows...)' },
     { dutch: 'grap', english: 'joke', level: 'B1', example: 'Een grappige grap. (A funny joke.)' },
-  ],
-
-  'b1_b2_nouns_part6': [
+ 
     { dutch: 'gras', english: 'grass', level: 'B1', example: 'Het gras maaien. (To mow the grass.)' },
     { dutch: 'grens', english: 'border, boundary', level: 'B1', example: 'De grens oversteken. (To cross the border.)' },
     { dutch: 'grief', english: 'grievance', level: 'B2', example: 'Een grief hebben. (To have a grievance.)' },
@@ -506,9 +439,7 @@ export const dutchWordBank = {
     { dutch: 'houding', english: 'attitude, posture', level: 'B2', example: 'Een positieve houding. (A positive attitude.)' },
     { dutch: 'hout', english: 'wood', level: 'B1', example: 'Van hout gemaakt. (Made of wood.)' },
     { dutch: 'huid', english: 'skin', level: 'B1', example: 'Een gevoelige huid. (Sensitive skin.)' },
-  ],
 
-  'b1_b2_nouns_part7': [
     { dutch: 'hulp', english: 'help', level: 'B1', example: 'Ik heb hulp nodig. (I need help.)' },
     { dutch: 'humor', english: 'humor', level: 'B1', example: 'Gevoel voor humor. (Sense of humor.)' },
     { dutch: 'huur', english: 'rent', level: 'B1', example: 'De huur betalen. (To pay the rent.)' },

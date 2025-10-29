@@ -17,6 +17,9 @@ const getAllWords = () => {
 const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const [storyQuestions, setStoryQuestions] = useState([]);
   const [currentStoryQuestion, setCurrentStoryQuestion] = useState(0);
   const [storyScore, setStoryScore] = useState(0);
@@ -107,6 +110,17 @@ useEffect(() => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [gameMode]);
 
+// Close search results when clicking outside
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (showSearchResults && !event.target.closest('.search-container')) {
+      setShowSearchResults(false);
+    }
+  };
+  
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => document.removeEventListener('mousedown', handleClickOutside);
+}, [showSearchResults]);
 
 // Load user progress when user changes
 useEffect(() => {
@@ -595,6 +609,32 @@ const goToMenu = () => {
   setGameStartCategory(null);
 };
 
+const handleSearch = (query) => {
+  setSearchQuery(query);
+  
+  if (query.trim().length < 2) {
+    setSearchResults([]);
+    setShowSearchResults(false);
+    return;
+  }
+  
+  const allWords = getAllWords();
+  const results = allWords.filter(word => 
+    word.dutch.toLowerCase().includes(query.toLowerCase()) ||
+    word.english.toLowerCase().includes(query.toLowerCase()) ||
+    word.example?.toLowerCase().includes(query.toLowerCase())
+  );
+  
+  setSearchResults(results.slice(0, 20)); // Limit to 20 results
+  setShowSearchResults(results.length > 0);
+};
+
+const clearSearch = () => {
+  setSearchQuery('');
+  setSearchResults([]);
+  setShowSearchResults(false);
+};
+
   // Add global CSS for mobile hover fix
 const mobileHoverFix = (
   <style>{`
@@ -977,6 +1017,94 @@ if (showStoryQuiz) {
                 </div>
                 <h1 className="text-5xl font-bold text-orange-600 mb-2">🇳🇱 Leer Nederlands</h1>
                 <p className="text-gray-600 text-lg">1000+ Most Common Dutch Words - A1 🟢 & A2 🔵</p>
+                {/* Search Bar */}
+<div className="mt-6 relative search-container">
+  <div className="relative">
+    <input
+      type="text"
+      value={searchQuery}
+      onChange={(e) => handleSearch(e.target.value)}
+      placeholder="🔍 Search for a Dutch or English word..."
+      className="w-full px-4 py-3 pl-12 text-lg border-2 border-orange-300 rounded-xl focus:border-orange-500 focus:outline-none"
+    />
+    {searchQuery && (
+      <button
+        onClick={clearSearch}
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+      >
+        <X className="w-5 h-5" />
+      </button>
+    )}
+  </div>
+  
+  {/* Search Results Dropdown */}
+  {showSearchResults && (
+    <div className="absolute z-10 w-full mt-2 bg-white border-2 border-orange-300 rounded-xl shadow-xl max-h-96 overflow-y-auto">
+      <div className="p-3 bg-orange-50 border-b border-orange-200">
+        <p className="text-sm font-semibold text-orange-700">
+          Found {searchResults.length} word{searchResults.length !== 1 ? 's' : ''}
+        </p>
+      </div>
+{searchResults.map((word, idx) => (
+  <div
+    key={idx}
+    className="p-4 hover:bg-orange-50 border-b border-gray-100 last:border-b-0 transition-all"
+  >
+    <div className="flex items-start justify-between">
+      <div className="flex-1">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-2xl font-bold text-orange-600">{word.dutch}</span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              speakDutch(word.dutch);
+            }}
+            className="p-1 hover:bg-orange-100 rounded-full transition-all"
+          >
+            <Volume2 className="w-4 h-4 text-orange-600" />
+          </button>
+          <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+            word.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+          }`}>
+            {word.level}
+          </span>
+        </div>
+        <p className="text-lg text-gray-700 mb-1">{word.english}</p>
+        {word.example && (
+          <p className="text-sm text-gray-500 italic">{word.example}</p>
+        )}
+        <p className="text-xs text-gray-400 mt-1">
+          Category: {word.category.replace(/_/g, ' ').toUpperCase()}
+        </p>
+        
+        {/* Practice buttons */}
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={() => {
+              // Set this word as a single-word practice
+              setLearnWords([word]);
+              setLearnIndex(0);
+              setGameMode('learn');
+              clearSearch();
+            }}
+            className="px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 transition-all"
+          >
+            📚 Study This Word
+          </button>
+          <button
+            onClick={() => speakDutch(word.dutch)}
+            className="px-3 py-1 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 transition-all"
+          >
+            🔊 Pronounce
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+))}
+    </div>
+  )}
+</div>
                 <div className="mt-4 inline-flex items-center gap-2 bg-green-100 px-4 py-2 rounded-full">
                   <GraduationCap className="w-5 h-5 text-green-600" />
                   <span className="text-green-700 font-bold">{getTotalWordCount()} Words Available!</span>

@@ -1062,7 +1062,9 @@ export const dutchWordBankA1 = {
 };
 
 import { dutchWordBankA2 } from './dutchWordBankA2';
+import { dutchWordBankB1 } from './dutchWordBankB1';
 export const dutchWordBank = {
   ...dutchWordBankA1,
-  ...dutchWordBankA2
+  ...dutchWordBankA2,
+  // ...dutchWordBankB1,
 };
