@@ -619,14 +619,58 @@ const handleSearch = (query) => {
   }
   
   const allWords = getAllWords();
+  const queryLower = query.toLowerCase();
+  
+  // Filter matching words
   const results = allWords.filter(word => 
-    word.dutch.toLowerCase().includes(query.toLowerCase()) ||
-    word.english.toLowerCase().includes(query.toLowerCase()) ||
-    word.example?.toLowerCase().includes(query.toLowerCase())
+    word.dutch.toLowerCase().includes(queryLower) ||
+    word.english.toLowerCase().includes(queryLower) ||
+    word.example?.toLowerCase().includes(queryLower)
   );
   
-  setSearchResults(results.slice(0, 20)); // Limit to 20 results
-  setShowSearchResults(results.length > 0);
+  // Sort by relevance
+  const sortedResults = results.sort((a, b) => {
+    const aDutch = a.dutch.toLowerCase();
+    const bDutch = b.dutch.toLowerCase();
+    const aEnglish = a.english.toLowerCase();
+    const bEnglish = b.english.toLowerCase();
+    
+    // Priority 1: Exact match (Dutch or English)
+    if (aDutch === queryLower) return -1;
+    if (bDutch === queryLower) return 1;
+    if (aEnglish === queryLower) return -1;
+    if (bEnglish === queryLower) return 1;
+    
+    // Priority 2: Starts with query (Dutch)
+    const aStartsDutch = aDutch.startsWith(queryLower);
+    const bStartsDutch = bDutch.startsWith(queryLower);
+    if (aStartsDutch && !bStartsDutch) return -1;
+    if (!aStartsDutch && bStartsDutch) return 1;
+    
+    // Priority 3: Starts with query (English)
+    const aStartsEnglish = aEnglish.startsWith(queryLower);
+    const bStartsEnglish = bEnglish.startsWith(queryLower);
+    if (aStartsEnglish && !bStartsEnglish) return -1;
+    if (!aStartsEnglish && bStartsEnglish) return 1;
+    
+    // Priority 4: Contains in Dutch
+    const aContainsDutch = aDutch.includes(queryLower);
+    const bContainsDutch = bDutch.includes(queryLower);
+    if (aContainsDutch && !bContainsDutch) return -1;
+    if (!aContainsDutch && bContainsDutch) return 1;
+    
+    // Priority 5: Contains in English
+    const aContainsEnglish = aEnglish.includes(queryLower);
+    const bContainsEnglish = bEnglish.includes(queryLower);
+    if (aContainsEnglish && !bContainsEnglish) return -1;
+    if (!aContainsEnglish && bContainsEnglish) return 1;
+    
+    // Priority 6: Alphabetical order
+    return aDutch.localeCompare(bDutch);
+  });
+  
+  setSearchResults(sortedResults.slice(0, 20)); // Limit to 20 results
+  setShowSearchResults(sortedResults.length > 0);
 };
 
 const clearSearch = () => {
