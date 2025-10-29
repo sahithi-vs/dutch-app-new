@@ -17,6 +17,7 @@ const getAllWords = () => {
 const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   const [user, setUser] = useState(null);
   const [userProgress, setUserProgress] = useState({});
   const [gameMode, setGameMode] = useState('menu');
@@ -39,6 +40,24 @@ export default function DutchLearningGame() {
   const [selectedStory, setSelectedStory] = useState(null);
   const [currentGameMode, setCurrentGameMode] = useState(null);
   const [gameStartCategory, setGameStartCategory] = useState(null);
+
+
+  // Add global styles
+if (typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    @media (hover: none) {
+      *:hover {
+        background-color: inherit !important;
+        color: inherit !important;
+      }
+    }
+  `;
+  if (!document.getElementById('mobile-hover-fix')) {
+    style.id = 'mobile-hover-fix';
+    document.head.appendChild(style);
+  }
+}
 
 // Load user from localStorage on mount
 // Load user from localStorage on mount
@@ -120,6 +139,8 @@ const handleLoginSuccess = (credentialResponse) => {
   localStorage.setItem('dutch_app_user', JSON.stringify(decoded));
   localStorage.setItem('dutch_app_login_time', Date.now().toString());
 };
+
+
 
 const handleLogout = () => {
   googleLogout();
@@ -254,18 +275,22 @@ const getCategoryProgress = (category) => {
     setShowQuestionSelector(true);
   };
 
-  const startGameWithQuestions = () => {
-    if (numQuestions < 10 || numQuestions > 45) {
-      alert('Please select between 10 and 45 questions.');
-      return;
-    }
-    if (pendingGameMode === 'learn') {
-      startLearnMode();
-    } else {
-      startGame(pendingGameMode);
-    }
-  };
-
+const startGameWithQuestions = () => {
+  const availableWords = selectedCategory === 'all' 
+    ? getTotalWordCount() 
+    : (dutchWordBank[selectedCategory]?.length || 0);
+  const maxQuestions = availableWords;
+  
+  if (numQuestions < 10 || numQuestions > maxQuestions) {
+    alert(`Please select between 10 and ${maxQuestions} questions.`);
+    return;
+  }
+  if (pendingGameMode === 'learn') {
+    startLearnMode();
+  } else {
+    startGame(pendingGameMode);
+  }
+};
   const generateQuestion = (words = wordBank, used = usedWords) => {
     if (words.length < 4) return;
     
@@ -444,9 +469,25 @@ if (isCorrect) {
     setGameStartCategory(null);
   };
 
+  // Add global CSS for mobile hover fix
+const mobileHoverFix = (
+  <style>{`
+    @media (hover: none) and (pointer: coarse) {
+      button:hover {
+        background-color: inherit !important;
+        color: inherit !important;
+        transform: none !important;
+        scale: none !important;
+      }
+    }
+  `}</style>
+);
+
   // Login screen
   if (!user) {
     return (
+      <>
+      {mobileHoverFix}
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center p-4">
         <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
           <h1 className="text-5xl font-bold text-orange-600 mb-4">🇳🇱 Leer Nederlands</h1>
@@ -467,6 +508,7 @@ if (isCorrect) {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
@@ -581,7 +623,6 @@ if (isCorrect) {
                         key={cat}
                         onClick={() => setSelectedCategory(cat)}
                         className={`p-3 rounded-xl font-medium transition-all text-xs relative ${
-                          // REPLACE THE ENTIRE className LOGIC WITH #3 FROM ABOVE
                           selectedCategory === cat
                             ? (isCompleted 
                                 ? 'bg-green-600 text-white shadow-lg scale-105 border-2 border-yellow-400' 
@@ -589,10 +630,10 @@ if (isCorrect) {
                                 ? 'bg-yellow-500 text-white shadow-lg scale-105'
                                 : 'bg-orange-500 text-white shadow-lg scale-105')
                             : isCompleted
-                            ? 'bg-green-500 text-white hover:bg-green-600 border-2 border-green-600'
+                            ? `bg-green-500 text-white ${!isTouchDevice ? 'hover:bg-green-600' : ''} border-2 border-green-600`
                             : hasPartialProgress
-                            ? 'bg-yellow-400 text-gray-800 hover:bg-yellow-500 border-2 border-yellow-500'
-                            : 'bg-white text-gray-700 hover:bg-orange-50 border border-gray-200'
+                            ? `bg-yellow-400 text-gray-800 ${!isTouchDevice ? 'hover:bg-yellow-500' : ''} border-2 border-yellow-500`
+                            : `bg-white text-gray-700 ${!isTouchDevice ? 'hover:bg-orange-50' : ''} border border-gray-200`
                         }`}
                       >
                             {isCompleted && (
@@ -986,7 +1027,7 @@ if (isCorrect) {
                       disabled={feedback !== null}
                       className={`p-4 text-lg font-semibold rounded-xl transition-all transform hover:scale-102 ${
                         feedback === null
-                          ? 'bg-gray-100 hover:bg-orange-100 text-gray-800 hover:text-orange-600'
+                          ? `bg-gray-100 text-gray-800 ${!isTouchDevice ? 'hover:bg-orange-100 hover:text-orange-600' : ''}`
                           : feedback.correct && option.english === currentWord.english
                           ? 'bg-green-500 text-white'
                           : !feedback.correct && option.english === currentWord.english
