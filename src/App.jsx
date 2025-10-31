@@ -50,7 +50,9 @@ export default function DutchLearningGame() {
   const [gameStartCategory, setGameStartCategory] = useState(null);
   const [fillBlankAnswer, setFillBlankAnswer] = useState('');
   const [fillBlankSentence, setFillBlankSentence] = useState('');
-
+  const [isRecording, setIsRecording] = useState(false);
+  const [recognition, setRecognition] = useState(null);
+  const [transcript, setTranscript] = useState('');
   // Add global styles
   if (typeof document !== 'undefined') {
     const style = document.createElement('style');
@@ -126,6 +128,137 @@ export default function DutchLearningGame() {
       setUserProgress({});
     }
   };
+
+const handleSpeakingResult = (spokenText) => {
+  if (!currentWord) return;
+  
+  // Map of digits to Dutch words
+  const digitToDutch = {
+    '0': 'nul',
+    '1': 'een',
+    '2': 'twee',
+    '3': 'drie',
+    '4': 'vier',
+    '5': 'vijf',
+    '6': 'zes',
+    '7': 'zeven',
+    '8': 'acht',
+    '9': 'negen',
+    '10': 'tien',
+    '11': 'elf',
+    '12': 'twaalf',
+    '13': 'dertien',
+    '14': 'veertien',
+    '15': 'vijftien',
+    '16': 'zestien',
+    '17': 'zeventien',
+    '18': 'achttien',
+    '19': 'negentien',
+    '20': 'twintig',
+    '21': 'eenentwintig',
+    '22': 'tweeëntwintig',
+    '23': 'drieëntwintig',
+    '24': 'vierentwintig',
+    '25': 'vijfentwintig',
+    '26': 'zesentwintig',
+    '27': 'zevenentwintig',
+    '28': 'achtentwintig',
+    '29': 'negenentwintig',
+    '30': 'dertig',
+    '40': 'veertig',
+    '50': 'vijftig',
+    '60': 'zestig',
+    '70': 'zeventig',
+    '80': 'tachtig',
+    '90': 'negentig',
+    '100': 'honderd',
+    '1000': 'duizend'
+  };
+  
+  const correctAnswer = currentWord.dutch.toLowerCase().trim();
+  let userAnswer = spokenText.toLowerCase().trim();
+  
+  // Convert digits to Dutch words in the spoken text
+  Object.keys(digitToDutch).forEach(digit => {
+    const regex = new RegExp(`\\b${digit}\\b`, 'g');
+    userAnswer = userAnswer.replace(regex, digitToDutch[digit]);
+  });
+  
+  // Calculate similarity (simple word matching)
+  const correctWords = correctAnswer.split(/\s+/);
+  const spokenWords = userAnswer.split(/\s+/);
+  
+  // Check if all correct words are present
+  const matchedWords = correctWords.filter(word => 
+    spokenWords.some(spoken => 
+      spoken.includes(word) || word.includes(spoken)
+    )
+  );
+  
+  const accuracy = (matchedWords.length / correctWords.length) * 100;
+  const isCorrect = accuracy >= 70; // 70% match threshold
+  
+  playSound(isCorrect);
+  setQuestionsAnswered(questionsAnswered + 1);
+  
+  if (isCorrect) {
+    setScore(score + 1);
+    setStreak(streak + 1);
+    setFeedback({ 
+      correct: true, 
+      message: `Perfect! You said: "${spokenText}"`,
+      accuracy: Math.round(accuracy)
+    });
+  } else {
+    setStreak(0);
+    setFeedback({ 
+      correct: false, 
+      message: `Not quite! Expected: "${currentWord.dutch}"`,
+      userSaid: spokenText,
+      accuracy: Math.round(accuracy)
+    });
+  }
+};
+
+useEffect(() => {
+  if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognitionInstance = new SpeechRecognition();
+    recognitionInstance.lang = 'nl-NL';
+    recognitionInstance.continuous = false;
+    recognitionInstance.interimResults = false;
+    
+    recognitionInstance.onresult = (event) => {
+      const spokenText = event.results[0][0].transcript.toLowerCase();
+      setTranscript(spokenText);
+      // Don't call handleSpeakingResult here - we'll handle it separately
+    };
+    
+    recognitionInstance.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsRecording(false);
+      if (event.error === 'no-speech') {
+        alert('No speech detected. Please try again.');
+      } else if (event.error === 'not-allowed') {
+        alert('Microphone access denied. Please enable microphone permissions.');
+      }
+    };
+    
+    recognitionInstance.onend = () => {
+      setIsRecording(false);
+    };
+    
+    setRecognition(recognitionInstance);
+  }
+}, []);
+
+// Add a new useEffect to handle transcript changes
+useEffect(() => {
+  if (transcript && gameMode === 'speaking' && currentWord && !feedback) {
+    handleSpeakingResult(transcript);
+  }
+}, [transcript]);
+
 
   const saveUserProgress = (progress) => {
     if (!user) return;
@@ -242,7 +375,7 @@ export default function DutchLearningGame() {
       return;
     }
     
-    if ((mode === 'spelling' || mode === 'fillblank') && words.length < 1) {
+    if ((mode === 'spelling' || mode === 'fillblank' || mode === 'speaking' ) && words.length < 1) {
       alert('Not enough words in this category.');
       return;
     }
@@ -279,14 +412,17 @@ export default function DutchLearningGame() {
     setFillBlankAnswer('');
     setShowQuestionSelector(false);
     
-    if (mode === 'spelling') {
+if (mode === 'spelling') {
       generateSpellingQuestion(words, []);
     } else if (mode === 'fillblank') {
       generateFillBlankQuestion(words, []);
+    } else if (mode === 'speaking') {
+      generateSpeakingQuestion(words, []);
     } else {
       generateQuestion(words, []);
     }
   };
+
 
   const openQuestionSelector = (mode) => {
     setPendingGameMode(mode);
@@ -358,7 +494,7 @@ export default function DutchLearningGame() {
     setUsedWords([...used, correct]);
   };
 
-  const generateFillBlankQuestion = (words = wordBank, used = usedWords) => {
+ const generateFillBlankQuestion = (words = wordBank, used = usedWords) => {
     if (words.length === 0) return;
     
     const availableWords = words.filter(w => {
@@ -414,6 +550,26 @@ export default function DutchLearningGame() {
     setUsedWords([...used, correct]);
   };
 
+  const generateSpeakingQuestion = (words = wordBank, used = usedWords) => {
+    if (words.length === 0) return;
+    
+    const availableWords = words.filter(w => 
+      !used.some(u => u.dutch === w.dutch && u.english === w.english)
+    );
+    
+    if (availableWords.length === 0) {
+      setUsedWords([]);
+      generateSpeakingQuestion(words, []);
+      return;
+    }
+    
+    const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
+    
+    setCurrentWord(correct);
+    setFeedback(null);
+    setUsedWords([...used, correct]);
+  };
+
   const handleAnswer = (selected) => {
     const isCorrect = selected.english === currentWord.english;
     playSound(isCorrect);
@@ -441,21 +597,24 @@ export default function DutchLearningGame() {
     setQuestionsAnswered(questionsAnswered + 1);
   };
 
-  const handleNext = () => {
-    setSpellingAnswer('');
-    setFillBlankAnswer('');
-    if (questionsAnswered >= numQuestions) {
-      setGameMode('results');
+const handleNext = () => {
+  setSpellingAnswer('');
+  setFillBlankAnswer('');
+  setTranscript('');
+  if (questionsAnswered >= numQuestions) {
+    setGameMode('results');
+  } else {
+    if (gameMode === 'spelling') {
+      generateSpellingQuestion();
+    } else if (gameMode === 'fillblank') {
+      generateFillBlankQuestion();
+    } else if (gameMode === 'speaking') {
+      generateSpeakingQuestion();
     } else {
-      if (gameMode === 'spelling') {
-        generateSpellingQuestion();
-      } else if (gameMode === 'fillblank') {
-        generateFillBlankQuestion();
-      } else {
-        generateQuestion();
-      }
+      generateQuestion();
     }
-  };
+  }
+};
 
   const handleSpellingSubmit = (e) => {
     if (e) e.preventDefault();
@@ -529,6 +688,30 @@ export default function DutchLearningGame() {
     }
   };
 
+  const startRecording = () => {
+  if (!recognition) {
+    alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
+    return;
+  }
+  
+  setTranscript('');
+  setIsRecording(true);
+  try {
+    recognition.start();
+  } catch (error) {
+    console.error('Error starting recognition:', error);
+    setIsRecording(false);
+  }
+};
+
+const stopRecording = () => {
+  if (recognition && isRecording) {
+    recognition.stop();
+  }
+};
+
+
+
   const playSound = (isCorrect) => {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const oscillator = audioContext.createOscillator();
@@ -584,6 +767,8 @@ export default function DutchLearningGame() {
     setNumQuestions(10);
     setCurrentGameMode(null);
     setGameStartCategory(null);
+    setTranscript('');
+    setIsRecording(false);
   };
 
   const handleSearch = (query) => {
@@ -1203,6 +1388,12 @@ export default function DutchLearningGame() {
                 >
                   <span className="text-base sm:text-xl">✏️ Spelling</span>
                 </button>
+                <button
+                  onClick={() => openQuestionSelector('speaking')}
+                  className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">🎤 Speaking Test</span>
+                </button>
                 
                 <button
                   onClick={() => openQuestionSelector('fillblank')}
@@ -1237,7 +1428,7 @@ export default function DutchLearningGame() {
                 <h2 className="text-2xl sm:text-4xl font-bold text-orange-600 mb-2">
                   {pendingGameMode === 'play' ? '🎯 Multiple Choice' : 
                   pendingGameMode === 'spelling' ? '✏️ Spelling' : 
-                  pendingGameMode === 'fillblank' ? '📝 Fill Blank' :
+                 pendingGameMode === 'speaking' ? '🎤 Speaking Test' :
                   '📚 Learn Mode'}
                 </h2>
                 <p className="text-gray-600 text-sm sm:text-lg">How many words?</p>
@@ -1381,12 +1572,27 @@ export default function DutchLearningGame() {
                 <div className="mb-6">
                   <div className="flex items-center justify-center gap-3 mb-4">
                     <h2 className="text-4xl sm:text-6xl font-bold text-indigo-600">{currentLearnWord.dutch}</h2>
-                    <button
-                      onClick={() => speakDutch(currentLearnWord.dutch)}
-                      className="bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 p-3 sm:p-4 rounded-full transition-all"
-                    >
-                      <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => speakDutch(currentLearnWord.dutch)}
+                        className="bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 p-3 sm:p-4 rounded-full transition-all"
+                        title="Pronounce word"
+                      >
+                        <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Remove English translation in parentheses and speak
+                          const dutchSentence = currentLearnWord.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
+                          speakDutch(dutchSentence);
+                        }}
+                        className="bg-purple-100 hover:bg-purple-200 active:bg-purple-200 px-4 py-2 sm:px-5 sm:py-3 rounded-xl transition-all flex items-center gap-2"
+                        title="Pronounce example sentence"
+                      >
+                        <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
+                        <span className="text-xs sm:text-sm font-semibold text-purple-600">Example</span>
+                      </button>
+                    </div>
                   </div>
                   
                   <div className="text-2xl sm:text-4xl font-semibold text-gray-700 mb-2">
@@ -1435,6 +1641,22 @@ export default function DutchLearningGame() {
             )}
           </div>
         </div>
+          {/* ADD THIS BOTTOM BAR - BEFORE THE CLOSING </div> OF min-h-screen */}
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-3 shadow-lg z-50">
+      <div className="max-w-2xl mx-auto">
+        <button
+          onClick={() => {
+            if (confirm('Return to menu? Progress will be lost.')) {
+              goToMenu();
+            }
+          }}
+          className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 px-4 py-3 rounded-xl transition-all"
+        >
+          <Home className="w-5 h-5 text-gray-700" />
+          <span className="font-semibold">Back to Menu</span>
+        </button>
+      </div>
+    </div>
       </div>
     );
   }
@@ -1487,7 +1709,7 @@ export default function DutchLearningGame() {
 
   // QUIZ SCREENS - MOBILE OPTIMIZED
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 p-3 sm:p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 p-3 sm:p-4 pb-24">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4">
           <div className="flex flex-wrap justify-between items-center mb-3 sm:mb-4 gap-2">
@@ -1679,7 +1901,146 @@ export default function DutchLearningGame() {
               )}
             </>
           )}
+        {/* SPEAKING TEST - MOBILE OPTIMIZED */}
+        {currentWord && gameMode === 'speaking' && (
+          <>
+            <div className="text-center mb-6 sm:mb-8">
+              <div className="mb-3">
+                <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold ${
+                  currentWord.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {currentWord.level} - Speaking Test
+                </span>
+              </div>
+              <p className="text-gray-600 mb-4 text-sm sm:text-base">Pronounce this Dutch word:</p>
+              
+              <div className="bg-rose-50 p-4 sm:p-6 rounded-xl mb-4 sm:mb-6">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <h2 className="text-3xl sm:text-5xl font-bold text-rose-600">{currentWord.dutch}</h2>
+                  <button
+                    onClick={() => speakDutch(currentWord.dutch)}
+                    className="bg-rose-100 hover:bg-rose-200 active:bg-rose-200 p-2 sm:p-3 rounded-full transition-all"
+                    title="Hear pronunciation"
+                  >
+                    <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-rose-600" />
+                  </button>
+                </div>
+                <p className="text-lg sm:text-2xl text-gray-700 font-semibold">{currentWord.english}</p>
+                      {/* ADD THIS EXAMPLE SECTION */}
+        {currentWord.example && (
+          <div className="mt-4 pt-4 border-t-2 border-rose-200">
+            <p className="text-xs sm:text-sm text-gray-500 mb-2">Example sentence:</p>
+            <p className="text-sm sm:text-base text-gray-700 italic mb-2">
+              {currentWord.example}
+            </p>
+            <button
+              onClick={() => {
+                const dutchSentence = currentWord.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
+                speakDutch(dutchSentence);
+              }}
+              className="bg-rose-100 hover:bg-rose-200 active:bg-rose-200 px-3 py-2 rounded-lg transition-all inline-flex items-center gap-2 text-xs sm:text-sm"
+            >
+              <Volume2 className="w-4 h-4 text-rose-600" />
+              <span className="text-rose-600 font-semibold">Hear Example</span>
+            </button>
+          </div>
+        )}
+              </div>
+              
+              {transcript && (
+                <div className="bg-blue-50 p-3 sm:p-4 rounded-lg mb-4">
+                  <p className="text-gray-600 text-xs sm:text-sm mb-1">You said:</p>
+                  <p className="text-blue-700 font-bold text-lg sm:text-xl">"{transcript}"</p>
+                </div>
+              )}
+            </div>
 
+        <div className="space-y-4">
+          {feedback === null && (
+            <>
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`w-full text-white text-base sm:text-xl font-bold py-4 sm:py-6 rounded-xl transition-all flex items-center justify-center gap-3 ${
+                  isRecording 
+                    ? 'bg-red-500 animate-pulse' 
+                    : 'bg-gradient-to-r from-rose-500 to-pink-600 hover:shadow-xl active:shadow-xl'
+                }`}
+              >
+                <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ${
+                  isRecording ? 'bg-white' : 'bg-white/20'
+                }`}>
+                  {isRecording ? (
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-red-500 rounded"></div>
+                  ) : (
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-rose-500 rounded-full"></div>
+                  )}
+                </div>
+                <span>{isRecording ? '🎤 Recording... (Tap to Stop)' : '🎤 Tap to Speak'}</span>
+              </button>
+              
+              <div className="text-center text-xs sm:text-sm text-gray-500">
+                {isRecording ? 'Tap the button again to stop recording' : 'Tap the button and speak the Dutch word clearly'}
+              </div>
+                </>
+              )}
+            </div>
+
+            {feedback && (
+              <div className={`mt-4 sm:mt-6 p-3 sm:p-4 rounded-xl ${
+                feedback.correct ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                <div className="flex items-center gap-2 sm:gap-3 mb-3">
+                  {feedback.correct ? (
+                    <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <p className={`font-semibold text-sm sm:text-base ${
+                      feedback.correct ? 'text-green-700' : 'text-red-700'
+                    }`}>
+                      {feedback.message}
+                    </p>
+                    {feedback.accuracy && (
+                      <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                        Accuracy: {feedback.accuracy}%
+                      </p>
+                    )}
+                  </div>
+                </div>
+                
+                {!feedback.correct && feedback.userSaid && (
+                  <div className="mb-3 p-3 bg-white rounded-lg">
+                    <p className="text-gray-600 text-xs sm:text-sm mb-1">You said:</p>
+                    <p className="text-red-600 font-bold text-base sm:text-lg">"{feedback.userSaid}"</p>
+                    <p className="text-gray-600 text-xs sm:text-sm mt-2 mb-1">Correct pronunciation:</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-green-600 font-bold text-base sm:text-lg">{currentWord.dutch}</p>
+                      <button
+                        onClick={() => speakDutch(currentWord.dutch)}
+                        className="bg-green-100 hover:bg-green-200 p-2 rounded-full transition-all"
+                      >
+                        <Volume2 className="w-4 h-4 text-green-600" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+              <button
+                onClick={() => {
+                  setTranscript('');
+                  setFeedback(null);
+                  handleNext();
+                }}
+                className="w-full mt-3 bg-rose-500 hover:bg-rose-600 active:bg-rose-600 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
+              >
+                Next Question
+                <ChevronRight className="w-5 h-5" />
+              </button>
+              </div>
+            )}
+          </>
+        )}
           {/* FILL IN THE BLANK - MOBILE OPTIMIZED */}
           {currentWord && gameMode === 'fillblank' && (
             <>
@@ -1800,6 +2161,22 @@ export default function DutchLearningGame() {
           )}
         </div>
       </div>
+          {/* ADD THIS BOTTOM BAR - BEFORE THE CLOSING </div> OF min-h-screen */}
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-3 shadow-lg z-50">
+      <div className="max-w-2xl mx-auto">
+        <button
+          onClick={() => {
+            if (confirm('Return to menu? Progress will be lost.')) {
+              goToMenu();
+            }
+          }}
+          className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 px-4 py-3 rounded-xl transition-all"
+        >
+          <Home className="w-5 h-5 text-gray-700" />
+          <span className="font-semibold">Back to Menu</span>
+        </button>
+      </div>
+    </div>
     </div>
   );
 }
