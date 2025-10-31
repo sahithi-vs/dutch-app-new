@@ -17,6 +17,7 @@ const getAllWords = () => {
 const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
+  const [difficulty, setDifficulty] = useState('normal'); // 'normal' or 'spelling'
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -446,7 +447,7 @@ if (mode === 'spelling') {
     }
   };
 
-  const generateQuestion = (words = wordBank, used = usedWords) => {
+const generateQuestion = (words = wordBank, used = usedWords) => {
     if (words.length < 4) return;
     
     const availableWords = words.filter(w => 
@@ -460,39 +461,117 @@ if (mode === 'spelling') {
     }
     
     const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
-    const wrongOptions = availableWords
-      .filter(w => w.english !== correct.english)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3);
     
-    const allOptions = [correct, ...wrongOptions].sort(() => Math.random() - 0.5);
+    let allOptions;
+    
+    if (difficulty === 'spelling') {
+      // Generate misspelled versions
+      const wrongOptions = generateMisspelledOptions(correct.dutch);
+      allOptions = [correct.dutch, ...wrongOptions].sort(() => Math.random() - 0.5);
+    } else {
+      // Normal mode - Filter wrong options more intelligently
+      let wrongOptions = availableWords
+        .filter(w => w.english !== correct.english)
+        .sort((a, b) => {
+          const aScore = (a.category === correct.category ? 100 : 0) + 
+                        (a.level === correct.level ? 50 : 0);
+          const bScore = (b.category === correct.category ? 100 : 0) + 
+                        (b.level === correct.level ? 50 : 0);
+          return bScore - aScore + (Math.random() - 0.5) * 30;
+        })
+        .slice(0, 3);
+      
+      if (wrongOptions.length < 3) {
+        const remaining = availableWords
+          .filter(w => w.english !== correct.english && 
+                 !wrongOptions.some(wo => wo.english === w.english))
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3 - wrongOptions.length);
+        wrongOptions = [...wrongOptions, ...remaining];
+      }
+      
+      allOptions = [correct, ...wrongOptions].sort(() => Math.random() - 0.5);
+    }
     
     setCurrentWord(correct);
-    setOptions(allOptions);
+    setOptions(difficulty === 'spelling' ? allOptions.map(opt => ({ dutch: opt, english: opt })) : allOptions);
     setFeedback(null);
     setUsedWords([...used, correct]);
   };
 
-  const generateSpellingQuestion = (words = wordBank, used = usedWords) => {
-    if (words.length === 0) return;
-    
-    const availableWords = words.filter(w => 
-      !used.some(u => u.dutch === w.dutch && u.english === w.english)
-    );
-    
-    if (availableWords.length === 0) {
-      setUsedWords([]);
-      generateSpellingQuestion(words, []);
-      return;
+// Helper function to generate misspelled versions
+const generateMisspelledOptions = (word) => {
+  const misspellings = [];
+  const wordLower = word.toLowerCase();
+  
+  // Strategy 1: Swap two adjacent letters
+  if (wordLower.length > 2) {
+    const pos = Math.floor(Math.random() * (wordLower.length - 1));
+    const swapped = wordLower.slice(0, pos) + wordLower[pos + 1] + wordLower[pos] + wordLower.slice(pos + 2);
+    misspellings.push(swapped);
+  }
+  
+  // Strategy 2: Replace a vowel with another vowel
+  const vowels = ['a', 'e', 'i', 'o', 'u'];
+  const vowelPositions = [...wordLower].map((char, idx) => vowels.includes(char) ? idx : -1).filter(idx => idx !== -1);
+  if (vowelPositions.length > 0) {
+    const pos = vowelPositions[Math.floor(Math.random() * vowelPositions.length)];
+    const currentVowel = wordLower[pos];
+    const newVowel = vowels.filter(v => v !== currentVowel)[Math.floor(Math.random() * 4)];
+    const vowelSwap = wordLower.slice(0, pos) + newVowel + wordLower.slice(pos + 1);
+    misspellings.push(vowelSwap);
+  }
+  
+  // Strategy 3: Double a consonant or remove a double
+  const consonantPos = [...wordLower].findIndex((char, idx) => 
+    !'aeiou'.includes(char) && idx < wordLower.length - 1
+  );
+  if (consonantPos !== -1) {
+    if (wordLower[consonantPos] === wordLower[consonantPos + 1]) {
+      // Remove double
+      const removeDouble = wordLower.slice(0, consonantPos) + wordLower.slice(consonantPos + 1);
+      misspellings.push(removeDouble);
+    } else {
+      // Add double
+      const addDouble = wordLower.slice(0, consonantPos + 1) + wordLower[consonantPos] + wordLower.slice(consonantPos + 1);
+      misspellings.push(addDouble);
     }
-    
-    const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
-    
-    setCurrentWord(correct);
-    setSpellingAnswer('');
-    setFeedback(null);
-    setUsedWords([...used, correct]);
-  };
+  }
+  
+  // Fill remaining slots with random variations if needed
+  while (misspellings.length < 3) {
+    const pos = Math.floor(Math.random() * wordLower.length);
+    const chars = 'abcdefghijklmnopqrstuvwxyz';
+    const randomChar = chars[Math.floor(Math.random() * chars.length)];
+    const variation = wordLower.slice(0, pos) + randomChar + wordLower.slice(pos + 1);
+    if (!misspellings.includes(variation) && variation !== wordLower) {
+      misspellings.push(variation);
+    }
+  }
+  
+  return misspellings.slice(0, 3);
+};
+
+const generateSpellingQuestion = (words = wordBank, used = usedWords) => {
+  if (words.length === 0) return;
+  
+  const availableWords = words.filter(w => 
+    !used.some(u => u.dutch === w.dutch && u.english === w.english)
+  );
+  
+  if (availableWords.length === 0) {
+    setUsedWords([]);
+    generateSpellingQuestion(words, []);
+    return;
+  }
+  
+  const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
+  
+  setCurrentWord(correct);
+  setSpellingAnswer('');
+  setFeedback(null);
+  setUsedWords([...used, correct]);
+};
 
  const generateFillBlankQuestion = (words = wordBank, used = usedWords) => {
     if (words.length === 0) return;
@@ -570,32 +649,37 @@ if (mode === 'spelling') {
     setUsedWords([...used, correct]);
   };
 
-  const handleAnswer = (selected) => {
-    const isCorrect = selected.english === currentWord.english;
-    playSound(isCorrect);
+const handleAnswer = (selected) => {
+  const isCorrect = difficulty === 'spelling' 
+    ? selected.dutch.toLowerCase() === currentWord.dutch.toLowerCase()
+    : selected.english === currentWord.english;
+  
+  playSound(isCorrect);
 
-    if (isCorrect) {
-      setScore(score + 1);
-      setStreak(streak + 1);
-      setFeedback({ correct: true, message: 'Goed gedaan! (Well done!)' });
-      
-      setTimeout(() => {
-        if (questionsAnswered + 1 >= numQuestions) {
-          setGameMode('results');
-        } else {
-          generateQuestion();
-        }
-      }, 1500);
-    } else {
-      setStreak(0);
-      setFeedback({ 
-        correct: false, 
-        message: `Niet helemaal! The correct answer is "${currentWord.english}"` 
-      });
-    }
+  if (isCorrect) {
+    setScore(score + 1);
+    setStreak(streak + 1);
+    setFeedback({ correct: true, message: 'Goed gedaan! (Well done!)' });
     
-    setQuestionsAnswered(questionsAnswered + 1);
-  };
+    setTimeout(() => {
+      if (questionsAnswered + 1 >= numQuestions) {
+        setGameMode('results');
+      } else {
+        generateQuestion();
+      }
+    }, 1500);
+  } else {
+    setStreak(0);
+    setFeedback({ 
+      correct: false, 
+      message: difficulty === 'spelling' 
+        ? `Niet helemaal! The correct spelling is "${currentWord.dutch}"` 
+        : `Niet helemaal! The correct answer is "${currentWord.english}"`
+    });
+  }
+  
+  setQuestionsAnswered(questionsAnswered + 1);
+};
 
 const handleNext = () => {
   setSpellingAnswer('');
@@ -1426,6 +1510,39 @@ const stopRecording = () => {
             <>
               <div className="text-center mb-6 sm:mb-8">
                 <h2 className="text-2xl sm:text-4xl font-bold text-orange-600 mb-2">
+                  {pendingGameMode === 'play' && (
+                  <div className="mb-6 sm:mb-8">
+                    <label className="block text-gray-700 font-semibold mb-3 text-center text-sm sm:text-base">
+                      Difficulty Mode
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => setDifficulty('normal')}
+                        className={`p-4 rounded-xl font-semibold transition-all text-sm sm:text-base ${
+                          difficulty === 'normal'
+                            ? 'bg-orange-500 text-white shadow-lg scale-105'
+                            : 'bg-white text-gray-700 hover:bg-orange-50 border border-gray-200'
+                        }`}
+                      >
+                        <div className="text-lg sm:text-xl mb-1">🎯</div>
+                        Normal
+                        <div className="text-xs opacity-75 mt-1">English → Dutch word</div>
+                      </button>
+                      <button
+                        onClick={() => setDifficulty('spelling')}
+                        className={`p-4 rounded-xl font-semibold transition-all text-sm sm:text-base ${
+                          difficulty === 'spelling'
+                            ? 'bg-purple-500 text-white shadow-lg scale-105'
+                            : 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
+                        }`}
+                      >
+                        <div className="text-lg sm:text-xl mb-1">✍️</div>
+                        Spelling
+                        <div className="text-xs opacity-75 mt-1">English → Similar spellings</div>
+                      </button>
+                    </div>
+                  </div>
+                )}
                   {pendingGameMode === 'play' ? '🎯 Multiple Choice' : 
                   pendingGameMode === 'spelling' ? '✏️ Spelling' : 
                  pendingGameMode === 'speaking' ? '🎤 Speaking Test' :
@@ -1753,36 +1870,42 @@ const stopRecording = () => {
                     {currentWord.level} Level
                   </span>
                 </div>
-                <p className="text-gray-600 mb-2 text-sm sm:text-base">What is the English translation?</p>
-                <div className="flex items-center justify-center gap-3">
-                  <h2 className="text-3xl sm:text-5xl font-bold text-orange-600">{currentWord.dutch}</h2>
-                  <button
-                    onClick={() => speakDutch(currentWord.dutch)}
-                    className="bg-orange-100 hover:bg-orange-200 active:bg-orange-200 p-2 sm:p-3 rounded-full transition-all"
-                  >
-                    <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
-                  </button>
-                </div>
+                <p className="text-gray-600 mb-2 text-sm sm:text-base">
+                        {difficulty === 'spelling' ? 'Which is the correct spelling?' : 'What is the English translation?'}
+                      </p>
+                      <div className="flex items-center justify-center gap-3">
+                        <h2 className="text-3xl sm:text-5xl font-bold text-orange-600">
+                          {difficulty === 'spelling' ? currentWord.english : currentWord.dutch}
+                        </h2>
+                        {difficulty === 'normal' && (
+                          <button
+                            onClick={() => speakDutch(currentWord.dutch)}
+                            className="bg-orange-100 hover:bg-orange-200 active:bg-orange-200 p-2 sm:p-3 rounded-full transition-all"
+                          >
+                            <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
+                          </button>
+                        )}
+                      </div>
               </div>
 
               <div className="grid grid-cols-1 gap-2 sm:gap-3">
                 {options.map((option, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => handleAnswer(option)}
-                    disabled={feedback !== null}
-                    className={`p-3 sm:p-4 text-sm sm:text-lg font-semibold rounded-xl transition-all ${
-                      feedback === null
-                        ? `bg-gray-100 text-gray-800 ${!isTouchDevice ? 'hover:bg-orange-100 hover:text-orange-600' : 'active:bg-orange-100'}`
-                        : feedback.correct && option.english === currentWord.english
-                        ? 'bg-green-500 text-white'
-                        : !feedback.correct && option.english === currentWord.english
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-100 text-gray-400'
-                    }`}
-                  >
-                    {option.english}
-                  </button>
+                <button
+                      key={idx}
+                      onClick={() => handleAnswer(option)}
+                      disabled={feedback !== null}
+                      className={`p-3 sm:p-4 text-sm sm:text-lg font-semibold rounded-xl transition-all ${
+                        feedback === null
+                          ? `bg-gray-100 text-gray-800 ${!isTouchDevice ? 'hover:bg-orange-100 hover:text-orange-600' : 'active:bg-orange-100'}`
+                          : feedback.correct && (difficulty === 'spelling' ? option.dutch === currentWord.dutch : option.english === currentWord.english)
+                          ? 'bg-green-500 text-white'
+                          : !feedback.correct && (difficulty === 'spelling' ? option.dutch === currentWord.dutch : option.english === currentWord.english)
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-100 text-gray-400'
+                      }`}
+                    >
+                      {difficulty === 'spelling' ? option.dutch : option.english}
+                    </button>
                 ))}
               </div>
 
