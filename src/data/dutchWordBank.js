@@ -110,7 +110,7 @@ export const dutchWordBankA1 = {
   { dutch: 'welkom', english: 'welcome', level: 'A1', example: 'Welkom in Nederland! (Welcome to the Netherlands!)' },
   { dutch: 'zeggen', english: 'to say', level: 'A1', example: 'Wat zeg je? (What do you say?)' },
   { dutch: 'nul', english: '0', level: 'A1', example: 'Het antwoord is nul. (The answer is zero.)' },
-  { dutch: 'één', english: '1', level: 'A1', example: 'Ik heb één broer. (I have one brother.)' },
+  { dutch: 'een', english: '1', level: 'A1', example: 'Ik heb één broer. (I have one brother.)' },
   { dutch: 'twee', english: '2', level: 'A1', example: 'Wij hebben twee katten. (We have two cats.)' },
   { dutch: 'drie', english: '3', level: 'A1', example: 'Er zijn drie stoelen. (There are three chairs.)' },
   { dutch: 'vier', english: '4', level: 'A1', example: 'Vier mensen zitten aan tafel. (Four people are sitting at the table.)' },

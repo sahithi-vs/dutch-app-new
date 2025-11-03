@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Volume2, Check, X, Trophy, RefreshCw, Home, BookOpen, GraduationCap, ChevronRight, ChevronLeft, LogOut, User, Menu } from 'lucide-react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-
+import { conversations } from './data/conversations';
 import { dutchWordBank } from './data/dutchWordBank';
 import { stories } from './data/stories';
 
@@ -17,8 +17,18 @@ const getAllWords = () => {
 const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
+  const [attemptHistory, setAttemptHistory] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [selectedHistoryCategory, setSelectedHistoryCategory] = useState('all');
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [conversationQuestions, setConversationQuestions] = useState([]);
+  const [currentConversationQuestion, setCurrentConversationQuestion] = useState(0);
+  const [conversationScore, setConversationScore] = useState(0);
+  const [showConversationQuiz, setShowConversationQuiz] = useState(false);
+  const [conversationQuizFeedback, setConversationQuizFeedback] = useState(null);
+  const [isPlayingConversation, setIsPlayingConversation] = useState(false);
+  const [currentDialogueIndex, setCurrentDialogueIndex] = useState(0);
   const [wrongAnswers, setWrongAnswers] = useState([]);
-
   const [currentWelcomeIndex, setCurrentWelcomeIndex] = useState(0);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeWords, setWelcomeWords] = useState([]);
@@ -59,32 +69,47 @@ export default function DutchLearningGame() {
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState(null);
   const [transcript, setTranscript] = useState('');
-  // Add global styles
+
+
 // Add global styles
   if (typeof document !== 'undefined') {
-    const style = document.createElement('style');
-    style.textContent = `
-      * {
-        -webkit-tap-highlight-color: transparent;
-        -webkit-touch-callout: none;
-        -webkit-user-select: none;
-        user-select: none;
-      }
-      
-      input, textarea {
-        -webkit-user-select: text;
-        user-select: text;
-      }
-      
-      @media (hover: none) {
-        *:hover {
-          background-color: inherit !important;
-          color: inherit !important;
-        }
-      }
-    `;
     if (!document.getElementById('mobile-hover-fix')) {
+      const style = document.createElement('style');
       style.id = 'mobile-hover-fix';
+      style.textContent = `
+        * {
+          -webkit-tap-highlight-color: transparent !important;
+          tap-highlight-color: transparent !important;
+          -webkit-touch-callout: none !important;
+          -webkit-user-select: none !important;
+          user-select: none !important;
+        }
+        
+        input, textarea {
+          -webkit-user-select: text !important;
+          user-select: text !important;
+        }
+        
+        body, html, #root {
+          -webkit-tap-highlight-color: transparent !important;
+          tap-highlight-color: transparent !important;
+          overscroll-behavior: none;
+          touch-action: pan-y;
+        }
+        
+        button, a, div[role="button"] {
+          -webkit-tap-highlight-color: transparent !important;
+          tap-highlight-color: transparent !important;
+          -webkit-touch-callout: none !important;
+          touch-action: manipulation !important;
+          outline: none !important;
+        }
+        
+        button:active, a:active {
+          -webkit-tap-highlight-color: transparent !important;
+          tap-highlight-color: transparent !important;
+        }
+      `;
       document.head.appendChild(style);
     }
   }
@@ -124,6 +149,24 @@ export default function DutchLearningGame() {
   }
 }, [user, gameMode, showWelcome]);
 
+
+// Load speech synthesis voices
+useEffect(() => {
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    // Load voices
+    const loadVoices = () => {
+      window.speechSynthesis.getVoices();
+    };
+    
+    loadVoices();
+    
+    // Chrome loads voices asynchronously
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }
+}, []);
+
 // Initialize welcome words when user logs in
 useEffect(() => {
   if (user && welcomeWords.length === 0) {
@@ -159,7 +202,7 @@ useEffect(() => {
 useEffect(() => {
   if (gameMode === 'results' && user && gameStartCategory && currentGameMode) {
     checkAndUpdateProgress(gameStartCategory, currentGameMode, score, numQuestions);
-    // Removed auto-redirect - user can navigate manually
+    saveAttemptToHistory(gameStartCategory, currentGameMode, score, numQuestions, wrongAnswers, difficulty);
   }
 }, [gameMode]);
 
@@ -174,9 +217,10 @@ useEffect(() => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showSearchResults]);
 
-  useEffect(() => {
-    loadUserProgress();
-  }, [user]);
+useEffect(() => {
+  loadUserProgress();
+  loadAttemptHistory();
+}, [user]);
 
   const loadUserProgress = () => {
     if (!user) return;
@@ -190,6 +234,49 @@ useEffect(() => {
       setUserProgress({});
     }
   };
+
+  const loadAttemptHistory = () => {
+  if (!user) return;
+  
+  try {
+    const saved = localStorage.getItem(`history_${user.sub}`);
+    if (saved) {
+      setAttemptHistory(JSON.parse(saved));
+    }
+  } catch (error) {
+    setAttemptHistory([]);
+  }
+};
+
+const saveAttemptToHistory = (category, mode, score, total, wrongAnswers, difficulty = 'normal') => {
+  if (!user || category === 'all') return;
+  
+  const attempt = {
+    id: Date.now(),
+    date: new Date().toISOString(),
+    category,
+    mode,
+    difficulty,
+    score,
+    total,
+    percentage: Math.round((score / total) * 100),
+    wrongAnswers: wrongAnswers.map(w => ({
+      dutch: w.dutch,
+      english: w.english,
+      userAnswer: w.userAnswer,
+      type: w.type
+    }))
+  };
+  
+  const updatedHistory = [attempt, ...attemptHistory].slice(0, 100); // Keep last 100 attempts
+  
+  try {
+    localStorage.setItem(`history_${user.sub}`, JSON.stringify(updatedHistory));
+    setAttemptHistory(updatedHistory);
+  } catch (error) {
+    console.error('Failed to save history:', error);
+  }
+};
 
 const handleSpeakingResult = (spokenText) => {
   if (!currentWord) return;
@@ -351,14 +438,15 @@ useEffect(() => {
     localStorage.setItem('dutch_app_login_time', Date.now().toString());
   };
 
-  const handleLogout = () => {
-    googleLogout();
-    setUser(null);
-    setUserProgress({});
-    localStorage.removeItem('dutch_app_user');
-    localStorage.removeItem('dutch_app_login_time');
-    goToMenu();
-  };
+const handleLogout = () => {
+  googleLogout();
+  setUser(null);
+  setUserProgress({});
+  setAttemptHistory([]);
+  localStorage.removeItem('dutch_app_user');
+  localStorage.removeItem('dutch_app_login_time');
+  goToMenu();
+};
 
 const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
   if (!user || category === 'all') return;
@@ -382,26 +470,45 @@ const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
     };
   }
 
+  // Only update progress if:
+  // 1. User attempted the required number of questions (80% of words), OR
+  // 2. The new result is better than existing (higher score with sufficient attempts)
+  // 3. Never downgrade from "passed" to "not passed" unless attempting with required questions
+  
   if (mode === 'play') {
     if (difficulty === 'spelling') {
-      updatedProgress[category].spellingDifficulty = {
-        score: percentage,
-        wordsAttempted: totalQuestions,
-        passed: passed
-      };
+      const existing = updatedProgress[category].spellingDifficulty;
+      // Only update if attempting required questions OR improving score OR not yet passed
+      if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
+        // If already passed, don't revert to not-passed unless this is a full attempt
+        const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
+        updatedProgress[category].spellingDifficulty = {
+          score: percentage,
+          wordsAttempted: totalQuestions,
+          passed: newPassed
+        };
+      }
     } else {
-      updatedProgress[category].multipleChoice = {
-        score: percentage,
-        wordsAttempted: totalQuestions,
-        passed: passed
-      };
+      const existing = updatedProgress[category].multipleChoice;
+      if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
+        const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
+        updatedProgress[category].multipleChoice = {
+          score: percentage,
+          wordsAttempted: totalQuestions,
+          passed: newPassed
+        };
+      }
     }
   } else if (mode === 'spelling') {
-    updatedProgress[category].spelling = {
-      score: percentage,
-      wordsAttempted: totalQuestions,
-      passed: passed
-    };
+    const existing = updatedProgress[category].spelling;
+    if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
+      const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
+      updatedProgress[category].spelling = {
+        score: percentage,
+        wordsAttempted: totalQuestions,
+        passed: newPassed
+      };
+    }
   }
 
   updatedProgress[category].completed = 
@@ -411,6 +518,7 @@ const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
 
   saveUserProgress(updatedProgress);
 };
+
   const isCategoryCompleted = (category) => {
     if (!user || category === 'all') return false;
     return userProgress[category]?.completed || false;
@@ -488,7 +596,7 @@ const isCategoryLocked = (category) => {
     setShowQuestionSelector(false);
   };
 
-  const startGame = (mode = 'play') => {
+const startGame = (mode = 'play') => {
     const words = loadWords(selectedCategory);
     
     if (mode === 'play' && words.length < 4) {
@@ -520,10 +628,13 @@ const isCategoryLocked = (category) => {
       return;
     }
     
+    // Use the mode parameter or fall back to currentGameMode
+    const actualMode = mode || currentGameMode || 'play';
+    
     setWordBank(words);
     setUsedWords([]);
-    setGameMode(mode);
-    setCurrentGameMode(mode);
+    setGameMode(actualMode);
+    setCurrentGameMode(actualMode);
     setGameStartCategory(selectedCategory);
     setScore(0);
     setStreak(0);
@@ -533,12 +644,14 @@ const isCategoryLocked = (category) => {
     setSpellingAnswer('');
     setFillBlankAnswer('');
     setShowQuestionSelector(false);
+    setTranscript('');
+    setIsRecording(false);
     
-if (mode === 'spelling') {
+    if (actualMode === 'spelling') {
       generateSpellingQuestion(words, []);
-    } else if (mode === 'fillblank') {
+    } else if (actualMode === 'fillblank') {
       generateFillBlankQuestion(words, []);
-    } else if (mode === 'speaking') {
+    } else if (actualMode === 'speaking') {
       generateSpeakingQuestion(words, []);
     } else {
       generateQuestion(words, []);
@@ -952,6 +1065,72 @@ const handleNext = () => {
 }
   };
 
+const speakConversationDialogue = (dialogueArray, startIndex = 0) => {
+  if (startIndex >= dialogueArray.length) {
+    setIsPlayingConversation(false);
+    setCurrentDialogueIndex(0);
+    return;
+  }
+  
+  setIsPlayingConversation(true);
+  setCurrentDialogueIndex(startIndex);
+  
+  const utterance = new SpeechSynthesisUtterance(dialogueArray[startIndex].text);
+  utterance.lang = 'nl-NL';
+  
+  // Get available voices
+  const voices = window.speechSynthesis.getVoices();
+  const dutchVoices = voices.filter(voice => voice.lang.startsWith('nl'));
+  
+  // Determine which speaker (alternating pattern or use speaker property)
+  const speakerIndex = startIndex % 2; // 0 or 1 for two speakers
+  
+  if (dutchVoices.length > 0) {
+    // Try to use different Dutch voices if available
+    if (dutchVoices.length > 1) {
+      utterance.voice = dutchVoices[speakerIndex % dutchVoices.length];
+    } else {
+      utterance.voice = dutchVoices[0];
+    }
+    
+    // Create variation between two female speakers
+    if (speakerIndex === 0) {
+      // First speaker: Slightly higher, faster
+      utterance.pitch = 1.2;
+      utterance.rate = 0.85;
+    } else {
+      // Second speaker: Slightly lower, slower
+      utterance.pitch = 0.7;
+      utterance.rate = 0.85;
+    }
+  } else {
+    // Fallback if no Dutch voices
+    if (speakerIndex === 0) {
+      utterance.pitch = 1.15;
+      utterance.rate = 0.85;
+    } else {
+      utterance.pitch = 0.95;
+      utterance.rate = 0.75;
+    }
+  }
+  
+  utterance.onend = () => {
+    setTimeout(() => {
+      speakConversationDialogue(dialogueArray, startIndex + 1);
+    }, 600);
+  };
+  
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(utterance);
+};
+
+const stopConversation = () => {
+  window.speechSynthesis.cancel();
+  setIsPlayingConversation(false);
+  setCurrentDialogueIndex(0);
+};
+
+
   const startRecording = () => {
   if (!recognition) {
     alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
@@ -1034,6 +1213,12 @@ const stopRecording = () => {
     setTranscript('');
     setIsRecording(false);
     setDifficulty('normal');
+    setSelectedConversation(null);
+    setShowConversationQuiz(false);
+    setCurrentConversationQuestion(0);
+    setConversationScore(0);
+    setConversationQuizFeedback(null);
+    stopConversation();
   };
 
   const handleSearch = (query) => {
@@ -1098,33 +1283,57 @@ const stopRecording = () => {
     setShowSearchResults(false);
   };
 
-  const mobileHoverFix = (
-    <style>{`
-      @media (hover: none) and (pointer: coarse) {
-        button:hover {
-          background-color: inherit !important;
-          color: inherit !important;
-          transform: none !important;
-          scale: none !important;
-        }
+const mobileHoverFix = (
+  <style>{`
+    * {
+      -webkit-tap-highlight-color: transparent !important;
+      tap-highlight-color: transparent !important;
+    }
+    
+    button, a, div[role="button"] {
+      -webkit-tap-highlight-color: transparent !important;
+      tap-highlight-color: transparent !important;
+      -webkit-touch-callout: none !important;
+      touch-action: manipulation !important;
+    }
+    
+    @media (hover: none) and (pointer: coarse) {
+      button:hover:not(:active) {
+        background-color: inherit !important;
+        color: inherit !important;
+        transform: none !important;
+        scale: none !important;
       }
       
-      .animate-fadeIn {
-        animation: fadeIn 0.3s ease-in;
+      .bg-orange-500:not(:active) {
+        background-color: rgb(249 115 22) !important;
       }
       
-      @keyframes fadeIn {
-        from {
-          opacity: 0;
-          transform: translateY(-10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+      .bg-indigo-500:not(:active) {
+        background-color: rgb(99 102 241) !important;
       }
-    `}</style>
-  );
+      
+      .bg-green-500:not(:active) {
+        background-color: rgb(34 197 94) !important;
+      }
+    }
+    
+    .animate-fadeIn {
+      animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  `}</style>
+);
 
   
   // Login screen - MOBILE OPTIMIZED
@@ -1455,6 +1664,628 @@ const stopRecording = () => {
     );
   }
 
+  // Conversations mode - MOBILE OPTIMIZED
+if (gameMode === 'conversations' && !selectedConversation) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-200 via-purple-400 to-purple-600 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-xl w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-purple-700">🎧 Listening Practice</h2>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+        <p className="text-gray-600 mb-6 text-center text-sm sm:text-base">
+          Listen to Dutch conversations and test your comprehension!
+        </p>
+        <div className="space-y-3 sm:space-y-4">
+          {conversations.map(conversation => (
+            <button
+              key={conversation.id}
+              onClick={() => {
+                setSelectedConversation(conversation);
+                setShowConversationQuiz(false);
+                setCurrentConversationQuestion(0);
+                setConversationScore(0);
+                setConversationQuizFeedback(null);
+                setCurrentDialogueIndex(0);
+              }}
+              className="w-full bg-gradient-to-r from-purple-400 to-purple-600 text-white p-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all text-left"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="text-base sm:text-lg font-bold">{conversation.title}</h3>
+                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                  conversation.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {conversation.level}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-purple-100">
+                <span>⏱️ {conversation.duration}</span>
+                <span>•</span>
+                <span>🎯 {conversation.questions.length} questions</span>
+              </div>
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => { 
+            setGameMode('menu'); 
+            setSelectedConversation(null);
+          }}
+          className="mt-6 sm:mt-8 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to Menu
+        </button>
+      </div>
+    </div>
+  );
+}
+
+if (gameMode === 'conversations' && selectedConversation) {
+  // Conversation quiz results
+  if (showConversationQuiz && currentConversationQuestion >= selectedConversation.questions.length) {
+    const percentage = Math.round((conversationScore / selectedConversation.questions.length) * 100);
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-200 via-purple-400 to-purple-600 flex items-center justify-center p-3 sm:p-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-lg w-full text-center">
+          <Trophy className="w-16 h-16 sm:w-24 sm:h-24 text-purple-500 mx-auto mb-4" />
+          <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-4">
+            {percentage >= 80 ? 'Uitstekend! Perfect comprehension!' :
+             percentage >= 60 ? 'Goed gedaan! You understood well!' :
+             'Listen again and try once more!'}
+          </h2>
+          <div className="mb-6">
+            <div className="text-4xl sm:text-6xl font-bold text-purple-600 mb-2">{conversationScore}/{selectedConversation.questions.length}</div>
+            <div className="text-xl sm:text-2xl text-gray-600">{percentage}% Correct</div>
+          </div>
+          
+          <div className="space-y-3">
+            <button
+              onClick={() => {
+                setShowConversationQuiz(false);
+                setCurrentConversationQuestion(0);
+                setConversationScore(0);
+                setConversationQuizFeedback(null);
+              }}
+              className="w-full bg-gradient-to-r from-purple-400 to-purple-600 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Listen Again
+            </button>
+            <button
+              onClick={() => {
+                setSelectedConversation(null);
+                setShowConversationQuiz(false);
+                setCurrentConversationQuestion(0);
+                setConversationScore(0);
+                setConversationQuizFeedback(null);
+              }}
+              className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Back to Conversations
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Conversation quiz questions
+  if (showConversationQuiz) {
+    const question = selectedConversation.questions[currentConversationQuestion];
+    
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-200 via-purple-400 to-purple-600 flex items-center justify-center p-3 sm:p-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 max-w-2xl w-full">
+          <div className="mb-4 sm:mb-6">
+            <div className="flex flex-wrap justify-between items-center mb-3 sm:mb-4 gap-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (confirm('Return to menu? Progress will be lost.')) {
+                      stopConversation();
+                      setShowConversationQuiz(false);
+                      setCurrentConversationQuestion(0);
+                      setConversationScore(0);
+                      setConversationQuizFeedback(null);
+                      setGameMode('menu');
+                      setSelectedConversation(null);
+                    }
+                  }}
+                  className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-1 sm:gap-2"
+                >
+                  <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+                  <span className="font-semibold text-xs sm:text-sm">Menu</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm('Back to conversation?')) {
+                      stopConversation();
+                      setShowConversationQuiz(false);
+                      setCurrentConversationQuestion(0);
+                      setConversationScore(0);
+                      setConversationQuizFeedback(null);
+                    }
+                  }}
+                  className="bg-purple-100 hover:bg-purple-200 active:bg-purple-200 p-2 rounded-lg transition-all flex items-center gap-1 sm:gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-purple-700" />
+                  <span className="font-semibold text-xs sm:text-sm hidden sm:inline">Back</span>
+                </button>
+              </div>
+              <div className="flex gap-2 sm:gap-3 items-center">
+                <div className="bg-purple-100 px-2 sm:px-4 py-1 sm:py-2 rounded-lg">
+                  <span className="text-purple-700 font-bold text-xs sm:text-base">Score: {conversationScore}/{selectedConversation.questions.length}</span>
+                </div>
+                <div className="text-gray-600 font-semibold text-xs sm:text-base">
+                  {currentConversationQuestion + 1}/{selectedConversation.questions.length}
+                </div>
+              </div>
+            </div>
+            
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-purple-400 to-purple-600 transition-all duration-300"
+                style={{ width: `${((currentConversationQuestion) / selectedConversation.questions.length) * 100}%` }}
+              />
+            </div>
+          </div>
+          
+          <div className="mb-4 p-3 sm:p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
+            <p className="text-xs sm:text-sm text-purple-600 mb-1">Question in English:</p>
+            <p className="text-sm text-gray-600 italic">{question.translation}</p>
+          </div>
+          
+          <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">{question.question}</h3>
+          
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 mb-4 sm:mb-6">
+            {question.options.map((option, idx) => (
+              <button
+                key={idx}
+                onClick={() => {
+                  const isCorrect = option === question.correct;
+                  playSound(isCorrect);
+                  
+                  if (isCorrect) {
+                    setConversationScore(conversationScore + 1);
+                    setConversationQuizFeedback({ correct: true, message: 'Goed gedaan! (Well done!)' });
+                  } else {
+                    setConversationQuizFeedback({ 
+                      correct: false, 
+                      message: `Niet helemaal! Het juiste antwoord is "${question.correct}"` 
+                    });
+                  }
+                  
+                  setTimeout(() => {
+                    setConversationQuizFeedback(null);
+                    setCurrentConversationQuestion(currentConversationQuestion + 1);
+                  }, 2000);
+                }}
+                disabled={conversationQuizFeedback !== null}
+                className={`p-3 sm:p-4 text-sm sm:text-lg font-semibold rounded-xl transition-all transform ${
+                  conversationQuizFeedback === null
+                    ? `bg-gray-100 text-gray-800 ${!isTouchDevice ? 'hover:bg-purple-100 hover:text-purple-600' : 'active:bg-purple-100'}`
+                    : conversationQuizFeedback.correct && option === question.correct
+                    ? 'bg-green-500 text-white'
+                    : !conversationQuizFeedback.correct && option === question.correct
+                    ? 'bg-green-500 text-white'
+                    : 'bg-gray-100 text-gray-400'
+                }`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+          
+          {conversationQuizFeedback && (
+            <div className={`p-3 sm:p-4 rounded-xl ${
+              conversationQuizFeedback.correct ? 'bg-green-100' : 'bg-red-100'
+            }`}>
+              <div className="flex items-center gap-2 sm:gap-3">
+                {conversationQuizFeedback.correct ? (
+                  <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
+                ) : (
+                  <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
+                )}
+                <p className={`font-semibold text-sm sm:text-base ${
+                  conversationQuizFeedback.correct ? 'text-green-700' : 'text-red-700'
+                }`}>
+                  {conversationQuizFeedback.message}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  
+// Show conversation player
+return (
+  <div className="min-h-screen bg-gradient-to-br from-purple-200 via-purple-400 to-purple-600 flex items-center justify-center p-3 sm:p-4">
+    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-purple-700 mb-2">{selectedConversation.title}</h2>
+          <div className="flex items-center gap-3 text-sm text-gray-600">
+            <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+              selectedConversation.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+            }`}>
+              {selectedConversation.level}
+            </span>
+            <span>⏱️ {selectedConversation.duration}</span>
+            <span>🎧 {selectedConversation.dialogue.length} speakers</span>
+          </div>
+        </div>
+      </div>
+      
+      {/* Listening area - show visual feedback while playing */}
+      <div className="mb-6 bg-gradient-to-br from-purple-50 to-purple-100 p-8 sm:p-12 rounded-xl min-h-[300px] flex flex-col items-center justify-center">
+        {!isPlayingConversation ? (
+          <div className="text-center">
+            <div className="text-6xl sm:text-8xl mb-4">🎧</div>
+            <h3 className="text-xl sm:text-2xl font-bold text-purple-700 mb-3">
+              Ready to Listen?
+            </h3>
+            <p className="text-gray-600 text-sm sm:text-base mb-4">
+              Listen carefully to the Dutch conversation
+            </p>
+            <p className="text-gray-500 text-xs sm:text-sm">
+              {selectedConversation.dialogue.length} dialogue turns • {selectedConversation.duration}
+            </p>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="relative mb-6">
+              <div className="text-6xl sm:text-8xl animate-pulse">
+                {currentDialogueIndex % 2 === 0 ? '👨' : '👩'}
+              </div>
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
+              </div>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-purple-700 mb-3">
+              {selectedConversation.dialogue[currentDialogueIndex]?.speaker} is speaking...
+            </h3>
+            <p className="text-gray-600 text-sm sm:text-base">
+              Turn {currentDialogueIndex + 1} of {selectedConversation.dialogue.length}
+            </p>
+            
+            {/* Progress bar */}
+            <div className="mt-6 w-full max-w-md mx-auto">
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-purple-500 to-purple-700 transition-all duration-300"
+                  style={{ width: `${((currentDialogueIndex + 1) / selectedConversation.dialogue.length) * 100}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Show script button - only visible when NOT playing */}
+      {!isPlayingConversation && (
+        <div className="mb-4">
+          <button
+            onClick={() => {
+              const scriptElement = document.getElementById('conversation-script');
+              if (scriptElement) {
+                scriptElement.classList.toggle('hidden');
+              }
+            }}
+            className="w-full bg-blue-100 hover:bg-blue-200 active:bg-blue-200 text-blue-700 text-sm sm:text-base font-semibold py-2 rounded-lg transition-all flex items-center justify-center gap-2"
+          >
+            <BookOpen className="w-4 h-4" />
+            Show/Hide Script (for reference)
+          </button>
+          
+          {/* Hidden script - togglable */}
+          <div id="conversation-script" className="hidden mt-4 max-h-64 overflow-y-auto space-y-2 bg-blue-50 p-4 rounded-xl border-2 border-blue-200">
+            {selectedConversation.dialogue.map((line, idx) => (
+              <div key={idx} className="p-2 bg-white rounded-lg">
+                <div className="flex items-start gap-2">
+                  <span className="font-bold text-purple-600 min-w-[60px] text-sm">{line.speaker}:</span>
+                  <div className="flex-1">
+                    <p className="text-gray-800 font-medium text-sm mb-1">{line.text}</p>
+                    <p className="text-xs text-gray-500 italic">{line.translation}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
+      <div className="flex flex-col gap-3 mb-6">
+        {!isPlayingConversation ? (
+          <>
+            <button
+              onClick={() => speakConversationDialogue(selectedConversation.dialogue, 0)}
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white text-base sm:text-xl font-bold py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-3"
+            >
+              <span className="text-3xl">▶️</span>
+              <span>Start Listening</span>
+            </button>
+            
+            <p className="text-center text-xs sm:text-sm text-gray-600 italic">
+              💡 Tip: Listen 2-3 times before taking the quiz!
+            </p>
+          </>
+        ) : (
+          <button
+            onClick={stopConversation}
+            className="w-full bg-gradient-to-r from-red-500 to-red-700 text-white text-base sm:text-xl font-bold py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-3"
+          >
+            <span className="text-3xl">⏹️</span>
+            <span>Stop Listening</span>
+          </button>
+        )}
+        
+        {!isPlayingConversation && selectedConversation.questions && selectedConversation.questions.length > 0 && (
+          <button
+            onClick={() => {
+              stopConversation();
+              setShowConversationQuiz(true);
+              setCurrentConversationQuestion(0);
+              setConversationScore(0);
+              setConversationQuizFeedback(null);
+            }}
+            className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+          >
+            <GraduationCap className="w-5 h-5" />
+            Take Comprehension Quiz ({selectedConversation.questions.length} questions)
+          </button>
+        )}
+      </div>
+      
+      <div className="flex flex-col sm:flex-row gap-3">
+        <button
+          onClick={() => {
+            stopConversation();
+            setSelectedConversation(null);
+            setGameMode('conversations');
+          }}
+          className="w-full bg-purple-400 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-purple-500 active:bg-purple-500 transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to Conversations
+        </button>
+        <button
+          onClick={() => { 
+            stopConversation();
+            setGameMode('menu'); 
+            setSelectedConversation(null);
+          }}
+          className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+        >
+          <Home className="w-5 h-5" />
+          Menu
+        </button>
+      </div>
+    </div>
+  </div>
+);
+}
+
+// HISTORY SCREEN - MOBILE OPTIMIZED
+if (showHistory) {
+  const filteredHistory = selectedHistoryCategory === 'all' 
+    ? attemptHistory 
+    : attemptHistory.filter(h => h.category === selectedHistoryCategory);
+  
+  const categoryStats = {};
+  attemptHistory.forEach(attempt => {
+    if (!categoryStats[attempt.category]) {
+      categoryStats[attempt.category] = {
+        totalAttempts: 0,
+        totalQuestions: 0,
+        totalCorrect: 0,
+        bestScore: 0,
+        modes: {}
+      };
+    }
+    
+    const stats = categoryStats[attempt.category];
+    stats.totalAttempts++;
+    stats.totalQuestions += attempt.total;
+    stats.totalCorrect += attempt.score;
+    stats.bestScore = Math.max(stats.bestScore, attempt.percentage);
+    
+    if (!stats.modes[attempt.mode]) {
+      stats.modes[attempt.mode] = { attempts: 0, avgScore: 0 };
+    }
+    stats.modes[attempt.mode].attempts++;
+  });
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-indigo-500 to-purple-500 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-4xl w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700">📊 My Learning History</h2>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+
+        {/* Category Filter */}
+        <div className="mb-6">
+          <label className="block text-gray-700 font-semibold mb-3 text-sm sm:text-base">Filter by Category:</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+            {['all', ...Object.keys(dutchWordBank)].map(cat => (
+              <button
+                key={cat}
+                onClick={() => setSelectedHistoryCategory(cat)}
+                style={{
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation',
+                  backgroundColor: selectedHistoryCategory === cat ? '#6366f1' : '#ffffff',
+                  color: selectedHistoryCategory === cat ? '#ffffff' : '#374151',
+                  border: selectedHistoryCategory === cat ? '2px solid #4f46e5' : '1px solid #e5e7eb',
+                  transform: selectedHistoryCategory === cat ? 'scale(1.05)' : 'scale(1)',
+                  transition: 'all 0.2s ease'
+                }}
+                className="p-2 sm:p-3 rounded-xl font-medium text-xs"
+              >
+                {cat === 'all' ? 'All Categories' : cat.replace(/_/g, ' ').toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Statistics Summary */}
+        {selectedHistoryCategory !== 'all' && categoryStats[selectedHistoryCategory] && (
+          <div className="mb-6 p-4 bg-indigo-50 rounded-xl">
+            <h3 className="text-lg font-bold text-indigo-700 mb-3">
+              {selectedHistoryCategory.replace(/_/g, ' ').toUpperCase()} Statistics
+            </h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white p-3 rounded-lg text-center">
+                <div className="text-2xl font-bold text-indigo-600">
+                  {categoryStats[selectedHistoryCategory].totalAttempts}
+                </div>
+                <div className="text-xs text-gray-600">Total Attempts</div>
+              </div>
+              <div className="bg-white p-3 rounded-lg text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {categoryStats[selectedHistoryCategory].bestScore}%
+                </div>
+                <div className="text-xs text-gray-600">Best Score</div>
+              </div>
+              <div className="bg-white p-3 rounded-lg text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {Math.round((categoryStats[selectedHistoryCategory].totalCorrect / categoryStats[selectedHistoryCategory].totalQuestions) * 100)}%
+                </div>
+                <div className="text-xs text-gray-600">Avg Score</div>
+              </div>
+              <div className="bg-white p-3 rounded-lg text-center">
+                <div className="text-2xl font-bold text-purple-600">
+                  {categoryStats[selectedHistoryCategory].totalQuestions}
+                </div>
+                <div className="text-xs text-gray-600">Total Questions</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* History List */}
+        <div className="max-h-96 overflow-y-auto space-y-3">
+          {filteredHistory.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📚</div>
+              <p className="text-gray-600 text-lg">No history yet for this category</p>
+              <p className="text-gray-500 text-sm mt-2">Start practicing to see your progress!</p>
+            </div>
+          ) : (
+            filteredHistory.map((attempt, idx) => (
+              <div key={attempt.id} className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h4 className="font-bold text-gray-800 text-sm sm:text-base">
+                      {attempt.category.replace(/_/g, ' ').toUpperCase()}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {new Date(attempt.date).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-2xl font-bold ${
+                      attempt.percentage >= 80 ? 'text-green-600' :
+                      attempt.percentage >= 60 ? 'text-yellow-600' : 'text-red-600'
+                    }`}>
+                      {attempt.percentage}%
+                    </div>
+                    <div className="text-xs text-gray-600">{attempt.score}/{attempt.total}</div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 mb-3">
+                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                    attempt.mode === 'play' ? 'bg-orange-100 text-orange-700' :
+                    attempt.mode === 'spelling' ? 'bg-purple-100 text-purple-700' :
+                    attempt.mode === 'speaking' ? 'bg-rose-100 text-rose-700' :
+                    'bg-teal-100 text-teal-700'
+                  }`}>
+                    {attempt.mode === 'play' ? '🎯 Multiple Choice' :
+                     attempt.mode === 'spelling' ? '✏️ Spelling' :
+                     attempt.mode === 'speaking' ? '🎤 Speaking' :
+                     '📝 Fill Blank'}
+                  </span>
+                  {attempt.difficulty && attempt.mode === 'play' && (
+                    <span className="px-2 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
+                      {attempt.difficulty === 'spelling' ? '🔤 Spelling Mode' : '📖 Normal'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Wrong Answers */}
+                {attempt.wrongAnswers && attempt.wrongAnswers.length > 0 && (
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-sm font-semibold text-gray-700 hover:text-indigo-600">
+                      ❌ {attempt.wrongAnswers.length} Wrong Answer{attempt.wrongAnswers.length > 1 ? 's' : ''} (click to view)
+                    </summary>
+                    <div className="mt-2 space-y-2 pl-4">
+                      {attempt.wrongAnswers.map((wrong, wIdx) => (
+                        <div key={wIdx} className="bg-red-50 p-2 rounded-lg text-xs">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-bold text-red-600">{wrong.dutch}</span>
+                            <button
+                              onClick={() => speakDutch(wrong.dutch)}
+                              className="bg-red-100 hover:bg-red-200 p-1 rounded-full"
+                            >
+                              <Volume2 className="w-3 h-3 text-red-600" />
+                            </button>
+                          </div>
+                          <p className="text-gray-700">{wrong.english}</p>
+                          <div className="mt-1 text-gray-600">
+                            <span className="text-red-600">Your: {wrong.userAnswer}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <button
+          onClick={() => {
+            setShowHistory(false);
+            setSelectedHistoryCategory('all');
+          }}
+          className="mt-6 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to Menu
+        </button>
+      </div>
+    </div>
+  );
+}
 
   // MENU SCREEN - MOBILE OPTIMIZED
   if (gameMode === 'menu') {
@@ -1630,32 +2461,36 @@ const stopRecording = () => {
                     const isLocked = isCategoryLocked(cat);
                     
                     return (
-                      <button
-                        key={cat}
-                        onClick={() => {
-                          if (isLocked) {
-                            alert('🔒 Complete all A1 categories (Multiple Choice with 80%+) first to unlock A2 lessons!');
-                          } else {
-                            setSelectedCategory(cat);
-                          }
-                        }}
-                        disabled={isLocked}
-                        className={`p-2 sm:p-3 rounded-xl font-medium transition-all text-xs relative ${
-                          isLocked
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
-                            : selectedCategory === cat
-                            ? (isCompleted 
-                                ? 'bg-green-600 text-white shadow-lg scale-105 border-2 border-yellow-400' 
+                          <button
+                            key={cat}
+                            onClick={() => {
+                              if (isLocked) {
+                                alert('🔒 Complete all A1 categories (Multiple Choice with 80%+) first to unlock A2 lessons!');
+                              } else {
+                                setSelectedCategory(cat);
+                              }
+                            }}
+                            disabled={isLocked}
+                            className={`p-2 sm:p-3 rounded-xl font-medium transition-all text-xs relative ${
+                              isLocked
+                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
+                                : selectedCategory === cat
+                                ? (isCompleted 
+                                    ? 'bg-green-600 text-white shadow-lg scale-105 border-2 border-yellow-400' 
+                                    : hasPartialProgress
+                                    ? 'bg-yellow-500 text-white shadow-lg scale-105'
+                                    : 'bg-orange-500 text-white shadow-lg scale-105')
+                                : isCompleted
+                                ? 'bg-green-500 text-white hover:bg-green-600 active:bg-green-600 border-2 border-green-600'
                                 : hasPartialProgress
-                                ? 'bg-yellow-500 text-white shadow-lg scale-105'
-                                : 'bg-orange-500 text-white shadow-lg scale-105')
-                            : isCompleted
-                            ? `bg-green-500 text-white ${!isTouchDevice ? 'hover:bg-green-600' : 'active:bg-green-600'} border-2 border-green-600`
-                            : hasPartialProgress
-                            ? `bg-yellow-400 text-gray-800 ${!isTouchDevice ? 'hover:bg-yellow-500' : 'active:bg-yellow-500'} border-2 border-yellow-500`
-                            : `bg-white text-gray-700 ${!isTouchDevice ? 'hover:bg-orange-50' : 'active:bg-orange-50'} border border-gray-200`
-                        }`}
-                      >
+                                ? 'bg-yellow-400 text-gray-800 hover:bg-yellow-500 active:bg-yellow-500 border-2 border-yellow-500'
+                                : 'bg-white text-gray-700 hover:bg-orange-100 active:bg-orange-100 border border-gray-200'
+                            }`}
+                            style={{
+                              WebkitTapHighlightColor: 'transparent',
+                              touchAction: 'manipulation'
+                            }}
+                          >
                           {isLocked && (
                             <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
                               <span className="text-white text-xs">🔒</span>
@@ -1734,7 +2569,15 @@ const stopRecording = () => {
                 >
                   <span className="text-sm sm:text-xl">🎤 Speaking Test</span>
                 </button>
-                
+                <button
+                  onClick={() => { 
+                    setGameMode('conversations'); 
+                    setSelectedConversation(null);
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-400 to-purple-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">🎧 Listening Practice</span>
+                </button>
                 <button
                   onClick={() => openQuestionSelector('fillblank')}
                   className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
@@ -1747,6 +2590,12 @@ const stopRecording = () => {
                   className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span className="text-sm sm:text-xl">📖 Stories</span>
+                </button>
+                <button
+                  onClick={() => setShowHistory(true)}
+                  className="w-full bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">📊 My History</span>
                 </button>
               </div>
 
@@ -2007,39 +2856,54 @@ const stopRecording = () => {
                 </div>
 
                 <div className="flex gap-3 sm:gap-4 justify-center mt-8">
-                  <button
-                    onClick={() => setLearnIndex(Math.max(0, learnIndex - 1))}
-                    disabled={learnIndex === 0}
-                    className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
-                  >
-                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                    Prev
-                  </button>
-                  
-                  {learnIndex < learnWords.length - 1 ? (
-                    <button
-                      onClick={() => setLearnIndex(learnIndex + 1)}
-                      className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (confirm('Ready to test yourself?')) {
-                          startGame();
-                        }
-                      }}
-                      className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
-                    >
-                      Start Test
-                      <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  )}
-                </div>
+  <button
+    onClick={() => setLearnIndex(Math.max(0, learnIndex - 1))}
+    disabled={learnIndex === 0}
+    className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+    style={{
+      WebkitTapHighlightColor: 'transparent',
+      touchAction: 'manipulation'
+    }}
+  >
+    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+    Prev
+  </button>
+  
+  {learnIndex < learnWords.length - 1 ? (
+    <button
+      onClick={() => setLearnIndex(learnIndex + 1)}
+      className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+      style={{
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'manipulation',
+        backgroundColor: '#6366f1'
+      }}
+    >
+      Next
+      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+    </button>
+  ) : (
+    <button
+      onClick={() => {
+        if (confirm('Ready to test yourself?')) {
+          startGame();
+        }
+      }}
+      className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+      style={{
+        WebkitTapHighlightColor: 'transparent',
+        touchAction: 'manipulation',
+        backgroundColor: '#22c55e'
+      }}
+    >
+      Start Test
+      <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+    </button>
+  )}
+</div>
               </div>
             )}
+            
           </div>
         </div>
           {/* ADD THIS BOTTOM BAR - BEFORE THE CLOSING </div> OF min-h-screen */}
@@ -2145,13 +3009,13 @@ if (gameMode === 'results') {
         )}
         
         <div className="space-y-3">
-          <button
-            onClick={startGame}
-            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-          >
-            <RefreshCw className="w-5 h-5" />
-            Test Again
-          </button>
+        <button
+          onClick={() => startGame(currentGameMode)}
+          className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+        >
+          <RefreshCw className="w-5 h-5" />
+          Test Again
+        </button>
           <button
             onClick={startLearnMode}
             className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
@@ -2512,6 +3376,8 @@ if (gameMode === 'results') {
             )}
           </>
         )}
+
+
           {/* FILL IN THE BLANK - MOBILE OPTIMIZED */}
           {currentWord && gameMode === 'fillblank' && (
             <>
