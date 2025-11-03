@@ -17,7 +17,8 @@ const getAllWords = () => {
 const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
-  
+  const [wrongAnswers, setWrongAnswers] = useState([]);
+
   const [currentWelcomeIndex, setCurrentWelcomeIndex] = useState(0);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeWords, setWelcomeWords] = useState([]);
@@ -59,9 +60,22 @@ export default function DutchLearningGame() {
   const [recognition, setRecognition] = useState(null);
   const [transcript, setTranscript] = useState('');
   // Add global styles
+// Add global styles
   if (typeof document !== 'undefined') {
     const style = document.createElement('style');
     style.textContent = `
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      
+      input, textarea {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      
       @media (hover: none) {
         *:hover {
           background-color: inherit !important;
@@ -142,12 +156,12 @@ useEffect(() => {
   }
 }, [user, welcomeWords]);
 
-  useEffect(() => {
-    if (gameMode === 'results' && user && gameStartCategory && currentGameMode) {
-      checkAndUpdateProgress(gameStartCategory, currentGameMode, score, numQuestions);
-      setTimeout(() => goToMenu(), 2000);
-    }
-  }, [gameMode]);
+useEffect(() => {
+  if (gameMode === 'results' && user && gameStartCategory && currentGameMode) {
+    checkAndUpdateProgress(gameStartCategory, currentGameMode, score, numQuestions);
+    // Removed auto-redirect - user can navigate manually
+  }
+}, [gameMode]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -257,15 +271,26 @@ const handleSpeakingResult = (spokenText) => {
       message: `Perfect! You said: "${spokenText}"`,
       accuracy: Math.round(accuracy)
     });
-  } else {
-    setStreak(0);
-    setFeedback({ 
-      correct: false, 
-      message: `Not quite! Expected: "${currentWord.dutch}"`,
-      userSaid: spokenText,
-      accuracy: Math.round(accuracy)
-    });
-  }
+} else {
+  setStreak(0);
+  setFeedback({ 
+    correct: false, 
+    message: `Not quite! Expected: "${currentWord.dutch}"`,
+    userSaid: spokenText,
+    accuracy: Math.round(accuracy)
+  });
+  
+  // Track wrong answer
+  setWrongAnswers(prev => [...prev, {
+    dutch: currentWord.dutch,
+    english: currentWord.english,
+    userAnswer: spokenText,
+    correctAnswer: currentWord.dutch,
+    example: currentWord.example,
+    accuracy: Math.round(accuracy),
+    type: 'speaking'
+  }]);
+}
 };
 
 useEffect(() => {
@@ -399,6 +424,42 @@ const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
     };
   };
 
+  // Check if all A1 categories have passed multiple choice
+const areAllA1CategoriesCompleted = () => {
+  if (!user) return false;
+  
+  const a1Categories = Object.keys(dutchWordBank).filter(cat => {
+    const words = dutchWordBank[cat];
+    return words && words.length > 0 && words.some(w => w.level === 'A1');
+  });
+  
+  return a1Categories.every(cat => 
+    userProgress[cat]?.multipleChoice?.passed || false
+  );
+};
+
+// Check if a category is locked (A2 categories locked until all A1 completed)
+const isCategoryLocked = (category) => {
+  if (!user || category === 'all') return false;
+  
+  const words = dutchWordBank[category];
+  if (!words || words.length === 0) return false;
+  
+  // Check if this is an A2-only category
+  const hasA1 = words.some(w => w.level === 'A1');
+  const hasA2 = words.some(w => w.level === 'A2');
+  
+  // If it has A1 words, it's not locked
+  if (hasA1) return false;
+  
+  // If it's A2-only, check if all A1 categories are completed
+  if (hasA2 && !hasA1) {
+    return !areAllA1CategoriesCompleted();
+  }
+  
+  return false;
+};
+
   const categories = ['all', ...Object.keys(dutchWordBank)];
 
   const loadWords = (category) => {
@@ -468,6 +529,7 @@ const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
     setStreak(0);
     setQuestionsAnswered(0);
     setFeedback(null);
+    setWrongAnswers([]);
     setSpellingAnswer('');
     setFillBlankAnswer('');
     setShowQuestionSelector(false);
@@ -558,13 +620,31 @@ const generateQuestion = (words = wordBank, used = usedWords) => {
         })
         .slice(0, 3);
       
+      // If not enough wrong options from current words, get from all words
       if (wrongOptions.length < 3) {
-        const remaining = availableWords
-          .filter(w => w.english !== correct.english && 
-                 !wrongOptions.some(wo => wo.english === w.english))
+        const allWords = getAllWords();
+        const additionalOptions = allWords
+          .filter(w => 
+            w.english !== correct.english && 
+            !wrongOptions.some(wo => wo.english === w.english) &&
+            !used.some(u => u.dutch === w.dutch && u.english === w.english)
+          )
           .sort(() => Math.random() - 0.5)
           .slice(0, 3 - wrongOptions.length);
-        wrongOptions = [...wrongOptions, ...remaining];
+        wrongOptions = [...wrongOptions, ...additionalOptions];
+      }
+      
+      // Final fallback: use ANY words if still not enough
+      if (wrongOptions.length < 3) {
+        const allWords = getAllWords();
+        const finalOptions = allWords
+          .filter(w => 
+            w.english !== correct.english && 
+            !wrongOptions.some(wo => wo.english === w.english)
+          )
+          .sort(() => Math.random() - 0.5)
+          .slice(0, 3 - wrongOptions.length);
+        wrongOptions = [...wrongOptions, ...finalOptions];
       }
       
       allOptions = [correct, ...wrongOptions].sort(() => Math.random() - 0.5);
@@ -737,15 +817,25 @@ const handleAnswer = (selected) => {
         generateQuestion();
       }
     }, 1500);
-  } else {
-    setStreak(0);
-    setFeedback({ 
-      correct: false, 
-      message: difficulty === 'spelling' 
-        ? `Niet helemaal! The correct spelling is "${currentWord.dutch}"` 
-        : `Niet helemaal! The correct answer is "${currentWord.english}"`
-    });
-  }
+} else {
+  setStreak(0);
+  setFeedback({ 
+    correct: false, 
+    message: difficulty === 'spelling' 
+      ? `Niet helemaal! The correct spelling is "${currentWord.dutch}"` 
+      : `Niet helemaal! The correct answer is "${currentWord.english}"`
+  });
+  
+  // Track wrong answer
+  setWrongAnswers(prev => [...prev, {
+    dutch: currentWord.dutch,
+    english: currentWord.english,
+    userAnswer: difficulty === 'spelling' ? selected.dutch : selected.english,
+    correctAnswer: difficulty === 'spelling' ? currentWord.dutch : currentWord.english,
+    example: currentWord.example,
+    type: difficulty === 'spelling' ? 'spelling_choice' : 'multiple_choice'
+  }]);
+}
   
   setQuestionsAnswered(questionsAnswered + 1);
 };
@@ -796,13 +886,23 @@ const handleNext = () => {
           generateSpellingQuestion();
         }
       }, 1500);
-    } else {
-      setStreak(0);
-      setFeedback({ 
-        correct: false, 
-        message: `Not quite! The correct spelling is "${currentWord.dutch}"` 
-      });
-    }
+} else {
+  setStreak(0);
+  setFeedback({ 
+    correct: false, 
+    message: `Not quite! The correct spelling is "${currentWord.dutch}"` 
+  });
+  
+  // Track wrong answer
+  setWrongAnswers(prev => [...prev, {
+    dutch: currentWord.dutch,
+    english: currentWord.english,
+    userAnswer: spellingAnswer.trim(),
+    correctAnswer: currentWord.dutch,
+    example: currentWord.example,
+    type: 'spelling'
+  }]);
+}
   };
 
   const handleFillBlankSubmit = (e) => {
@@ -832,13 +932,24 @@ const handleNext = () => {
           generateFillBlankQuestion();
         }
       }, 1500);
-    } else {
-      setStreak(0);
-      setFeedback({ 
-        correct: false, 
-        message: `Not quite! The correct word is "${currentWord.dutch}"` 
-      });
-    }
+} else {
+  setStreak(0);
+  setFeedback({ 
+    correct: false, 
+    message: `Not quite! The correct word is "${currentWord.dutch}"` 
+  });
+  
+  // Track wrong answer
+  setWrongAnswers(prev => [...prev, {
+    dutch: currentWord.dutch,
+    english: currentWord.english,
+    userAnswer: fillBlankAnswer.trim(),
+    correctAnswer: currentWord.dutch,
+    example: currentWord.example,
+    sentence: fillBlankSentence,
+    type: 'fill_blank'
+  }]);
+}
   };
 
   const startRecording = () => {
@@ -1516,13 +1627,23 @@ const stopRecording = () => {
                     const isCompleted = isCategoryCompleted(cat);
                     const progress = getCategoryProgress(cat);
                     const hasPartialProgress = (progress.multipleChoice || progress.spelling) && !isCompleted;
+                    const isLocked = isCategoryLocked(cat);
                     
                     return (
                       <button
                         key={cat}
-                        onClick={() => setSelectedCategory(cat)}
+                        onClick={() => {
+                          if (isLocked) {
+                            alert('🔒 Complete all A1 categories (Multiple Choice with 80%+) first to unlock A2 lessons!');
+                          } else {
+                            setSelectedCategory(cat);
+                          }
+                        }}
+                        disabled={isLocked}
                         className={`p-2 sm:p-3 rounded-xl font-medium transition-all text-xs relative ${
-                          selectedCategory === cat
+                          isLocked
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
+                            : selectedCategory === cat
                             ? (isCompleted 
                                 ? 'bg-green-600 text-white shadow-lg scale-105 border-2 border-yellow-400' 
                                 : hasPartialProgress
@@ -1535,6 +1656,12 @@ const stopRecording = () => {
                             : `bg-white text-gray-700 ${!isTouchDevice ? 'hover:bg-orange-50' : 'active:bg-orange-50'} border border-gray-200`
                         }`}
                       >
+                          {isLocked && (
+                            <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
+                              <span className="text-white text-xs">🔒</span>
+                            </div>
+                            
+                          )}
                         {isCompleted && (
                           <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
                             <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
@@ -1561,7 +1688,22 @@ const stopRecording = () => {
                   })}
                 </div>
               </div>
+            {/* A1 Progress Indicator */}
+            {!areAllA1CategoriesCompleted() && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-blue-700 text-xs sm:text-sm text-center font-semibold">
+                  💡 Complete all A1 categories (Multiple Choice with 80%+) to unlock A2 lessons!
+                </p>
+              </div>
+            )}
 
+            {areAllA1CategoriesCompleted() && (
+              <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200">
+                <p className="text-green-700 text-xs sm:text-sm text-center font-semibold">
+                  🎉 Congratulations! All A2 lessons are now unlocked!
+                </p>
+              </div>
+            )}
               {/* Game Mode Buttons - MOBILE OPTIMIZED */}
               <div className="space-y-2 sm:space-y-3">
                 <button
@@ -1921,12 +2063,13 @@ const stopRecording = () => {
   }
 
   // RESULTS SCREEN - MOBILE OPTIMIZED
-  if (gameMode === 'results') {
-    const percentage = Math.round((score / numQuestions) * 100);
+if (gameMode === 'results') {
+  const percentage = Math.round((score / numQuestions) * 100);
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-lg w-full text-center">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-4xl w-full">
+        <div className="text-center mb-6">
           <Trophy className="w-16 h-16 sm:w-24 sm:h-24 text-yellow-500 mx-auto mb-4" />
           <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-4">
             {percentage >= 80 ? 'Uitstekend! Exam ready!' :
@@ -1937,34 +2080,97 @@ const stopRecording = () => {
             <div className="text-4xl sm:text-6xl font-bold text-orange-600 mb-2">{score}/{numQuestions}</div>
             <div className="text-xl sm:text-2xl text-gray-600">{percentage}% Correct</div>
           </div>
-          
-          <div className="space-y-3">
-            <button
-              onClick={startGame}
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-            >
-              <RefreshCw className="w-5 h-5" />
-              Test Again
-            </button>
-            <button
-              onClick={startLearnMode}
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-            >
-              <BookOpen className="w-5 h-5" />
-              Review Words
-            </button>
-            <button
-              onClick={goToMenu}
-              className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
-            >
-              <Home className="w-5 h-5" />
-              Menu
-            </button>
+        </div>
+        
+        {/* Wrong Answers Review Section */}
+        {wrongAnswers.length > 0 && (
+          <div className="mb-6 max-h-96 overflow-y-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 text-center">
+              📝 Review Your Mistakes ({wrongAnswers.length})
+            </h3>
+            <div className="space-y-3">
+              {wrongAnswers.map((wrong, idx) => (
+                <div key={idx} className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl font-bold text-red-600">{wrong.dutch}</span>
+                        <button
+                          onClick={() => speakDutch(wrong.dutch)}
+                          className="bg-red-100 hover:bg-red-200 active:bg-red-200 p-2 rounded-full transition-all"
+                        >
+                          <Volume2 className="w-4 h-4 text-red-600" />
+                        </button>
+                      </div>
+                      <p className="text-gray-700 font-semibold mb-2">{wrong.english}</p>
+                      
+                      <div className="bg-white rounded-lg p-3 mb-2">
+                        <p className="text-sm text-gray-600 mb-1">❌ Your answer:</p>
+                        <p className="text-red-600 font-bold line-through">{wrong.userAnswer}</p>
+                        <p className="text-sm text-gray-600 mt-2 mb-1">✅ Correct answer:</p>
+                        <p className="text-green-600 font-bold">{wrong.correctAnswer}</p>
+                        {wrong.accuracy !== undefined && (
+                          <p className="text-xs text-gray-500 mt-2">Accuracy: {wrong.accuracy}%</p>
+                        )}
+                      </div>
+                      
+                      {wrong.example && (
+                        <div className="bg-blue-50 rounded-lg p-2 mt-2">
+                          <p className="text-xs text-blue-600 mb-1">Example:</p>
+                          <p className="text-sm text-gray-700 italic">{wrong.example}</p>
+                        </div>
+                      )}
+                      
+                      {wrong.sentence && (
+                        <div className="bg-purple-50 rounded-lg p-2 mt-2">
+                          <p className="text-xs text-purple-600 mb-1">Sentence:</p>
+                          <p className="text-sm text-gray-700">{wrong.sentence}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-400 mt-2">
+                    Type: {wrong.type.replace('_', ' ')}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+        )}
+        
+        {wrongAnswers.length === 0 && (
+          <div className="mb-6 p-4 bg-green-50 border-2 border-green-200 rounded-xl text-center">
+            <p className="text-green-700 font-bold text-lg">🎉 Perfect! No mistakes!</p>
+          </div>
+        )}
+        
+        <div className="space-y-3">
+          <button
+            onClick={startGame}
+            className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-5 h-5" />
+            Test Again
+          </button>
+          <button
+            onClick={startLearnMode}
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+          >
+            <BookOpen className="w-5 h-5" />
+            Review Words
+          </button>
+          <button
+            onClick={goToMenu}
+            className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+          >
+            <Home className="w-5 h-5" />
+            Menu
+          </button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // QUIZ SCREENS - MOBILE OPTIMIZED
   return (
