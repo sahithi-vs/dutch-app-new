@@ -18,6 +18,7 @@ const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
   const [attemptHistory, setAttemptHistory] = useState([]);
+  const [srsData, setSrsData] = useState({});
   const [showHistory, setShowHistory] = useState(false);
   const [selectedHistoryCategory, setSelectedHistoryCategory] = useState('all');
   const [selectedConversation, setSelectedConversation] = useState(null);
@@ -220,6 +221,7 @@ useEffect(() => {
 useEffect(() => {
   loadUserProgress();
   loadAttemptHistory();
+  loadSRSData()
 }, [user]);
 
   const loadUserProgress = () => {
@@ -268,7 +270,7 @@ const saveAttemptToHistory = (category, mode, score, total, wrongAnswers, diffic
     }))
   };
   
-  const updatedHistory = [attempt, ...attemptHistory].slice(0, 100); // Keep last 100 attempts
+ const updatedHistory = [attempt, ...attemptHistory].slice(0, 100); // Keep last 100 attempts
   
   try {
     localStorage.setItem(`history_${user.sub}`, JSON.stringify(updatedHistory));
@@ -349,7 +351,9 @@ const handleSpeakingResult = (spokenText) => {
   
   playSound(isCorrect);
   setQuestionsAnswered(questionsAnswered + 1);
-  
+    // In handleSpeakingResult - add after playSound
+  const wordKey = `${currentWord.dutch}_${currentWord.english}`;
+  updateSRSData(wordKey, isCorrect);
   if (isCorrect) {
     setScore(score + 1);
     setStreak(streak + 1);
@@ -446,6 +450,109 @@ const handleLogout = () => {
   localStorage.removeItem('dutch_app_user');
   localStorage.removeItem('dutch_app_login_time');
   goToMenu();
+};
+
+
+// Calculate next review interval based on performance
+const calculateNextReview = (currentLevel, isCorrect) => {
+  // SM-2 algorithm intervals (in days)
+  const intervals = [0.1, 1, 3, 7, 14, 30];
+  
+  let newLevel = currentLevel;
+  if (isCorrect) {
+    newLevel = Math.min(5, currentLevel + 1);
+  } else {
+    newLevel = Math.max(0, currentLevel - 1);
+  }
+  
+  const daysUntilReview = intervals[newLevel] || 30;
+  const nextReviewDate = new Date();
+  nextReviewDate.setDate(nextReviewDate.getDate() + daysUntilReview);
+  
+  return { newLevel, nextReviewDate: nextReviewDate.toISOString() };
+};
+
+// Update SRS data for a word
+const updateSRSData = (wordKey, isCorrect) => {
+  if (!user) return;
+  
+  const currentData = srsData[wordKey] || {
+    level: 0,
+    reviewCount: 0,
+    lastReviewed: null,
+    nextReview: new Date().toISOString()
+  };
+  
+  const { newLevel, nextReviewDate } = calculateNextReview(currentData.level, isCorrect);
+  
+  const updatedData = {
+    ...srsData,
+    [wordKey]: {
+      level: newLevel,
+      reviewCount: currentData.reviewCount + 1,
+      lastReviewed: new Date().toISOString(),
+      nextReview: nextReviewDate,
+      correctStreak: isCorrect ? (currentData.correctStreak || 0) + 1 : 0,
+      totalAttempts: (currentData.totalAttempts || 0) + 1,
+      correctAttempts: (currentData.correctAttempts || 0) + (isCorrect ? 1 : 0)
+    }
+  };
+  
+  setSrsData(updatedData);
+  localStorage.setItem(`srs_${user.sub}`, JSON.stringify(updatedData));
+};
+
+// Load SRS data from localStorage
+const loadSRSData = () => {
+  if (!user) return;
+  
+  try {
+    const saved = localStorage.getItem(`srs_${user.sub}`);
+    if (saved) {
+      setSrsData(JSON.parse(saved));
+    }
+  } catch (error) {
+    setSrsData({});
+  }
+};
+
+// Get words prioritized by SRS algorithm
+const getSRSPrioritizedWords = (words) => {
+  const now = new Date();
+  
+  return words
+    .map(word => {
+      const wordKey = `${word.dutch}_${word.english}`;
+      const srsInfo = srsData[wordKey] || {
+        level: 0,
+        nextReview: now.toISOString(),
+        reviewCount: 0
+      };
+      
+      const nextReview = new Date(srsInfo.nextReview);
+      const isDue = nextReview <= now;
+      const daysSinceReview = srsInfo.lastReviewed 
+        ? (now - new Date(srsInfo.lastReviewed)) / (1000 * 60 * 60 * 24)
+        : 999;
+      
+      // Priority score (higher = more important to review)
+      let priority = 0;
+      
+      if (isDue) priority += 100; // Due words get highest priority
+      if (srsInfo.level === 0) priority += 50; // New/difficult words
+      if (srsInfo.level <= 2) priority += 30; // Learning words
+      if (srsInfo.reviewCount === 0) priority += 40; // Never reviewed
+      priority += (5 - srsInfo.level) * 10; // Lower level = higher priority
+      priority += Math.min(daysSinceReview, 30); // Add days since last review
+      
+      return {
+        ...word,
+        srsInfo,
+        priority,
+        isDue
+      };
+    })
+    .sort((a, b) => b.priority - a.priority);
 };
 
 const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
@@ -570,15 +677,19 @@ const isCategoryLocked = (category) => {
 
   const categories = ['all', ...Object.keys(dutchWordBank)];
 
-  const loadWords = (category) => {
-    let words = [];
-    if (category === 'all') {
-      words = getAllWords();
-    } else {
-      words = (dutchWordBank[category] || []).map(w => ({ ...w, category }));
-    }
-    return words.sort(() => Math.random() - 0.5);
-  };
+const loadWords = (category) => {
+  let words = [];
+  if (category === 'all') {
+    words = getAllWords();
+  } else {
+    words = (dutchWordBank[category] || []).map(w => ({ ...w, category }));
+  }
+  
+  // Apply SRS prioritization
+  const prioritizedWords = getSRSPrioritizedWords(words);
+  
+  return prioritizedWords;
+};
 
   const startLearnMode = () => {
     const words = loadWords(selectedCategory);
@@ -918,6 +1029,10 @@ const handleAnswer = (selected) => {
   
   playSound(isCorrect);
 
+  // UPDATE SRS DATA - ADD THIS
+  const wordKey = `${currentWord.dutch}_${currentWord.english}`;
+  updateSRSData(wordKey, isCorrect);
+
   if (isCorrect) {
     setScore(score + 1);
     setStreak(streak + 1);
@@ -930,25 +1045,24 @@ const handleAnswer = (selected) => {
         generateQuestion();
       }
     }, 1500);
-} else {
-  setStreak(0);
-  setFeedback({ 
-    correct: false, 
-    message: difficulty === 'spelling' 
-      ? `Niet helemaal! The correct spelling is "${currentWord.dutch}"` 
-      : `Niet helemaal! The correct answer is "${currentWord.english}"`
-  });
-  
-  // Track wrong answer
-  setWrongAnswers(prev => [...prev, {
-    dutch: currentWord.dutch,
-    english: currentWord.english,
-    userAnswer: difficulty === 'spelling' ? selected.dutch : selected.english,
-    correctAnswer: difficulty === 'spelling' ? currentWord.dutch : currentWord.english,
-    example: currentWord.example,
-    type: difficulty === 'spelling' ? 'spelling_choice' : 'multiple_choice'
-  }]);
-}
+  } else {
+    setStreak(0);
+    setFeedback({ 
+      correct: false, 
+      message: difficulty === 'spelling' 
+        ? `Niet helemaal! The correct spelling is "${currentWord.dutch}"` 
+        : `Niet helemaal! The correct answer is "${currentWord.english}"`
+    });
+    
+    setWrongAnswers(prev => [...prev, {
+      dutch: currentWord.dutch,
+      english: currentWord.english,
+      userAnswer: difficulty === 'spelling' ? selected.dutch : selected.english,
+      correctAnswer: difficulty === 'spelling' ? currentWord.dutch : currentWord.english,
+      example: currentWord.example,
+      type: difficulty === 'spelling' ? 'spelling_choice' : 'multiple_choice'
+    }]);
+  }
   
   setQuestionsAnswered(questionsAnswered + 1);
 };
@@ -986,6 +1100,10 @@ const handleNext = () => {
     playSound(isCorrect); 
     setQuestionsAnswered(questionsAnswered + 1);
     
+        // In handleSpellingSubmit - add after playSound
+    const wordKey = `${currentWord.dutch}_${currentWord.english}`;
+    updateSRSData(wordKey, isCorrect);
+
     if (isCorrect) {
       setScore(score + 1);
       setStreak(streak + 1);
@@ -1032,6 +1150,10 @@ const handleNext = () => {
     playSound(isCorrect); 
     setQuestionsAnswered(questionsAnswered + 1);
     
+    // In handleFillBlankSubmit - add after playSound
+    const wordKey = `${currentWord.dutch}_${currentWord.english}`;
+    updateSRSData(wordKey, isCorrect);
+
     if (isCorrect) {
       setScore(score + 1);
       setStreak(streak + 1);
@@ -2444,84 +2566,127 @@ if (showHistory) {
                   </div>
                 )}
                 
-
+            {user && Object.keys(srsData).length > 0 && (
+              <div className="mt-4 bg-indigo-50 rounded-xl p-4 sm:p-6 border-2 border-indigo-200">
+                <h3 className="text-center font-bold text-indigo-700 mb-3 text-sm sm:text-base">
+                  🧠 Your Learning Progress (SRS)
+                </h3>
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  {(() => {
+                    const allWords = getAllWords();
+                    const prioritized = getSRSPrioritizedWords(allWords);
+                    const mastered = prioritized.filter(w => w.srsInfo.level >= 4).length;
+                    const learning = prioritized.filter(w => w.srsInfo.level > 0 && w.srsInfo.level < 4).length;
+                    const dueToday = prioritized.filter(w => w.isDue).length;
+                    
+                    return (
+                      <>
+                        <div className="bg-white p-2 sm:p-3 rounded-lg text-center">
+                          <div className="text-xl sm:text-2xl font-bold text-green-600">{mastered}</div>
+                          <div className="text-xs text-gray-600">Mastered</div>
+                        </div>
+                        <div className="bg-white p-2 sm:p-3 rounded-lg text-center">
+                          <div className="text-xl sm:text-2xl font-bold text-blue-600">{learning}</div>
+                          <div className="text-xs text-gray-600">Learning</div>
+                        </div>
+                        <div className="bg-white p-2 sm:p-3 rounded-lg text-center">
+                          <div className="text-xl sm:text-2xl font-bold text-orange-600">{dueToday}</div>
+                          <div className="text-xs text-gray-600">Due Today</div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
               </div>
               
               {/* Category Selection - MOBILE OPTIMIZED */}
               <div className="mb-4 sm:mb-6">
                 <label className="block text-gray-700 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Choose a Thema category:</label>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
-                  {categories.map(cat => {
-                    const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
-                    const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
-                    const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
-                    const isCompleted = isCategoryCompleted(cat);
-                    const progress = getCategoryProgress(cat);
-                    const hasPartialProgress = (progress.multipleChoice || progress.spelling) && !isCompleted;
-                    const isLocked = isCategoryLocked(cat);
-                    
-                    return (
-                          <button
-                            key={cat}
-                            onClick={() => {
-                              if (isLocked) {
-                                alert('🔒 Complete all A1 categories (Multiple Choice with 80%+) first to unlock A2 lessons!');
-                              } else {
-                                setSelectedCategory(cat);
-                              }
-                            }}
-                            disabled={isLocked}
-                            className={`p-2 sm:p-3 rounded-xl font-medium transition-all text-xs relative ${
-                              isLocked
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60'
-                                : selectedCategory === cat
-                                ? (isCompleted 
-                                    ? 'bg-green-600 text-white shadow-lg scale-105 border-2 border-yellow-400' 
-                                    : hasPartialProgress
-                                    ? 'bg-yellow-500 text-white shadow-lg scale-105'
-                                    : 'bg-orange-500 text-white shadow-lg scale-105')
-                                : isCompleted
-                                ? 'bg-green-500 text-white hover:bg-green-600 active:bg-green-600 border-2 border-green-600'
-                                : hasPartialProgress
-                                ? 'bg-yellow-400 text-gray-800 hover:bg-yellow-500 active:bg-yellow-500 border-2 border-yellow-500'
-                                : 'bg-white text-gray-700 hover:bg-orange-100 active:bg-orange-100 border border-gray-200'
-                            }`}
-                            style={{
-                              WebkitTapHighlightColor: 'transparent',
-                              touchAction: 'manipulation'
-                            }}
-                          >
-                          {isLocked && (
-                            <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
-                              <span className="text-white text-xs">🔒</span>
-                            </div>
-                            
-                          )}
-                        {isCompleted && (
-                          <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
-                            <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                          </div>
-                        )}
-                        {!isCompleted && hasPartialProgress && (
-                          <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1 sm:px-1.5 py-0.5">
-                            <span className="text-white text-xs font-bold">
-                              {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✓' : ''}
-                            </span>
-                          </div>
-                        )}
-                        <div className="font-bold text-xs sm:text-sm">{cat === 'all' ? 'All' : cat.replace(/_/g, ' ').replace(/lesson /g, 'L').toUpperCase()}</div>
-                        <div className="opacity-75 mt-1 text-xs">
-                          {wordCount} words
-                          {(hasA1 || hasA2) && (
-                            <span className="block sm:inline sm:ml-1">
-                              {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'}
-                            </span>
-                          )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                {categories.map(cat => {
+                  const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
+                  const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
+                  const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
+
+                  const isCompleted = isCategoryCompleted(cat);
+                  const progress = getCategoryProgress(cat);
+                  const hasPartialProgress = (progress.multipleChoice || progress.spelling) && !isCompleted;
+                  const isLocked = isCategoryLocked(cat);
+                  const isSelected = selectedCategory === cat;
+                  
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        if (isLocked) {
+                          alert('🔒 Complete all A1 categories (Multiple Choice with 80%+) first to unlock A2 lessons!');
+                        } else {
+                          setSelectedCategory(cat);
+                        }
+                      }}
+                      disabled={isLocked}
+                      style={{
+                        WebkitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        backgroundColor: isLocked
+                          ? '#d1d5db'
+                          : isSelected
+                          ? (isCompleted ? '#16a34a' : hasPartialProgress ? '#eab308' : '#f97316')
+                          : (isCompleted ? '#22c55e' : hasPartialProgress ? '#facc15' : '#ffffff'),
+                        color: isLocked
+                          ? '#6b7280'
+                          : (isSelected || isCompleted || hasPartialProgress)
+                          ? '#ffffff'
+                          : '#374151',
+                        border: isLocked
+                          ? 'none'
+                          : isSelected
+                          ? (isCompleted ? '2px solid #fbbf24' : '2px solid transparent')
+                          : isCompleted
+                          ? '2px solid #16a34a'
+                          : hasPartialProgress
+                          ? '2px solid #eab308'
+                          : '1px solid #e5e7eb',
+                        transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                        boxShadow: isSelected ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none',
+                        transition: 'all 0.2s ease',
+                        opacity: isLocked ? 0.6 : 1,
+                        cursor: isLocked ? 'not-allowed' : 'pointer'
+                      }}
+                      className="p-2 sm:p-3 rounded-xl font-medium text-xs relative"
+                    >
+                      {isLocked && (
+                        <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
+                          <span className="text-white text-xs">🔒</span>
                         </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                      )}
+                      {isCompleted && (
+                        <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
+                          <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                        </div>
+                      )}
+                      {!isCompleted && hasPartialProgress && (
+                        <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1 sm:px-1.5 py-0.5">
+                          <span className="text-white text-xs font-bold">
+                            {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✓' : ''}
+                          </span>
+                        </div>
+                      )}
+                      <div className="font-bold text-xs sm:text-sm">{cat === 'all' ? 'All' : cat.replace(/_/g, ' ').replace(/lesson /g, 'L').toUpperCase()}</div>
+                      <div className="opacity-75 mt-1 text-xs">
+                        {wordCount} words
+                        {(hasA1 || hasA2) && (
+                          <span className="block sm:inline sm:ml-1">
+                            {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
               </div>
             {/* A1 Progress Indicator */}
             {!areAllA1CategoriesCompleted() && (
@@ -2596,6 +2761,28 @@ if (showHistory) {
                   className="w-full bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span className="text-sm sm:text-xl">📊 My History</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    const allWords = getAllWords();
+                    const prioritized = getSRSPrioritizedWords(allWords);
+                    const dueWords = prioritized.filter(w => w.isDue);
+                    
+                    if (dueWords.length === 0) {
+                      alert('🎉 No words due for review! Great job!');
+                      return;
+                    }
+                    
+                    setNumQuestions(Math.min(dueWords.length, 20));
+                    setPendingGameMode('play');
+                    setShowQuestionSelector(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">🧠 SRS Review ({
+                    getSRSPrioritizedWords(getAllWords()).filter(w => w.isDue).length
+                  } due)</span>
                 </button>
               </div>
 
