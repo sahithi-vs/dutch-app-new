@@ -1,6 +1,6 @@
 // data/conversations.js - All female version (complete with all dialogues and updated questions)
 
-export const conversations = [
+export const conversations1 = [
   {
     id: 1,
     title: "At the Restaurant - Food Conversation",
@@ -315,3 +315,5 @@ export const conversations = [
 
 
 ];
+
+export const conversations = conversations1;

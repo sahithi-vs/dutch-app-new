@@ -5,6 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import { conversations } from './data/conversations';
 import { dutchWordBank } from './data/dutchWordBank';
 import { stories } from './data/stories';
+import { verbConjugations } from './data/verbConjugations';
 
 const getAllWords = () => {
   const allWords = [];
@@ -17,6 +18,9 @@ const getAllWords = () => {
 const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
+  // Add state for conjugation mode
+  const [conjugationQuestion, setConjugationQuestion] = useState(null);
+  const [conjugationAnswer, setConjugationAnswer] = useState('');
   const [attemptHistory, setAttemptHistory] = useState([]);
   const [srsData, setSrsData] = useState({});
   const [showHistory, setShowHistory] = useState(false);
@@ -470,6 +474,66 @@ const calculateNextReview = (currentLevel, isCorrect) => {
   nextReviewDate.setDate(nextReviewDate.getDate() + daysUntilReview);
   
   return { newLevel, nextReviewDate: nextReviewDate.toISOString() };
+};
+
+
+// Generate conjugation question
+const generateConjugationQuestion = () => {
+  const verbs = Object.keys(verbConjugations);
+  const randomVerb = verbs[Math.floor(Math.random() * verbs.length)];
+  const tenses = ['present', 'past'];
+  const randomTense = tenses[Math.floor(Math.random() * tenses.length)];
+  const pronouns = Object.keys(verbConjugations[randomVerb][randomTense]);
+  const randomPronoun = pronouns[Math.floor(Math.random() * pronouns.length)];
+  
+  setConjugationQuestion({
+    verb: randomVerb,
+    tense: randomTense,
+    pronoun: randomPronoun,
+    correctAnswer: verbConjugations[randomVerb][randomTense][randomPronoun]
+  });
+  setConjugationAnswer('');
+  setFeedback(null);
+};
+
+// Handle conjugation submit
+const handleConjugationSubmit = (e) => {
+  if (e) e.preventDefault();
+  
+  if (!conjugationAnswer.trim()) return;
+  
+  const isCorrect = conjugationAnswer.trim().toLowerCase() === conjugationQuestion.correctAnswer.toLowerCase();
+  
+  playSound(isCorrect);
+  setQuestionsAnswered(questionsAnswered + 1);
+  
+  if (isCorrect) {
+    setScore(score + 1);
+    setStreak(streak + 1);
+    setFeedback({ correct: true, message: 'Perfect! Goed gedaan!' });
+    
+    setTimeout(() => {
+      if (questionsAnswered + 1 >= numQuestions) {
+        setGameMode('results');
+      } else {
+        generateConjugationQuestion();
+      }
+    }, 1500);
+  } else {
+    setStreak(0);
+    setFeedback({ 
+      correct: false, 
+      message: `Not quite! The correct answer is "${conjugationQuestion.correctAnswer}"` 
+    });
+    
+    setWrongAnswers(prev => [...prev, {
+      dutch: conjugationQuestion.verb,
+      english: `${conjugationQuestion.pronoun} (${conjugationQuestion.tense})`,
+      userAnswer: conjugationAnswer.trim(),
+      correctAnswer: conjugationQuestion.correctAnswer,
+      type: 'conjugation'
+    }]);
+  }
 };
 
 // Update SRS data for a word
@@ -1341,6 +1405,9 @@ const stopRecording = () => {
     setConversationScore(0);
     setConversationQuizFeedback(null);
     stopConversation();
+    setConjugationQuestion(null);
+    setConjugationAnswer('');
+    stopConversation();
   };
 
   const handleSearch = (query) => {
@@ -1519,21 +1586,6 @@ const mobileHoverFix = (
               </button>
             ))}
           </div>
-          <button
-            onClick={() => { 
-              setGameMode('menu'); 
-              setShowStories(false);
-              setSelectedStory(null);
-              setScore(0);
-              setStreak(0);
-              setQuestionsAnswered(0);
-              setFeedback(null);
-            }}
-            className="mt-6 sm:mt-8 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            Back to Menu
-          </button>
         </div>
       </div>
     );
@@ -2097,7 +2149,7 @@ return (
           </div>
         )}
       </div>
-      
+
       {/* Show script button - only visible when NOT playing */}
       {!isPlayingConversation && (
         <div className="mb-4">
@@ -2750,6 +2802,24 @@ if (showHistory) {
                   <span className="text-sm sm:text-xl">📝 Fill Blank</span>
                 </button>
                 
+                {/* ADD THIS CONJUGATION BUTTON RIGHT HERE */}
+                <button
+                  onClick={() => {
+                    setGameMode('conjugation');
+                    setNumQuestions(10);
+                    setScore(0);
+                    setStreak(0);
+                    setQuestionsAnswered(0);
+                    setWrongAnswers([]);
+                    setCurrentGameMode('conjugation');
+                    setGameStartCategory('verbs');
+                    generateConjugationQuestion();
+                  }}
+                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">🔄 Verb Conjugation</span>
+                </button>
+
                 <button
                   onClick={() => { setShowStories(true); setGameMode('stories'); }}
                   className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
@@ -3017,18 +3087,7 @@ if (showHistory) {
                       >
                         <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
                       </button>
-                      <button
-                        onClick={() => {
-                          // Remove English translation in parentheses and speak
-                          const dutchSentence = currentLearnWord.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
-                          speakDutch(dutchSentence);
-                        }}
-                        className="bg-purple-100 hover:bg-purple-200 active:bg-purple-200 px-4 py-2 sm:px-5 sm:py-3 rounded-xl transition-all flex items-center gap-2"
-                        title="Pronounce example sentence"
-                      >
-                        <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
-                        <span className="text-xs sm:text-sm font-semibold text-purple-600">Example</span>
-                      </button>
+
                     </div>
                   </div>
                   
@@ -3037,8 +3096,20 @@ if (showHistory) {
                   </div>
                   
                   <div className="text-sm sm:text-lg text-gray-500 mt-4">
-                    <span className="font-semibold">Example:</span>
+                    <div className="flex flex-col items-center mb-3">
+                    {/* <span className="font-semibold">Example:</span> */}
+                      <button
+                        onClick={() => {
+                          const dutchSentence = currentLearnWord.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
+                          speakDutch(dutchSentence);
+                        }}
+                        className="bg-blue-100 hover:bg-blue-200 active:bg-blue-200 px-4 py-2 sm:px-5 sm:py-3 rounded-xl transition-all flex items-center gap-2"
+                      >
+                        <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                        <span className="text-xs sm:text-sm font-semibold text-blue-600">Example</span>
+                      </button>
                     <p className="mt-2">{currentLearnWord.example}</p>
+                  </div>
                   </div>
                 </div>
 
@@ -3683,6 +3754,85 @@ if (gameMode === 'results') {
               )}
             </>
           )}
+{/* CONJUGATION MODE */}
+{conjugationQuestion && gameMode === 'conjugation' && (
+  <>
+    <div className="text-center mb-6 sm:mb-8">
+      <div className="mb-3">
+        <span className="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-cyan-100 text-cyan-700">
+          Verb Conjugation - {conjugationQuestion.tense === 'present' ? 'Present' : 'Past'} Tense
+        </span>
+      </div>
+      <p className="text-gray-600 mb-4 text-sm sm:text-base">Conjugate this verb:</p>
+      
+      <div className="bg-cyan-50 p-4 sm:p-6 rounded-xl mb-4 sm:mb-6">
+        <p className="text-2xl sm:text-3xl font-bold text-cyan-700 mb-3">
+          {conjugationQuestion.verb}
+        </p>
+        <p className="text-lg sm:text-xl text-gray-700">
+          {conjugationQuestion.pronoun} → ____
+        </p>
+      </div>
+    </div>
+
+    <form onSubmit={handleConjugationSubmit} className="space-y-4">
+      <input
+        type="text"
+        value={conjugationAnswer}
+        onChange={(e) => setConjugationAnswer(e.target.value)}
+        disabled={feedback !== null}
+        placeholder="Type conjugated form..."
+        className="w-full p-3 sm:p-4 text-xl sm:text-2xl text-center font-semibold border-4 border-cyan-300 rounded-xl focus:border-cyan-500 focus:outline-none disabled:bg-gray-100"
+        autoFocus
+      />
+      
+      {feedback === null && (
+        <button
+          type="submit"
+          disabled={!conjugationAnswer.trim()}
+          className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all disabled:opacity-50"
+        >
+          Submit Answer
+        </button>
+      )}
+    </form>
+
+    {feedback && (
+      <div className={`mt-4 sm:mt-6 p-3 sm:p-4 rounded-xl ${feedback.correct ? 'bg-green-100' : 'bg-red-100'}`}>
+        <div className="flex items-center gap-2 sm:gap-3 mb-3">
+          {feedback.correct ? <Check className="w-5 h-5 text-green-600" /> : <X className="w-5 h-5 text-red-600" />}
+          <p className={`font-semibold ${feedback.correct ? 'text-green-700' : 'text-red-700'}`}>
+            {feedback.message}
+          </p>
+        </div>
+        
+        {!feedback.correct && (
+          <div className="mb-3 p-3 bg-white rounded-lg">
+            <p className="text-gray-600 text-xs mb-1">You wrote:</p>
+            <p className="text-red-600 font-bold text-lg line-through">{conjugationAnswer}</p>
+            <p className="text-gray-600 text-xs mt-2 mb-1">Correct:</p>
+            <p className="text-green-600 font-bold text-lg">{conjugationQuestion.correctAnswer}</p>
+          </div>
+        )}
+        
+        <button
+          onClick={() => {
+            setConjugationAnswer('');
+            if (questionsAnswered >= numQuestions) {
+              setGameMode('results');
+            } else {
+              generateConjugationQuestion();
+            }
+          }}
+          className="w-full mt-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
+        >
+          Next Question
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    )}
+  </>
+)}
         </div>
       </div>
           {/* ADD THIS BOTTOM BAR - BEFORE THE CLOSING </div> OF min-h-screen */}
