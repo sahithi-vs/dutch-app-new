@@ -6,6 +6,9 @@ import { conversations } from './data/conversations';
 import { dutchWordBank } from './data/dutchWordBank';
 import { stories } from './data/stories';
 import { verbConjugations } from './data/verbConjugations';
+import { achievements as achievementsData } from './data/achievements';
+import { ref, set, get, child, onValue } from 'firebase/database';
+import { database } from './firebase'; 
 
 const getAllWords = () => {
   const allWords = [];
@@ -18,7 +21,18 @@ const getAllWords = () => {
 const getTotalWordCount = () => getAllWords().length;
 
 export default function DutchLearningGame() {
-  // Add state for conjugation mode
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [allUserStats, setAllUserStats] = useState([]);
+
+// Admin email - CHANGE THIS TO YOUR GOOGLE EMAIL
+  const ADMIN_EMAIL = 'naveen.nainika2025@gmail.com';
+  const [achievements, setAchievements] = useState({});
+  const [userPoints, setUserPoints] = useState(0);
+  const [showAchievementPopup, setShowAchievementPopup] = useState(null);
+  const [unlockedAchievements, setUnlockedAchievements] = useState([]);
+  const [quizStartTime, setQuizStartTime] = useState(null);
+  const [gameModesCompleted, setGameModesCompleted] = useState(new Set());
   const [conjugationQuestion, setConjugationQuestion] = useState(null);
   const [conjugationAnswer, setConjugationAnswer] = useState('');
   const [attemptHistory, setAttemptHistory] = useState([]);
@@ -124,29 +138,37 @@ export default function DutchLearningGame() {
     }
   }
 
-  // Load user from localStorage on mount
-  useEffect(() => {
-    const savedUser = localStorage.getItem('dutch_app_user');
-    const loginTime = localStorage.getItem('dutch_app_login_time');
-    
-    if (savedUser && loginTime) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        const timeDifference = Date.now() - parseInt(loginTime);
-        const oneHour = 60 * 60 * 1000;
-        
-        if (timeDifference < oneHour) {
-          setUser(parsedUser);
-        } else {
-          localStorage.removeItem('dutch_app_user');
-          localStorage.removeItem('dutch_app_login_time');
+useEffect(() => {
+  const savedUser = localStorage.getItem('dutch_app_user');
+  const loginTime = localStorage.getItem('dutch_app_login_time');
+  
+  if (savedUser && loginTime) {
+    try {
+      const parsedUser = JSON.parse(savedUser);
+      const timeDifference = Date.now() - parseInt(loginTime);
+      const oneHour = 60 * 60 * 1000;
+      
+      if (timeDifference < oneHour) {
+        setUser(parsedUser);
+        // Reset admin state first, then check
+        setIsAdmin(false);
+        if (parsedUser.email === ADMIN_EMAIL) {
+          setIsAdmin(true);
         }
-      } catch (error) {
+      } else {
         localStorage.removeItem('dutch_app_user');
         localStorage.removeItem('dutch_app_login_time');
+        setIsAdmin(false); // ADD THIS
       }
+    } catch (error) {
+      localStorage.removeItem('dutch_app_user');
+      localStorage.removeItem('dutch_app_login_time');
+      setIsAdmin(false); // ADD THIS
     }
-  }, []);
+  } else {
+    setIsAdmin(false); // ADD THIS
+  }
+}, []);
 
   useEffect(() => {
   if (user && gameMode === 'menu' && showWelcome) {
@@ -213,6 +235,23 @@ useEffect(() => {
   if (gameMode === 'results' && user && gameStartCategory && currentGameMode) {
     checkAndUpdateProgress(gameStartCategory, currentGameMode, score, numQuestions);
     saveAttemptToHistory(gameStartCategory, currentGameMode, score, numQuestions, wrongAnswers, difficulty);
+    
+    // Check achievements
+    const timeTaken = quizStartTime ? (Date.now() - quizStartTime) / 1000 : 0;
+    const isSpeedDemon = numQuestions >= 20 && timeTaken < 120;
+    
+    // Track completed game modes
+    if (score / numQuestions >= 0.8) {
+      const newModes = new Set(gameModesCompleted);
+      newModes.add(currentGameMode);
+      setGameModesCompleted(newModes);
+      
+      checkAchievements('game_modes_mastered', newModes.size, { modesCompleted: newModes });
+    }
+    
+    checkAchievements('perfect_score', score, { score, total: numQuestions });
+    checkAchievements('quizzes_completed', attemptHistory.length + 1);
+    checkAchievements('special', 1, { isSpeedDemon, modesCompleted: gameModesCompleted });
   }
 }, [gameMode]);
 
@@ -230,7 +269,8 @@ useEffect(() => {
 useEffect(() => {
   loadUserProgress();
   loadAttemptHistory();
-  loadSRSData()
+  loadSRSData();
+  loadAchievements();
 }, [user]);
 
   const loadUserProgress = () => {
@@ -366,6 +406,7 @@ const handleSpeakingResult = (spokenText) => {
   if (isCorrect) {
     setScore(score + 1);
     setStreak(streak + 1);
+    checkAchievements('streak', streak + 1);
     setFeedback({ 
       correct: true, 
       message: `Perfect! You said: "${spokenText}"`,
@@ -444,18 +485,94 @@ useEffect(() => {
     }
   };
 
-  const handleLoginSuccess = (credentialResponse) => {
-    const decoded = jwtDecode(credentialResponse.credential);
-    setUser(decoded);
-    localStorage.setItem('dutch_app_user', JSON.stringify(decoded));
-    localStorage.setItem('dutch_app_login_time', Date.now().toString());
-  };
+const handleLoginSuccess = async (credentialResponse) => {
+  const decoded = jwtDecode(credentialResponse.credential);
+  setUser(decoded);
+  localStorage.setItem('dutch_app_user', JSON.stringify(decoded));
+  localStorage.setItem('dutch_app_login_time', Date.now().toString());
+  
+  // Reset admin state first
+  setIsAdmin(false);
+  setShowAdminPanel(false);
+  
+  // Track user login
+  await trackUserLogin(decoded);
+  
+  // Check if admin AFTER reset
+  if (decoded.email === ADMIN_EMAIL) {
+    setIsAdmin(true);
+  }
+};
+
+const trackUserLogin = async (user) => {
+  try {
+    const userId = user.email.replace(/[^a-zA-Z0-9]/g, '_');
+    const userRef = ref(database, `users/${userId}`);
+    
+    // Get existing data
+    const snapshot = await get(userRef);
+    const existingData = snapshot.exists() ? snapshot.val() : null;
+
+    const userActivity = {
+      email: user.email,
+      name: user.name,
+      picture: user.picture,
+      lastLogin: new Date().toISOString(),
+      loginCount: existingData ? existingData.loginCount + 1 : 1,
+      firstLogin: existingData ? existingData.firstLogin : new Date().toISOString()
+    };
+
+    // Save to Firebase
+    await set(userRef, userActivity);
+    
+    console.log('✅ User login tracked in Firebase:', user.email);
+  } catch (error) {
+    console.error('❌ Failed to track user login:', error);
+  }
+};
+
+const loadAllUsers = () => {
+  try {
+    const usersRef = ref(database, 'users');
+    
+    // Listen for real-time updates
+    onValue(usersRef, (snapshot) => {
+      if (!snapshot.exists()) {
+        setAllUserStats([]);
+        return;
+      }
+
+      const usersData = snapshot.val();
+      const userStatsArray = Object.values(usersData).map(userActivity => ({
+        email: userActivity.email,
+        name: userActivity.name,
+        picture: userActivity.picture,
+        lastLogin: userActivity.lastLogin,
+        loginCount: userActivity.loginCount,
+        firstLogin: userActivity.firstLogin,
+        completedCategories: 0,
+        totalAttempts: 0,
+        avgScore: 0,
+        points: 0,
+        achievements: 0
+      }));
+      
+      userStatsArray.sort((a, b) => new Date(b.lastLogin) - new Date(a.lastLogin));
+      setAllUserStats(userStatsArray);
+    });
+  } catch (error) {
+    console.error('Failed to load users:', error);
+    setAllUserStats([]);
+  }
+};
 
 const handleLogout = () => {
   googleLogout();
   setUser(null);
   setUserProgress({});
   setAttemptHistory([]);
+  setIsAdmin(false); 
+  setShowAdminPanel(false);
   localStorage.removeItem('dutch_app_user');
   localStorage.removeItem('dutch_app_login_time');
   goToMenu();
@@ -515,6 +632,7 @@ const handleConjugationSubmit = (e) => {
   if (isCorrect) {
     setScore(score + 1);
     setStreak(streak + 1);
+    checkAchievements('streak', streak + 1);
     setFeedback({ correct: true, message: 'Perfect! Goed gedaan!' });
     
     setTimeout(() => {
@@ -800,6 +918,7 @@ const loadWords = (category) => {
   };
 
 const startGame = (mode = 'play') => {
+    setQuizStartTime(Date.now());
     const words = loadWords(selectedCategory);
     
     if (mode === 'play' && words.length < 4) {
@@ -1141,6 +1260,7 @@ const handleAnswer = (selected) => {
   if (isCorrect) {
     setScore(score + 1);
     setStreak(streak + 1);
+    checkAchievements('streak', streak + 1);
     setFeedback({ correct: true, message: 'Goed gedaan! (Well done!)' });
     
     setTimeout(() => {
@@ -1212,6 +1332,7 @@ const handleNext = () => {
     if (isCorrect) {
       setScore(score + 1);
       setStreak(streak + 1);
+      checkAchievements('streak', streak + 1);
       setFeedback({ correct: true, message: 'Perfect! Goed gedaan! (Well done!)' });
       
       setTimeout(() => {
@@ -1262,6 +1383,7 @@ const handleNext = () => {
     if (isCorrect) {
       setScore(score + 1);
       setStreak(streak + 1);
+      checkAchievements('streak', streak + 1);
       setFeedback({ correct: true, message: 'Perfect! Goed gedaan! (Well done!)' });
       
       setTimeout(() => {
@@ -1513,6 +1635,285 @@ const stopRecording = () => {
     setShowSearchResults(false);
   };
 
+  // Load achievements from localStorage
+const loadAchievements = () => {
+  if (!user) return;
+  
+  try {
+    const saved = localStorage.getItem(`achievements_${user.sub}`);
+    if (saved) {
+      const data = JSON.parse(saved);
+      setAchievements(data.achievements || {});
+      setUserPoints(data.points || 0);
+      setUnlockedAchievements(data.unlocked || []);
+      setGameModesCompleted(new Set(data.modesCompleted || []));
+    }
+  } catch (error) {
+    console.error('Failed to load achievements:', error);
+  }
+};
+
+// Save achievements to localStorage
+const saveAchievements = (newAchievements, newPoints, newUnlocked, newModes) => {
+  if (!user) return;
+  
+  try {
+    const data = {
+      achievements: newAchievements,
+      points: newPoints,
+      unlocked: newUnlocked,
+      modesCompleted: Array.from(newModes)
+    };
+    localStorage.setItem(`achievements_${user.sub}`, JSON.stringify(data));
+  } catch (error) {
+    console.error('Failed to save achievements:', error);
+  }
+};
+
+// Check and unlock achievements
+const checkAchievements = (type, value, context = {}) => {
+  if (!user) return;
+  
+  const newUnlocked = [];
+  const updatedAchievements = { ...achievements };
+  let pointsEarned = 0;
+  
+  Object.values(achievementsData).forEach(achievement => {
+    // Skip if already unlocked
+    if (unlockedAchievements.includes(achievement.id)) return;
+    
+    let shouldUnlock = false;
+    
+    switch (achievement.type) {
+      case 'words_learned':
+        const masteredCount = Object.values(srsData).filter(
+          data => data.level >= 4
+        ).length;
+        shouldUnlock = masteredCount >= achievement.requirement;
+        break;
+        
+      case 'streak':
+        shouldUnlock = value >= achievement.requirement;
+        break;
+        
+      case 'perfect_score':
+        shouldUnlock = context.score === context.total && 
+                      context.total >= achievement.requirement;
+        break;
+        
+      case 'categories_completed':
+        const completedCount = Object.values(userProgress).filter(
+          p => p.completed
+        ).length;
+        shouldUnlock = completedCount >= achievement.requirement;
+        break;
+        
+      case 'a1_complete':
+        shouldUnlock = areAllA1CategoriesCompleted();
+        break;
+        
+      case 'a2_complete':
+        shouldUnlock = areAllA2CategoriesCompleted();
+        break;
+        
+      case 'quizzes_completed':
+        shouldUnlock = attemptHistory.length >= achievement.requirement;
+        break;
+        
+      case 'special':
+        if (achievement.id === 'night_owl') {
+          const hour = new Date().getHours();
+          shouldUnlock = hour >= 0 && hour < 5;
+        } else if (achievement.id === 'early_bird') {
+          const hour = new Date().getHours();
+          shouldUnlock = hour >= 5 && hour < 7;
+        } else if (achievement.id === 'speed_demon') {
+          shouldUnlock = context.isSpeedDemon;
+        } else if (achievement.id === 'polyglot') {
+          shouldUnlock = context.modesCompleted && context.modesCompleted.size >= 4;
+        }
+        break;
+        
+      case 'game_modes_mastered':
+        shouldUnlock = gameModesCompleted.size >= achievement.requirement;
+        break;
+    }
+    
+    if (shouldUnlock) {
+      updatedAchievements[achievement.id] = {
+        ...achievement,
+        unlockedAt: new Date().toISOString()
+      };
+      newUnlocked.push(achievement.id);
+      pointsEarned += achievement.points;
+    }
+  });
+  
+  if (newUnlocked.length > 0) {
+    const allUnlocked = [...unlockedAchievements, ...newUnlocked];
+    const newPoints = userPoints + pointsEarned;
+    const newModes = new Set(gameModesCompleted);
+    
+    setAchievements(updatedAchievements);
+    setUserPoints(newPoints);
+    setUnlockedAchievements(allUnlocked);
+    saveAchievements(updatedAchievements, newPoints, allUnlocked, newModes);
+    
+    // Show popup for first achievement
+    if (newUnlocked.length > 0) {
+      setShowAchievementPopup(updatedAchievements[newUnlocked[0]]);
+      setTimeout(() => setShowAchievementPopup(null), 5000);
+    }
+  }
+};
+
+// Get user level based on points
+const getUserLevel = (points) => {
+  if (points < 100) return { level: 1, title: '🌱 Beginner', nextLevel: 100 };
+  if (points < 300) return { level: 2, title: '🌿 Learner', nextLevel: 300 };
+  if (points < 600) return { level: 3, title: '🌳 Student', nextLevel: 600 };
+  if (points < 1000) return { level: 4, title: '🎓 Scholar', nextLevel: 1000 };
+  if (points < 1500) return { level: 5, title: '👨‍🎓 Graduate', nextLevel: 1500 };
+  if (points < 2500) return { level: 6, title: '🏅 Expert', nextLevel: 2500 };
+  if (points < 5000) return { level: 7, title: '🌟 Master', nextLevel: 5000 };
+  return { level: 8, title: '👑 Legend', nextLevel: null };
+};
+
+
+// Admin Panel Component
+const AdminPanel = () => {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-6xl w-full">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl sm:text-3xl font-bold text-purple-700">👑 Admin Dashboard</h2>
+          <button
+            onClick={() => setShowAdminPanel(false)}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold"
+          >
+            Back to Menu
+          </button>
+        </div>
+
+        {/* Stats Summary */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white">
+            <div className="text-3xl font-bold">{allUserStats.length}</div>
+            <div className="text-sm opacity-90">Total Users</div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl text-white">
+            <div className="text-3xl font-bold">
+              {allUserStats.reduce((sum, u) => sum + u.totalAttempts, 0)}
+            </div>
+            <div className="text-sm opacity-90">Total Attempts</div>
+          </div>
+          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 p-4 rounded-xl text-white">
+            <div className="text-3xl font-bold">
+              {allUserStats.reduce((sum, u) => sum + u.completedCategories, 0)}
+            </div>
+            <div className="text-sm opacity-90">Categories Done</div>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 p-4 rounded-xl text-white">
+            <div className="text-3xl font-bold">
+              {allUserStats.length > 0 
+                ? Math.round(allUserStats.reduce((sum, u) => sum + u.avgScore, 0) / allUserStats.length)
+                : 0}%
+            </div>
+            <div className="text-sm opacity-90">Avg Score</div>
+          </div>
+        </div>
+
+        {/* Users List */}
+        <div className="max-h-96 overflow-y-auto">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">User Activities</h3>
+          {allUserStats.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p>No users yet</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {allUserStats.map((userStat, idx) => (
+                <div key={idx} className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200 hover:border-purple-300 transition-all">
+                  <div className="flex items-start gap-4">
+                    <img 
+                      src={userStat.picture} 
+                      alt={userStat.name}
+                      className="w-12 h-12 rounded-full"
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-bold text-gray-800">{userStat.name}</h4>
+                          <p className="text-sm text-gray-600">{userStat.email}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full font-bold">
+                            {userStat.loginCount} logins
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                        <div className="bg-white p-2 rounded-lg">
+                          <div className="text-gray-500">Last Login</div>
+                          <div className="font-semibold text-gray-800">
+                            {new Date(userStat.lastLogin).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg">
+                          <div className="text-gray-500">Attempts</div>
+                          <div className="font-semibold text-blue-600">{userStat.totalAttempts}</div>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg">
+                          <div className="text-gray-500">Avg Score</div>
+                          <div className="font-semibold text-green-600">{userStat.avgScore}%</div>
+                        </div>
+                        <div className="bg-white p-2 rounded-lg">
+                          <div className="text-gray-500">Completed</div>
+                          <div className="font-semibold text-purple-600">{userStat.completedCategories} cats</div>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-2 flex gap-2">
+                        <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
+                          🏆 {userStat.points} pts
+                        </span>
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                          🎖️ {userStat.achievements} achievements
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+// Achievement Popup Component
+const AchievementPopup = ({ achievement }) => {
+  if (!achievement) return null;
+  
+  return (
+    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-fadeIn">
+      <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl shadow-2xl p-6 max-w-sm border-4 border-yellow-300">
+        <div className="text-center">
+          <div className="text-6xl mb-3 animate-bounce">{achievement.icon}</div>
+          <div className="text-2xl font-bold mb-2">Achievement Unlocked!</div>
+          <div className="text-xl font-semibold mb-1">{achievement.title}</div>
+          <div className="text-sm opacity-90 mb-3">{achievement.description}</div>
+          <div className="bg-white/20 rounded-lg px-4 py-2 inline-block">
+            <span className="font-bold">+{achievement.points} points!</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const mobileHoverFix = (
   <style>{`
     * {
@@ -1565,6 +1966,10 @@ const mobileHoverFix = (
   `}</style>
 );
 
+// Admin Panel
+if (showAdminPanel && isAdmin) {
+  return <AdminPanel />;
+}
   
   // Login screen - MOBILE OPTIMIZED
   if (!user) {
@@ -2161,7 +2566,9 @@ return (
           <div className="text-center">
             <div className="relative mb-6">
               <div className="text-6xl sm:text-8xl animate-pulse">
-                {currentDialogueIndex % 2 === 0 ? '👨' : '👩'}
+                {/* {currentDialogueIndex % 2 === 0 ? '👨' : '👩'} */}
+                {currentDialogueIndex % 2 === 0 ? '👧' : '👩'}
+
               </div>
               <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
                 <div className="flex gap-1">
@@ -2522,12 +2929,32 @@ if (showHistory) {
                     <LogOut className="w-4 h-4" />
                     Logout
                   </button>
+                  {isAdmin && (
+                      <button
+                        onClick={() => {
+                          loadAllUsers();
+                          setShowAdminPanel(true);
+                        }}
+                        className="flex items-center gap-2 bg-purple-100 hover:bg-purple-200 active:bg-purple-200 text-purple-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+                      >
+                        <User className="w-4 h-4" />
+                        Admin Panel
+                      </button>
+                    )}
                 </div>
                 <h1 className="text-3xl sm:text-5xl font-bold text-orange-600 mb-2">🇳🇱 Leer Nederlands</h1>
                 <p className="text-gray-600 text-sm sm:text-lg">1000+ Most Common Dutch Words - A1 🟢 & A2 🔵</p>
-                 <div className="mt-3 sm:mt-4 inline-flex items-center gap-2 bg-green-100 px-3 sm:px-4 py-2 rounded-full">
-                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-                  <span className="text-green-700 font-bold text-xs sm:text-base">{getTotalWordCount()} Words!</span>
+                <div className="mt-3 sm:mt-4 flex gap-3 justify-center flex-wrap">
+                  <div className="inline-flex items-center gap-2 bg-green-100 px-3 sm:px-4 py-2 rounded-full">
+                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                    <span className="text-green-700 font-bold text-xs sm:text-base">{getTotalWordCount()} Words!</span>
+                  </div>
+                  <div className="inline-flex items-center gap-2 bg-yellow-100 px-3 sm:px-4 py-2 rounded-full">
+                    <Trophy className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
+                    <span className="text-yellow-700 font-bold text-xs sm:text-base">
+                      {userPoints} pts • {getUserLevel(userPoints).title}
+                    </span>
+                  </div>
                 </div>
                 
                 {/* Search Bar - MOBILE OPTIMIZED */}
@@ -2782,7 +3209,7 @@ if (showHistory) {
                         {wordCount} words
                         {(hasA1 || hasA2) && (
                           <span className="block sm:inline sm:ml-1">
-                            {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'}
+                            {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'} 
                           </span>
                         )}
                       </div>
@@ -2906,7 +3333,12 @@ if (showHistory) {
                 >
                   <span className="text-sm sm:text-xl">📊 My History</span>
                 </button>
-
+                <button
+                  onClick={() => setGameMode('achievements')}
+                  className="w-full bg-gradient-to-r from-fuchsia-400 via-rose-400 to-amber-300 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">🏆 Achievements & Points</span>
+                </button>
                 <button
                   onClick={() => {
                     const allWords = getAllWords();
@@ -3259,6 +3691,114 @@ if (showHistory) {
     );
   }
 
+  // ACHIEVEMENTS SCREEN
+if (gameMode === 'achievements') {
+  const userLevel = getUserLevel(userPoints);
+  const progressToNextLevel = userLevel.nextLevel 
+    ? ((userPoints / userLevel.nextLevel) * 100) 
+    : 100;
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-4xl w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-yellow-700">🏆 Achievements</h2>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+
+        {/* User Level Card */}
+        <div className="mb-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-6 text-white">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <div className="text-4xl font-bold mb-1">{userLevel.title}</div>
+              <div className="text-xl opacity-90">Level {userLevel.level}</div>
+            </div>
+            <div className="text-right">
+              <div className="text-3xl font-bold">{userPoints}</div>
+              <div className="text-sm opacity-90">Total Points</div>
+            </div>
+          </div>
+          {userLevel.nextLevel && (
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span>Progress to Level {userLevel.level + 1}</span>
+                <span>{userPoints} / {userLevel.nextLevel}</span>
+              </div>
+              <div className="h-3 bg-white/30 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-white transition-all duration-300"
+                  style={{ width: `${progressToNextLevel}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Achievements Grid */}
+        <div className="mb-4 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-gray-800">
+            Unlocked: {unlockedAchievements.length} / {Object.keys(achievementsData).length}
+          </h3>
+        </div>
+
+        <div className="max-h-96 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {Object.values(achievementsData).map(achievement => {
+            const isUnlocked = unlockedAchievements.includes(achievement.id);
+            
+            return (
+              <div
+                key={achievement.id}
+                className={`rounded-xl p-4 border-2 transition-all ${
+                  isUnlocked
+                    ? 'bg-gradient-to-br from-yellow-50 to-orange-50 border-yellow-300 shadow-md'
+                    : 'bg-gray-100 border-gray-300 opacity-60'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className={`text-4xl ${isUnlocked ? '' : 'grayscale'}`}>
+                    {achievement.icon}
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-bold text-gray-800 mb-1">
+                      {achievement.title}
+                    </div>
+                    <div className="text-sm text-gray-600 mb-2">
+                      {achievement.description}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-bold">
+                        +{achievement.points} pts
+                      </span>
+                      {isUnlocked && (
+                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold">
+                          ✓ Unlocked
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <button
+          onClick={() => setGameMode('menu')}
+          className="mt-6 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to Menu
+        </button>
+      </div>
+    </div>
+  );
+}
   // CONJUGATION LEARN MODE
   if (gameMode === 'conjugation_learn') {
     const currentVerb = conjugationLearnVerbs[conjugationLearnIndex];
