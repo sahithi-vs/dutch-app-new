@@ -38,6 +38,11 @@ export default function DutchLearningGame() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeWords, setWelcomeWords] = useState([]);
   const [difficulty, setDifficulty] = useState('normal'); // 'normal' or 'spelling'
+  const [hasCompletedLearn, setHasCompletedLearn] = useState(false);
+  const [conjugationLearnVerbs, setConjugationLearnVerbs] = useState([]);
+  const [conjugationLearnIndex, setConjugationLearnIndex] = useState(0);
+  const [hasCompletedConjugationLearn, setHasCompletedConjugationLearn] = useState(false);
+  const [showConjugationOptions, setShowConjugationOptions] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
@@ -703,7 +708,7 @@ const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
     };
   };
 
-  // Check if all A1 categories have passed multiple choice
+// Check if all A1 categories have both Multiple Choice and Spelling passed
 const areAllA1CategoriesCompleted = () => {
   if (!user) return false;
   
@@ -712,26 +717,49 @@ const areAllA1CategoriesCompleted = () => {
     return words && words.length > 0 && words.some(w => w.level === 'A1');
   });
   
-  return a1Categories.every(cat => 
-    userProgress[cat]?.multipleChoice?.passed || false
-  );
+  return a1Categories.every(cat => {
+    const prog = userProgress[cat];
+    return (prog?.multipleChoice?.passed && prog?.spelling?.passed) || false;
+  });
 };
 
-// Check if a category is locked (A2 categories locked until all A1 completed)
+// Check if all A2-only categories have both Multiple Choice and Spelling passed
+const areAllA2CategoriesCompleted = () => {
+  if (!user) return false;
+  const a2Categories = Object.keys(dutchWordBank).filter(cat => {
+    const words = dutchWordBank[cat];
+    if (!words || words.length === 0) return false;
+    const hasA1 = words.some(w => w.level === 'A1');
+    const hasA2 = words.some(w => w.level === 'A2');
+    // Treat categories that include A2 (with or without A1) as A2 categories for completion gate
+    return hasA2;
+  });
+  if (a2Categories.length === 0) return false;
+  return a2Categories.every(cat => {
+    const prog = userProgress[cat];
+    return (prog?.multipleChoice?.passed && prog?.spelling?.passed) || false;
+  });
+};
+
+// Check if a category is locked (A2 locked until all A1 done; B1/B2 until all A1 & A2 done)
 const isCategoryLocked = (category) => {
   if (!user || category === 'all') return false;
   
   const words = dutchWordBank[category];
   if (!words || words.length === 0) return false;
   
-  // Check if this is an A2-only category
+  // Determine levels present
   const hasA1 = words.some(w => w.level === 'A1');
   const hasA2 = words.some(w => w.level === 'A2');
+  const hasB1 = words.some(w => w.level === 'B1');
+  const hasB2 = words.some(w => w.level === 'B2');
   
-  // If it has A1 words, it's not locked
-  if (hasA1) return false;
+  // Any category that contains B1/B2 requires all A1 and A2 completed
+  if (hasB1 || hasB2) {
+    return !(areAllA1CategoriesCompleted() && areAllA2CategoriesCompleted());
+  }
   
-  // If it's A2-only, check if all A1 categories are completed
+  // If it contains A2 (and no A1), require all A1 completed
   if (hasA2 && !hasA1) {
     return !areAllA1CategoriesCompleted();
   }
@@ -866,6 +894,19 @@ const startGameWithQuestions = () => {
   } else {
     startGame(pendingGameMode);
   }
+};
+
+const startConjugationLearn = () => {
+  const verbs = Object.keys(verbConjugations);
+  if (verbs.length === 0) {
+    alert('No verb conjugations available.');
+    return;
+  }
+  const count = Math.min(numQuestions || 10, verbs.length);
+  setConjugationLearnVerbs(verbs.slice(0, count));
+  setConjugationLearnIndex(0);
+  setGameMode('conjugation_learn');
+  setShowQuestionSelector(false);
 };
 
 const generateQuestion = (words = wordBank, used = usedWords) => {
@@ -2627,8 +2668,12 @@ if (showHistory) {
                   {(() => {
                     const allWords = getAllWords();
                     const prioritized = getSRSPrioritizedWords(allWords);
-                    const mastered = prioritized.filter(w => w.srsInfo.level >= 4).length;
-                    const learning = prioritized.filter(w => w.srsInfo.level > 0 && w.srsInfo.level < 4).length;
+                    // Count mastered words only after completing both quiz (play) and spelling for a category
+                    const passedCategories = Object.entries(userProgress)
+                      .filter(([cat, prog]) => prog?.multipleChoice?.passed && prog?.spelling?.passed)
+                      .map(([cat]) => cat);
+                    const mastered = prioritized.filter(w => passedCategories.includes(w.category)).length;
+                    const learning = prioritized.filter(w => !passedCategories.includes(w.category) && (w.srsInfo.level > 0 && w.srsInfo.level < 4)).length;
                     const dueToday = prioritized.filter(w => w.isDue).length;
                     
                     return (
@@ -2673,7 +2718,13 @@ if (showHistory) {
                       key={cat}
                       onClick={() => {
                         if (isLocked) {
-                          alert('🔒 Complete all A1 categories (Multiple Choice with 80%+) first to unlock A2 lessons!');
+                          const words = dutchWordBank[cat] || [];
+                          const hasA2 = words.some(w => w.level === 'A2');
+                          const hasB = words.some(w => w.level === 'B1' || w.level === 'B2');
+                          const reason = hasB
+                            ? '🔒 Complete ALL A1 and A2 categories (Multiple Choice AND Spelling, 80%+) to unlock B1/B2.'
+                            : '🔒 Complete ALL A1 categories (Multiple Choice AND Spelling, 80%+) to unlock A2.';
+                          alert(reason);
                         } else {
                           setSelectedCategory(cat);
                         }
@@ -2804,21 +2855,44 @@ if (showHistory) {
                 
                 {/* ADD THIS CONJUGATION BUTTON RIGHT HERE */}
                 <button
-                  onClick={() => {
-                    setGameMode('conjugation');
-                    setNumQuestions(10);
-                    setScore(0);
-                    setStreak(0);
-                    setQuestionsAnswered(0);
-                    setWrongAnswers([]);
-                    setCurrentGameMode('conjugation');
-                    setGameStartCategory('verbs');
-                    generateConjugationQuestion();
-                  }}
+                  onClick={() => setShowConjugationOptions(!showConjugationOptions)}
                   className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span className="text-sm sm:text-xl">🔄 Verb Conjugation</span>
                 </button>
+                {showConjugationOptions && (
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        startConjugationLearn();
+                      }}
+                      className="w-full bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-sm sm:text-base font-bold py-2 sm:py-3 rounded-xl hover:shadow-lg active:shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>📚 Learn</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (!hasCompletedConjugationLearn) {
+                          alert('📚 Please complete Verb Conjugation Learn first before attempting the Conjugation Test.');
+                          startConjugationLearn();
+                          return;
+                        }
+                        setGameMode('conjugation');
+                        setNumQuestions(10);
+                        setScore(0);
+                        setStreak(0);
+                        setQuestionsAnswered(0);
+                        setWrongAnswers([]);
+                        setCurrentGameMode('conjugation');
+                        setGameStartCategory('verbs');
+                        generateConjugationQuestion();
+                      }}
+                      className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm sm:text-base font-bold py-2 sm:py-3 rounded-xl hover:shadow-lg active:shadow-lg transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>🧪 Test</span>
+                    </button>
+                  </div>
+                )}
 
                 <button
                   onClick={() => { setShowStories(true); setGameMode('stories'); }}
@@ -3144,6 +3218,7 @@ if (showHistory) {
     <button
       onClick={() => {
         if (confirm('Ready to test yourself?')) {
+          setHasCompletedLearn(true);
           startGame();
         }
       }}
@@ -3180,6 +3255,142 @@ if (showHistory) {
         </button>
       </div>
     </div>
+      </div>
+    );
+  }
+
+  // CONJUGATION LEARN MODE
+  if (gameMode === 'conjugation_learn') {
+    const currentVerb = conjugationLearnVerbs[conjugationLearnIndex];
+    const forms = currentVerb ? verbConjugations[currentVerb] : null;
+    const present = forms?.present || {};
+    const past = forms?.past || {};
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 p-3 sm:p-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4">
+            <div className="flex justify-between items-center">
+              <button
+                onClick={goToMenu}
+                className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-2"
+              >
+                <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+                <span className="font-semibold text-sm sm:text-base">Menu</span>
+              </button>
+              <div className="text-gray-600 font-semibold text-sm sm:text-base">
+                {conjugationLearnIndex + 1} / {conjugationLearnVerbs.length}
+              </div>
+            </div>
+
+            <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-300"
+                style={{ width: `${((conjugationLearnIndex + 1) / conjugationLearnVerbs.length) * 100}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8">
+            {currentVerb && (
+              <div>
+                <div className="text-center mb-6">
+                  <h2 className="text-3xl sm:text-5xl font-bold text-indigo-600">{currentVerb}</h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-xl border-2 border-cyan-200 bg-cyan-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg sm:text-xl font-bold text-cyan-700">Present (Tegenwoordige tijd)</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {Object.entries(present).map(([pronoun, form]) => (
+                        <div key={pronoun} className="flex items-center justify-between bg-white rounded-lg p-2">
+                          <div className="font-semibold text-gray-700 text-sm sm:text-base">{pronoun}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-gray-900 font-bold text-sm sm:text-base">{form}</div>
+                            <button
+                              onClick={() => speakDutch(form)}
+                              className="bg-cyan-100 hover:bg-cyan-200 active:bg-cyan-200 p-2 rounded-lg"
+                              title="Pronounce"
+                            >
+                              <Volume2 className="w-4 h-4 text-cyan-700" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-xl border-2 border-indigo-200 bg-indigo-50">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg sm:text-xl font-bold text-indigo-700">Past (Verleden tijd)</h3>
+                    </div>
+                    <div className="space-y-2">
+                      {Object.entries(past).map(([pronoun, form]) => (
+                        <div key={pronoun} className="flex items-center justify-between bg-white rounded-lg p-2">
+                          <div className="font-semibold text-gray-700 text-sm sm:text-base">{pronoun}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-gray-900 font-bold text-sm sm:text-base">{form}</div>
+                            <button
+                              onClick={() => speakDutch(form)}
+                              className="bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 p-2 rounded-lg"
+                              title="Pronounce"
+                            >
+                              <Volume2 className="w-4 h-4 text-indigo-700" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 sm:gap-4 justify-center mt-8">
+                  <button
+                    onClick={() => setConjugationLearnIndex(Math.max(0, conjugationLearnIndex - 1))}
+                    disabled={conjugationLearnIndex === 0}
+                    className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                  >
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Prev
+                  </button>
+
+                  {conjugationLearnIndex < conjugationLearnVerbs.length - 1 ? (
+                    <button
+                      onClick={() => setConjugationLearnIndex(conjugationLearnIndex + 1)}
+                      className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+                      style={{ backgroundColor: '#6366f1' }}
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (confirm('Ready to take the Verb Conjugation Test?')) {
+                          setHasCompletedConjugationLearn(true);
+                          setGameMode('conjugation');
+                          setNumQuestions(10);
+                          setScore(0);
+                          setStreak(0);
+                          setQuestionsAnswered(0);
+                          setWrongAnswers([]);
+                          setCurrentGameMode('conjugation');
+                          setGameStartCategory('verbs');
+                          generateConjugationQuestion();
+                        }
+                      }}
+                      className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+                      style={{ backgroundColor: '#22c55e' }}
+                    >
+                      Start Conjugation Test
+                      <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }

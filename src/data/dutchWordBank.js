@@ -1066,5 +1066,5 @@ import { dutchWordBankB1 } from './dutchWordBankB1';
 export const dutchWordBank = {
   ...dutchWordBankA1,
   ...dutchWordBankA2,
-  // ...dutchWordBankB1,
+  ...dutchWordBankB1,
 };
