@@ -34,6 +34,8 @@ export default function DutchLearningGame() {
   'naveennimmala50@gmail.com' 
 ];
 
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [reviewFailedWords, setReviewFailedWords] = useState(false);
   const [achievements, setAchievements] = useState({});
   const [userPoints, setUserPoints] = useState(0);
   const [showAchievementPopup, setShowAchievementPopup] = useState(null);
@@ -329,11 +331,13 @@ const saveAttemptToHistory = (category, mode, score, total, wrongAnswers, diffic
       dutch: w.dutch,
       english: w.english,
       userAnswer: w.userAnswer,
-      type: w.type
+      type: w.type,
+      example: w.example,
+      correctAnswer: w.correctAnswer
     }))
   };
   
- const updatedHistory = [attempt, ...attemptHistory].slice(0, 100); // Keep last 100 attempts
+  const updatedHistory = [attempt, ...attemptHistory].slice(0, 100);
   
   try {
     localStorage.setItem(`history_${user.sub}`, JSON.stringify(updatedHistory));
@@ -341,6 +345,22 @@ const saveAttemptToHistory = (category, mode, score, total, wrongAnswers, diffic
   } catch (error) {
     console.error('Failed to save history:', error);
   }
+};
+
+// Get failed words for a specific category and mode
+const getFailedWords = (category, mode) => {
+  if (!user) return [];
+  
+  const relevantAttempts = attemptHistory.filter(
+    a => a.category === category && a.mode === mode && a.wrongAnswers && a.wrongAnswers.length > 0
+  );
+  
+  if (relevantAttempts.length === 0) return [];
+  
+  // Get the most recent attempt
+  const latestAttempt = relevantAttempts[0];
+  
+  return latestAttempt.wrongAnswers || [];
 };
 
 const handleSpeakingResult = (spokenText) => {
@@ -954,8 +974,34 @@ const loadWords = (category) => {
 
 const startGame = (mode = 'play') => {
     setQuizStartTime(Date.now());
-    const words = loadWords(selectedCategory);
     
+    // Check if we should review failed words
+    let words;
+    if (reviewFailedWords && selectedCategory !== 'all') {
+      const failedWords = getFailedWords(selectedCategory, mode);
+      if (failedWords.length > 0) {
+        // Convert failed words back to full word objects
+        const allCategoryWords = loadWords(selectedCategory);
+        words = failedWords.map(fw => {
+          return allCategoryWords.find(w => w.dutch === fw.dutch && w.english === fw.english);
+        }).filter(w => w !== undefined);
+        
+        if (words.length === 0) {
+          alert('No failed words found to review!');
+          setReviewFailedWords(false);
+          return;
+        }
+        
+        // Set numQuestions to failed words count
+        setNumQuestions(words.length);
+      } else {
+        alert('No failed words found to review!');
+        setReviewFailedWords(false);
+        return;
+      }
+    } else {
+      words = loadWords(selectedCategory);
+    }
     if (mode === 'play' && words.length < 4) {
       alert('Not enough words in this category.');
       return;
@@ -1022,6 +1068,13 @@ const startGame = (mode = 'play') => {
   };
 
 const startGameWithQuestions = () => {
+    if (reviewFailedWords) {
+    // For failed words review, use the failed words count
+      const failedWords = getFailedWords(selectedCategory, pendingGameMode);
+      if (failedWords.length > 0) {
+        setNumQuestions(failedWords.length);
+      }
+    }
   const availableWords = selectedCategory === 'all' 
     ? getTotalWordCount() 
     : (dutchWordBank[selectedCategory]?.length || 0);
@@ -1605,6 +1658,7 @@ const stopRecording = () => {
     stopConversation();
     setConjugationQuestion(null);
     setConjugationAnswer('');
+    setReviewFailedWords(false);
     stopConversation();
   };
 
@@ -1991,6 +2045,169 @@ const AdminPanel = () => {
     </div>
   );
 };
+
+
+// Instructions Component
+const InstructionsScreen = () => {
+  useEffect(() => {
+    // Prevent body scroll when instructions are open
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-600 z-50 overflow-hidden">
+      <div className="h-full flex items-center justify-center p-3 sm:p-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl h-full max-h-[90vh] flex flex-col">
+          {/* Fixed Header */}
+          <div className="flex justify-between items-center p-6 sm:p-8 border-b-2 border-gray-200 flex-shrink-0">
+            <h2 className="text-2xl sm:text-3xl font-bold text-indigo-700">📚 How to Use This App</h2>
+            <button
+              onClick={() => setShowInstructions(false)}
+              className="bg-gray-200 hover:bg-gray-300 active:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-all"
+            >
+              ✕ Close
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+            <div className="space-y-6">
+              {/* Overview */}
+              <div className="bg-orange-50 rounded-xl p-4 border-2 border-orange-200">
+                <h3 className="text-xl font-bold text-orange-700 mb-3">🎯 Course Overview</h3>
+                <p className="text-gray-700 mb-2">This is the official <strong>2000+ Most Common Dutch Words</strong> learning course covering A1 🟢 and A2 🔵 and B1, B2 levels.</p>
+                <div className="mt-3 space-y-2">
+                  <p><strong>🟢 A1 Level:</strong> Basic everyday words and phrases</p>
+                  <p><strong>🔵 A2 Level:</strong> Intermediate vocabulary (unlocked after completing all A1)</p>
+                </div>
+              </div>
+
+              {/* Learning Path */}
+              <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
+                <h3 className="text-xl font-bold text-blue-700 mb-3">📖 Recommended Learning Path</h3>
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">1️⃣</span>
+                    <div>
+                      <p className="font-bold text-blue-700">Learn Mode 📚</p>
+                      <p className="text-sm text-gray-600">Study words with examples and pronunciation. Take your time!</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">2️⃣</span>
+                    <div>
+                      <p className="font-bold text-orange-700">Multiple Choice Quiz 🎯</p>
+                      <p className="text-sm text-gray-600">Test your knowledge. Need 80%+ on 80% of words to pass!</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">3️⃣</span>
+                    <div>
+                      <p className="font-bold text-purple-700">Spelling Mode ✏️</p>
+                      <p className="text-sm text-gray-600">Master the spelling. Need 80%+ on 80% of words to complete!</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">✅</span>
+                    <div>
+                      <p className="font-bold text-green-700">Category Completed! 🎉</p>
+                      <p className="text-sm text-gray-600">Both Multiple Choice + Spelling passed = Trophy 🏆</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Game Modes */}
+              <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+                <h3 className="text-xl font-bold text-purple-700 mb-3">🎮 Game Modes Explained</h3>
+                <div className="space-y-3 text-sm">
+                  <div>
+                    <p className="font-bold text-blue-600">📚 Learn Mode</p>
+                    <p className="text-gray-600">Browse words with English translation, pronunciation, and example sentences. No pressure!</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-orange-600">🎯 Multiple Choice</p>
+                    <p className="text-gray-600">See Dutch word, pick English translation. Has Normal and Spelling Difficulty modes.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-purple-600">✏️ Spelling Mode</p>
+                    <p className="text-gray-600">Type the complete Dutch word from English hint + audio. Most challenging!</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-rose-600">🎤 Speaking Test</p>
+                    <p className="text-gray-600">Pronounce Dutch words. Needs microphone permission.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-red-600">🔄 Practice Failed Words</p>
+                    <p className="text-gray-600">Review only the words you got wrong in your last spelling test!</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-teal-600">📝 Fill in the Blank</p>
+                    <p className="text-gray-600">Complete sentences with the correct Dutch word.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-cyan-600">🔄 Verb Conjugation</p>
+                    <p className="text-gray-600">Learn and test verb forms in present and past tense.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-purple-600">🎧 Listening Practice</p>
+                    <p className="text-gray-600">Listen to conversations and answer comprehension questions.</p>
+                  </div>
+                  <div>
+                    <p className="font-bold text-yellow-600">📖 Stories</p>
+                    <p className="text-gray-600">Read Dutch stories and test your understanding.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress & Points */}
+              <div className="bg-yellow-50 rounded-xl p-4 border-2 border-yellow-200">
+                <h3 className="text-xl font-bold text-yellow-700 mb-3">🏆 Progress & Points System</h3>
+                <div className="space-y-2 text-sm">
+                  <p><strong>✅ Category Progress:</strong> Complete BOTH Multiple Choice + Spelling with 80%+ to unlock trophy</p>
+                  <p><strong>💡 Partial Progress:</strong> Blue indicator shows one mode passed (either Multiple Choice OR Spelling)</p>
+                  <p><strong>🔒 Locked Categories:</strong> Complete all A1 categories to unlock A2</p>
+                  <p><strong>🎯 Points:</strong> Earn points by completing quizzes and unlocking achievements</p>
+                  <p><strong>📊 Level Up:</strong> Gain levels as you earn more points</p>
+                  <p><strong>🧠 SRS System:</strong> Smart review system tracks which words need more practice</p>
+                </div>
+              </div>
+
+              {/* Tips */}
+              <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
+                <h3 className="text-xl font-bold text-green-700 mb-3">💡 Pro Tips</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li>✓ Use Learn Mode first - don't skip it!</li>
+                  <li>✓ Listen to pronunciation multiple times</li>
+                  <li>✓ Complete 80% of words (not less) for best results</li>
+                  <li>✓ Review failed words using "Practice Failed Words" button</li>
+                  <li>✓ Check "My History" to see your progress</li>
+                  <li>✓ Use the search bar to quickly find specific words</li>
+                  <li>✓ Spelling Difficulty in Multiple Choice is optional practice</li>
+                  <li>✓ Enable microphone for Speaking Test</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Fixed Footer Button */}
+          <div className="p-6 sm:p-8 border-t-2 border-gray-200 flex-shrink-0">
+            <button
+              onClick={() => setShowInstructions(false)}
+              className="w-full bg-indigo-500 hover:bg-indigo-600 active:bg-indigo-600 text-white text-lg font-bold py-3 rounded-xl transition-all"
+            >
+              Got it! Let's Learn 🚀
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // Achievement Popup Component
 const AchievementPopup = ({ achievement }) => {
   if (!achievement) return null;
@@ -2067,6 +2284,11 @@ const mobileHoverFix = (
 // Admin Panel
 if (showAdminPanel && isAdmin) {
   return <AdminPanel />;
+}
+
+// Instructions Screen - ADD THIS
+if (showInstructions) {
+  return <InstructionsScreen />;
 }
   
   // Login screen - MOBILE OPTIMIZED
@@ -3041,7 +3263,7 @@ if (showHistory) {
                     )}
                 </div>
                 <h1 className="text-3xl sm:text-5xl font-bold text-orange-600 mb-2">🇳🇱 Leer Nederlands</h1>
-                <p className="text-gray-600 text-sm sm:text-lg">1000+ Most Common Dutch Words - A1 🟢 & A2 🔵</p>
+                <p className="text-gray-600 text-sm sm:text-lg">2000+ Most Common Dutch Words - A1 🟢 & A2 🔵</p>
                 <div className="mt-3 sm:mt-4 flex gap-3 justify-center flex-wrap">
                   <div className="inline-flex items-center gap-2 bg-green-100 px-3 sm:px-4 py-2 rounded-full">
                     <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
@@ -3055,6 +3277,14 @@ if (showHistory) {
                   </div>
                 </div>
                 
+                {/* After the welcome words section */}
+                <button
+                  onClick={() => setShowInstructions(true)}
+                  className="mt-4 w-full bg-gradient-to-r from-blue-400 to-indigo-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <span>📚 How to Use This App</span>
+                </button>
+
                 {/* Search Bar - MOBILE OPTIMIZED */}
                 <div className="mt-4 sm:mt-6 relative search-container">
                   <div className="relative">
@@ -3358,6 +3588,27 @@ if (showHistory) {
                 >
                   <span className="text-base sm:text-xl">✏️ Spelling</span>
                 </button>
+                {/* ADD THIS NEW BUTTON */}
+                <button
+                  onClick={() => {
+                    if (selectedCategory === 'all') {
+                      alert('Please select a specific category to review failed words!');
+                      return;
+                    }
+                    const failedWords = getFailedWords(selectedCategory, 'spelling');
+                    if (failedWords.length === 0) {
+                      alert('No failed words to review! You haven\'t taken any spelling tests yet or got all correct.');
+                      return;
+                    }
+                    setReviewFailedWords(true);
+                    setPendingGameMode('spelling');
+                    setNumQuestions(failedWords.length);
+                    setShowQuestionSelector(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-red-500 to-rose-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">🔄 Practice Failed Words</span>
+                </button>
                 <button
                   onClick={() => openQuestionSelector('speaking')}
                   className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
@@ -3465,7 +3716,7 @@ if (showHistory) {
               {/* Info Box - MOBILE OPTIMIZED */}
               <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-orange-50 rounded-xl">
                 <div className="text-xs sm:text-sm text-gray-600 space-y-1 sm:space-y-2">
-                  <p className="text-center font-bold text-orange-600 mb-2 text-sm sm:text-base">Official "1000+ Dutch Words" Course</p>
+                  <p className="text-center font-bold text-orange-600 mb-2 text-sm sm:text-base">Official "2000+ Dutch Words" Course</p>
                   <p><span className="font-bold">🟢 A1:</span> Basic words</p>
                   <p><span className="font-bold">🔵 A2:</span> Intermediate</p>
                   <p className="mt-2 sm:mt-3 text-center font-semibold text-xs sm:text-sm">📚 Learn → ✅ Quiz (Normal) → ✏️ Spelling Mode</p>
