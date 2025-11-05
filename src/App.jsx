@@ -7,8 +7,10 @@ import { dutchWordBank } from './data/dutchWordBank';
 import { stories } from './data/stories';
 import { verbConjugations } from './data/verbConjugations';
 import { achievements as achievementsData } from './data/achievements';
-import { ref, set, get, child, onValue } from 'firebase/database';
+// import { ref, set, get, child, onValue } from 'firebase/database';
 import { database } from './firebase'; 
+import { ref, set, get, child, onValue, update } from 'firebase/database';
+
 
 const getAllWords = () => {
   const allWords = [];
@@ -26,7 +28,12 @@ export default function DutchLearningGame() {
   const [allUserStats, setAllUserStats] = useState([]);
 
 // Admin email - CHANGE THIS TO YOUR GOOGLE EMAIL
-  const ADMIN_EMAIL = 'naveen.nainika2025@gmail.com';
+  const ADMIN_EMAILS = [
+  'naveen.nainika2025@gmail.com',
+  'naveennimmala77@gmail.com',
+  'naveennimmala50@gmail.com' 
+];
+
   const [achievements, setAchievements] = useState({});
   const [userPoints, setUserPoints] = useState(0);
   const [showAchievementPopup, setShowAchievementPopup] = useState(null);
@@ -93,7 +100,7 @@ export default function DutchLearningGame() {
   const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState(null);
   const [transcript, setTranscript] = useState('');
-
+  const [scrollPosition, setScrollPosition] = useState(0);
 
 // Add global styles
   if (typeof document !== 'undefined') {
@@ -152,7 +159,7 @@ useEffect(() => {
         setUser(parsedUser);
         // Reset admin state first, then check
         setIsAdmin(false);
-        if (parsedUser.email === ADMIN_EMAIL) {
+        if (ADMIN_EMAILS.includes(parsedUser.email)) {
           setIsAdmin(true);
         }
       } else {
@@ -255,7 +262,14 @@ useEffect(() => {
   }
 }, [gameMode]);
 
-  useEffect(() => {
+useEffect(() => {
+  if (gameMode === 'menu' && user) {
+    // Sync stats when returning to menu
+    syncUserStatsToFirebase();
+  }
+}, [gameMode, user, userProgress, attemptHistory, userPoints, unlockedAchievements]);
+
+useEffect(() => {
     const handleClickOutside = (event) => {
       if (showSearchResults && !event.target.closest('.search-container')) {
         setShowSearchResults(false);
@@ -473,17 +487,19 @@ useEffect(() => {
   }
 }, [transcript]);
 
-
-  const saveUserProgress = (progress) => {
-    if (!user) return;
+const saveUserProgress = async (progress) => {
+  if (!user) return;
+  
+  try {
+    localStorage.setItem(`progress_${user.sub}`, JSON.stringify(progress));
+    setUserProgress(progress);
     
-    try {
-      localStorage.setItem(`progress_${user.sub}`, JSON.stringify(progress));
-      setUserProgress(progress);
-    } catch (error) {
-      console.error('Failed to save progress:', error);
-    }
-  };
+    // ⭐ Sync to Firebase
+    await syncUserStatsToFirebase();
+  } catch (error) {
+    console.error('Failed to save progress:', error);
+  }
+};
 
 const handleLoginSuccess = async (credentialResponse) => {
   const decoded = jwtDecode(credentialResponse.credential);
@@ -499,7 +515,7 @@ const handleLoginSuccess = async (credentialResponse) => {
   await trackUserLogin(decoded);
   
   // Check if admin AFTER reset
-  if (decoded.email === ADMIN_EMAIL) {
+ if (ADMIN_EMAILS.includes(decoded.email)) {
     setIsAdmin(true);
   }
 };
@@ -513,23 +529,33 @@ const trackUserLogin = async (user) => {
     const snapshot = await get(userRef);
     const existingData = snapshot.exists() ? snapshot.val() : null;
 
+    const currentTime = new Date().toISOString();
+
     const userActivity = {
       email: user.email,
       name: user.name,
       picture: user.picture,
-      lastLogin: new Date().toISOString(),
-      loginCount: existingData ? existingData.loginCount + 1 : 1,
-      firstLogin: existingData ? existingData.firstLogin : new Date().toISOString()
+      lastLogin: currentTime,
+      loginCount: (existingData?.loginCount || 0) + 1,
+      firstLogin: existingData?.firstLogin || currentTime,
+      // Preserve existing stats
+      completedCategories: existingData?.completedCategories || 0,
+      totalAttempts: existingData?.totalAttempts || 0,
+      avgScore: existingData?.avgScore || 0,
+      points: existingData?.points || 0,
+      achievements: existingData?.achievements || 0,
+      lastUpdated: currentTime
     };
 
     // Save to Firebase
     await set(userRef, userActivity);
     
-    console.log('✅ User login tracked in Firebase:', user.email);
+    console.log('✅ User login tracked in Firebase:', user.email, 'at', currentTime);
   } catch (error) {
     console.error('❌ Failed to track user login:', error);
   }
 };
+
 
 const loadAllUsers = () => {
   try {
@@ -550,15 +576,23 @@ const loadAllUsers = () => {
         lastLogin: userActivity.lastLogin,
         loginCount: userActivity.loginCount,
         firstLogin: userActivity.firstLogin,
-        completedCategories: 0,
-        totalAttempts: 0,
-        avgScore: 0,
-        points: 0,
-        achievements: 0
+        completedCategories: userActivity.completedCategories || 0,
+        totalAttempts: userActivity.totalAttempts || 0,
+        avgScore: userActivity.avgScore || 0,
+        points: userActivity.points || 0,
+        achievements: userActivity.achievements || 0
       }));
       
+      // Sort by LATEST login first (descending order)
       userStatsArray.sort((a, b) => new Date(b.lastLogin) - new Date(a.lastLogin));
-      setAllUserStats(userStatsArray);
+      
+      // Only update state if data actually changed to prevent unnecessary re-renders
+      setAllUserStats(prevStats => {
+        if (JSON.stringify(prevStats) === JSON.stringify(userStatsArray)) {
+          return prevStats;
+        }
+        return userStatsArray;
+      });
     });
   } catch (error) {
     console.error('Failed to load users:', error);
@@ -805,10 +839,11 @@ const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
     }
   }
 
+// Category is completed when BOTH normal multiple choice AND spelling mode are passed
+// Spelling difficulty in multiple choice is just for practice (not required)
   updatedProgress[category].completed = 
     updatedProgress[category].multipleChoice.passed && 
-    updatedProgress[category].spelling.passed &&
-    updatedProgress[category].spellingDifficulty.passed;
+    updatedProgress[category].spelling.passed;
 
   saveUserProgress(updatedProgress);
 };
@@ -1653,8 +1688,7 @@ const loadAchievements = () => {
   }
 };
 
-// Save achievements to localStorage
-const saveAchievements = (newAchievements, newPoints, newUnlocked, newModes) => {
+const saveAchievements = async (newAchievements, newPoints, newUnlocked, newModes) => {
   if (!user) return;
   
   try {
@@ -1665,8 +1699,56 @@ const saveAchievements = (newAchievements, newPoints, newUnlocked, newModes) => 
       modesCompleted: Array.from(newModes)
     };
     localStorage.setItem(`achievements_${user.sub}`, JSON.stringify(data));
+    
+    // ⭐ Sync to Firebase
+    await syncUserStatsToFirebase();
   } catch (error) {
     console.error('Failed to save achievements:', error);
+  }
+};
+
+
+const syncUserStatsToFirebase = async () => {
+  if (!user) return;
+  
+  try {
+    const userId = user.email.replace(/[^a-zA-Z0-9]/g, '_');
+    const userRef = ref(database, `users/${userId}`);
+    
+    // Get existing data (to preserve login info)
+    const snapshot = await get(userRef);
+    if (!snapshot.exists()) {
+      console.log('⚠️ No existing user data to sync stats to');
+      return; // Don't create new user data in sync, only update existing
+    }
+    
+    const existingData = snapshot.val();
+    
+    // Calculate stats from current state
+    const completedCategories = Object.values(userProgress).filter(p => p.completed).length;
+    const totalAttempts = attemptHistory.length;
+    const avgScore = totalAttempts > 0 
+      ? Math.round(attemptHistory.reduce((sum, a) => sum + a.percentage, 0) / totalAttempts)
+      : 0;
+    
+    // ✅ CRITICAL FIX: Use Firebase update() instead of set() to only update specific fields
+    const { update } = await import('firebase/database');
+    
+    const statsUpdate = {
+      completedCategories,
+      totalAttempts,
+      avgScore,
+      points: userPoints,
+      achievements: unlockedAchievements.length,
+      lastUpdated: new Date().toISOString()
+      // ✅ DON'T touch lastLogin, loginCount, firstLogin at all!
+    };
+    
+    await update(userRef, statsUpdate);
+    console.log('✅ User stats synced to Firebase (login data preserved)');
+    
+  } catch (error) {
+    console.error('❌ Failed to sync stats to Firebase:', error);
   }
 };
 
@@ -1824,7 +1906,7 @@ const AdminPanel = () => {
         </div>
 
         {/* Users List */}
-        <div className="max-h-96 overflow-y-auto">
+        <div>
           <h3 className="text-xl font-bold text-gray-800 mb-4">User Activities</h3>
           {allUserStats.length === 0 ? (
             <div className="text-center py-12 text-gray-500">
@@ -1856,8 +1938,24 @@ const AdminPanel = () => {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                         <div className="bg-white p-2 rounded-lg">
                           <div className="text-gray-500">Last Login</div>
-                          <div className="font-semibold text-gray-800">
-                            {new Date(userStat.lastLogin).toLocaleDateString()}
+                          <div className="font-semibold text-gray-800 text-xs">
+                            {(() => {
+                              try {
+                                if (!userStat.lastLogin) return 'Never';
+                                const date = new Date(userStat.lastLogin);
+                                if (isNaN(date.getTime())) return 'Invalid Date';
+                                return date.toLocaleString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  hour12: true
+                                });
+                              } catch (error) {
+                                return 'Error';
+                              }
+                            })()}
                           </div>
                         </div>
                         <div className="bg-white p-2 rounded-lg">
@@ -3136,7 +3234,9 @@ if (showHistory) {
 
                   const isCompleted = isCategoryCompleted(cat);
                   const progress = getCategoryProgress(cat);
-                  const hasPartialProgress = (progress.multipleChoice || progress.spelling) && !isCompleted;
+                  // Show partial progress if at least one (but not both) of the required modes is passed
+                  const hasPartialProgress = ((progress.multipleChoice || progress.spelling) && !isCompleted);
+
                   const isLocked = isCategoryLocked(cat);
                   const isSelected = selectedCategory === cat;
                   
@@ -3222,7 +3322,7 @@ if (showHistory) {
             {!areAllA1CategoriesCompleted() && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-blue-700 text-xs sm:text-sm text-center font-semibold">
-                  💡 Complete all A1 categories (Multiple Choice with 80%+) to unlock A2 lessons!
+                  💡 Complete all A1 categories (Multiple Choice Normal + Spelling Mode with 80%+) to unlock A2 lessons!
                 </p>
               </div>
             )}
@@ -3368,8 +3468,9 @@ if (showHistory) {
                   <p className="text-center font-bold text-orange-600 mb-2 text-sm sm:text-base">Official "1000+ Dutch Words" Course</p>
                   <p><span className="font-bold">🟢 A1:</span> Basic words</p>
                   <p><span className="font-bold">🔵 A2:</span> Intermediate</p>
-                  <p className="mt-2 sm:mt-3 text-center font-semibold text-xs sm:text-sm">📚 Learn → ✅ Quiz → ✏️ Spell → 📝 Fill</p>
-                  <p className="mt-2 text-center font-bold text-green-600 text-xs sm:text-sm">🏆 Get 80% on 80% of words!</p>
+                  <p className="mt-2 sm:mt-3 text-center font-semibold text-xs sm:text-sm">📚 Learn → ✅ Quiz (Normal) → ✏️ Spelling Mode</p>
+                  <p className="mt-2 text-center font-bold text-green-600 text-xs sm:text-sm">🏆 Pass both Quiz + Spelling to complete! (80% on 80% of words)</p>
+                  <p className="text-xs text-gray-500 mt-1 text-center">💡 Spelling Difficulty in Quiz is optional practice</p>
                 </div>
               </div>
             </>
