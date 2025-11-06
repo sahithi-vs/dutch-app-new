@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, Check, X, Trophy, RefreshCw, Home, BookOpen, GraduationCap, ChevronRight, ChevronLeft, LogOut, User, Menu } from 'lucide-react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
@@ -10,7 +10,8 @@ import { achievements as achievementsData } from './data/achievements';
 // import { ref, set, get, child, onValue } from 'firebase/database';
 import { database } from './firebase'; 
 import { ref, set, get, child, onValue, update } from 'firebase/database';
-
+import { dutchStories } from './data/dutchStories';
+import DutchFillBlanks from './components/DutchFillBlanks';
 
 const getAllWords = () => {
   const allWords = [];
@@ -34,6 +35,8 @@ export default function DutchLearningGame() {
   'naveennimmala50@gmail.com' 
 ];
 
+  const [selectedStoryKey, setSelectedStoryKey] = useState(null);
+  const [showFillBlankStories, setShowFillBlankStories] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [reviewFailedWords, setReviewFailedWords] = useState(false);
   const [achievements, setAchievements] = useState({});
@@ -179,8 +182,8 @@ useEffect(() => {
   }
 }, []);
 
-  useEffect(() => {
-  if (user && gameMode === 'menu' && showWelcome) {
+useEffect(() => {
+  if (user && gameMode === 'menu' && showWelcome && !showInstructions) {
     // Auto-hide welcome screen after 10 seconds
     const timer = setTimeout(() => {
       setShowWelcome(false);
@@ -188,7 +191,7 @@ useEffect(() => {
     
     return () => clearTimeout(timer);
   }
-}, [user, gameMode, showWelcome]);
+}, [user, gameMode, showWelcome, showInstructions]);
 
 
 // Load speech synthesis voices
@@ -219,7 +222,7 @@ useEffect(() => {
 
 // Auto-rotate welcome words every 4 seconds and load new batch after completing cycle
 useEffect(() => {
-  if (user && welcomeWords.length > 0) {
+  if (user && welcomeWords.length > 0 && !showInstructions) {
     const interval = setInterval(() => {
       setCurrentWelcomeIndex((prev) => {
         const nextIndex = prev + 1;
@@ -238,7 +241,7 @@ useEffect(() => {
     
     return () => clearInterval(interval);
   }
-}, [user, welcomeWords]);
+}, [user, welcomeWords, showInstructions]);
 
 useEffect(() => {
   if (gameMode === 'results' && user && gameStartCategory && currentGameMode) {
@@ -2049,11 +2052,48 @@ const AdminPanel = () => {
 
 // Instructions Component
 const InstructionsScreen = () => {
+  const scrollRef = useRef(null);
+  const savedScrollTopRef = useRef(0);
+
   useEffect(() => {
     // Prevent body scroll when instructions are open
     document.body.style.overflow = 'hidden';
+    // Disable browser scroll restoration that can jump the overlay
+    const prevRestore = (typeof window !== 'undefined' && 'scrollRestoration' in history) ? history.scrollRestoration : undefined;
+    if (prevRestore !== undefined) history.scrollRestoration = 'manual';
     return () => {
       document.body.style.overflow = 'unset';
+      if (prevRestore !== undefined) history.scrollRestoration = prevRestore;
+    };
+  }, []);
+
+  // Track and preserve scroll position across re-renders; actively guard against sudden jumps up
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastUserScrollAt = Date.now();
+
+    const onScroll = () => {
+      savedScrollTopRef.current = el.scrollTop;
+      lastUserScrollAt = Date.now();
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+
+    let rafId;
+    const guard = () => {
+      // If within 6s of user's last scroll and the container jumped upward, restore it
+      if (Date.now() - lastUserScrollAt < 6000) {
+        if (el.scrollTop + 5 < savedScrollTopRef.current) {
+          el.scrollTop = savedScrollTopRef.current;
+        }
+      }
+      rafId = requestAnimationFrame(guard);
+    };
+    rafId = requestAnimationFrame(guard);
+
+    return () => {
+      el.removeEventListener('scroll', onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
 
@@ -2073,7 +2113,7 @@ const InstructionsScreen = () => {
           </div>
 
           {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 sm:p-8 overscroll-contain" style={{ scrollBehavior: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <div className="space-y-6">
               {/* Overview */}
               <div className="bg-orange-50 rounded-xl p-4 border-2 border-orange-200">
@@ -2088,23 +2128,34 @@ const InstructionsScreen = () => {
               {/* Learning Path */}
               <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
                 <h3 className="text-xl font-bold text-blue-700 mb-3">📖 Recommended Learning Path</h3>
+                {/* NEW: Explicit instruction to select Thema first */}
+                <div className="mb-3 p-3 rounded-lg bg-blue-100 border border-blue-300">
+                  <p className="text-sm text-blue-800 font-semibold">🗂️ Before you start: Select a Thema (category) on the menu, then choose a Learning Mode.</p>
+                </div>
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <span className="text-2xl">1️⃣</span>
+                    <div>
+                      <p className="font-bold text-blue-700">Choose a Thema 🗂️</p>
+                      <p className="text-sm text-gray-600">Pick a category (e.g., Thema lessons) from the grid. This sets which words you’ll study.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="text-2xl">2️⃣</span>
                     <div>
                       <p className="font-bold text-blue-700">Learn Mode 📚</p>
                       <p className="text-sm text-gray-600">Study words with examples and pronunciation. Take your time!</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">2️⃣</span>
+                    <span className="text-2xl">3️⃣</span>
                     <div>
                       <p className="font-bold text-orange-700">Multiple Choice Quiz 🎯</p>
                       <p className="text-sm text-gray-600">Test your knowledge. Need 80%+ on 80% of words to pass!</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <span className="text-2xl">3️⃣</span>
+                    <span className="text-2xl">4️⃣</span>
                     <div>
                       <p className="font-bold text-purple-700">Spelling Mode ✏️</p>
                       <p className="text-sm text-gray-600">Master the spelling. Need 80%+ on 80% of words to complete!</p>
@@ -3229,6 +3280,80 @@ if (showHistory) {
   );
 }
 
+// FILL-IN-THE-BLANK STORIES LIST
+if (showFillBlankStories && !selectedStoryKey) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-xl w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-emerald-700">✍️ Fill-in-the-Blank Stories</h2>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+        <p className="text-gray-600 mb-6 text-center text-sm sm:text-base">
+          Practice Dutch by completing sentences with the correct words!
+        </p>
+        <div className="space-y-3 sm:space-y-4">
+          {Object.entries(dutchStories).map(([key, story]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedStoryKey(key)}
+              className="w-full bg-gradient-to-r from-emerald-400 to-teal-600 text-white p-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all text-left"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h3 className="text-base sm:text-lg font-bold">{story.title}</h3>
+                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                  story.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {story.level}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-emerald-100">
+                <span>📝 {story.theme}</span>
+                <span>•</span>
+                <span>🎯 {story.sentences.length} questions</span>
+              </div>
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => {
+            setShowFillBlankStories(false);
+            setSelectedStoryKey(null);
+          }}
+          className="mt-6 sm:mt-8 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to Menu
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// FILL-IN-THE-BLANK STORY PLAYER
+if (showFillBlankStories && selectedStoryKey) {
+  const story = dutchStories[selectedStoryKey];
+  
+  return (
+    <DutchFillBlanks 
+      story={story} 
+      onBack={() => setSelectedStoryKey(null)}
+      onMenu={() => {
+        setShowFillBlankStories(false);
+        setSelectedStoryKey(null);
+        goToMenu();
+      }}
+      speakDutch={speakDutch}
+    />
+  );
+}
+
   // MENU SCREEN - MOBILE OPTIMIZED
   if (gameMode === 'menu') {
     return (
@@ -3456,6 +3581,15 @@ if (showHistory) {
               {/* Category Selection - MOBILE OPTIMIZED */}
               <div className="mb-4 sm:mb-6">
                 <label className="block text-gray-700 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Choose a Thema category:</label>
+                {/* Clear selected indicator for mobile browsers */}
+                <div className="mb-2 sm:mb-3">
+                  <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-orange-200 bg-orange-50">
+                    <span className="text-xs sm:text-sm text-gray-600 font-semibold">Selected Thema:</span>
+                    <span className="text-xs sm:text-sm font-bold text-orange-700">
+                      {selectedCategory === 'all' ? 'All Lessons' : selectedCategory.replace(/_/g, ' ').toUpperCase()}
+                    </span>
+                  </div>
+                </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
                 {categories.map(cat => {
                   const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
@@ -3487,7 +3621,7 @@ if (showHistory) {
                         }
                       }}
                       disabled={isLocked}
-                      style={{
+                       style={{
                         WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
                         backgroundColor: isLocked
@@ -3517,6 +3651,11 @@ if (showHistory) {
                       }}
                       className="p-2 sm:p-3 rounded-xl font-medium text-xs relative"
                     >
+                      {isSelected && (
+                        <div className="absolute -top-1 -left-1 bg-green-500 rounded-full px-1.5 py-0.5 shadow">
+                          <span className="text-white text-[10px] font-bold">Selected</span>
+                        </div>
+                      )}
                       {isLocked && (
                         <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
                           <span className="text-white text-xs">🔒</span>
@@ -3624,12 +3763,13 @@ if (showHistory) {
                 >
                   <span className="text-sm sm:text-xl">🎧 Listening Practice</span>
                 </button>
-                <button
-                  onClick={() => openQuestionSelector('fillblank')}
-                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                 <button
+                  onClick={() => setShowFillBlankStories(true)}
+                  className="w-full bg-gradient-to-r from-emerald-400 to-teal-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <span className="text-sm sm:text-xl">📝 Fill Blank</span>
+                  <span className="text-sm sm:text-xl">✍️ Fill-in-the-Blank Stories</span>
                 </button>
+
                 
                 {/* ADD THIS CONJUGATION BUTTON RIGHT HERE */}
                 <button
@@ -3677,6 +3817,12 @@ if (showHistory) {
                   className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span className="text-sm sm:text-xl">📖 Stories</span>
+                </button>
+                <button
+                  onClick={() => openQuestionSelector('fillblank')}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">📝 Fill Blank</span>
                 </button>
                 <button
                   onClick={() => setShowHistory(true)}
