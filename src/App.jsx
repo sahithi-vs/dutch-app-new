@@ -35,6 +35,8 @@ export default function DutchLearningGame() {
   'naveennimmala50@gmail.com' 
 ];
 
+  const [selectedCategories, setSelectedCategories] = useState(['all']); // Change from single to array
+  const [showMultiSelect, setShowMultiSelect] = useState(false);
   const [selectedStoryKey, setSelectedStoryKey] = useState(null);
   const [showFillBlankStories, setShowFillBlankStories] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -945,124 +947,136 @@ const isCategoryLocked = (category) => {
 
   const categories = ['all', ...Object.keys(dutchWordBank)];
 
-const loadWords = (category) => {
+const loadWords = (categories) => {
   let words = [];
-  if (category === 'all') {
+  
+  // If categories is a string (backward compatibility), convert to array
+  const categoryArray = Array.isArray(categories) ? categories : [categories];
+  
+  if (categoryArray.includes('all') || categoryArray.length === 0) {
     words = getAllWords();
   } else {
-    words = (dutchWordBank[category] || []).map(w => ({ ...w, category }));
+    // Load words from multiple selected categories
+    categoryArray.forEach(category => {
+      const categoryWords = (dutchWordBank[category] || []).map(w => ({ ...w, category }));
+      words = [...words, ...categoryWords];
+    });
   }
   
+  // Remove duplicates based on dutch + english combination
+  const uniqueWords = words.filter((word, index, self) =>
+    index === self.findIndex((w) => w.dutch === word.dutch && w.english === word.english)
+  );
+  
   // Apply SRS prioritization
-  const prioritizedWords = getSRSPrioritizedWords(words);
+  const prioritizedWords = getSRSPrioritizedWords(uniqueWords);
   
   return prioritizedWords;
 };
 
-  const startLearnMode = () => {
-    const words = loadWords(selectedCategory);
-    if (words.length === 0) {
-      alert('Not enough words in this category.');
-      return;
-    }
-    if (words.length < numQuestions) {
-      alert(`Not enough words in this category. Please select a category with at least ${numQuestions} words or reduce the number of questions.`);
-      return;
-    }
-    setLearnWords(words.slice(0, numQuestions));
-    setLearnIndex(0);
-    setGameMode('learn');
-    setShowQuestionSelector(false);
-  };
+const startLearnMode = () => {
+  const words = loadWords(selectedCategories); // Now accepts array
+  if (words.length === 0) {
+    alert('Not enough words in the selected categories.');
+    return;
+  }
+  if (words.length < numQuestions) {
+    alert(`Not enough words in the selected categories. Please select categories with at least ${numQuestions} words or reduce the number of questions.`);
+    return;
+  }
+  setLearnWords(words.slice(0, numQuestions));
+  setLearnIndex(0);
+  setGameMode('learn');
+  setShowQuestionSelector(false);
+};
 
-const startGame = (mode = 'play') => {
-    setQuizStartTime(Date.now());
-    
-    // Check if we should review failed words
-    let words;
-    if (reviewFailedWords && selectedCategory !== 'all') {
-      const failedWords = getFailedWords(selectedCategory, mode);
-      if (failedWords.length > 0) {
-        // Convert failed words back to full word objects
-        const allCategoryWords = loadWords(selectedCategory);
-        words = failedWords.map(fw => {
-          return allCategoryWords.find(w => w.dutch === fw.dutch && w.english === fw.english);
-        }).filter(w => w !== undefined);
-        
-        if (words.length === 0) {
-          alert('No failed words found to review!');
-          setReviewFailedWords(false);
-          return;
-        }
-        
-        // Set numQuestions to failed words count
-        setNumQuestions(words.length);
-      } else {
+  const startGame = (mode = 'play') => {
+  setQuizStartTime(Date.now());
+  
+  // Check if we should review failed words
+  let words;
+  if (reviewFailedWords && !selectedCategories.includes('all') && selectedCategories.length === 1) {
+    const failedWords = getFailedWords(selectedCategories[0], mode);
+    if (failedWords.length > 0) {
+      const allCategoryWords = loadWords(selectedCategories);
+      words = failedWords.map(fw => {
+        return allCategoryWords.find(w => w.dutch === fw.dutch && w.english === fw.english);
+      }).filter(w => w !== undefined);
+      
+      if (words.length === 0) {
         alert('No failed words found to review!');
         setReviewFailedWords(false);
         return;
       }
-    } else {
-      words = loadWords(selectedCategory);
-    }
-    if (mode === 'play' && words.length < 4) {
-      alert('Not enough words in this category.');
-      return;
-    }
-    
-    if ((mode === 'spelling' || mode === 'fillblank' || mode === 'speaking' ) && words.length < 1) {
-      alert('Not enough words in this category.');
-      return;
-    }
-    
-    if (mode === 'fillblank') {
-      const wordsWithValidExamples = words.filter(w => {
-        if (!w.example) return false;
-        const exampleLower = w.example.toLowerCase();
-        const dutchLower = w.dutch.toLowerCase();
-        return exampleLower.includes(dutchLower);
-      });
       
-      if (wordsWithValidExamples.length < numQuestions) {
-        alert(`Not enough words with suitable examples for Fill in the Blank mode. Only ${wordsWithValidExamples.length} words available. Please reduce the number of questions or choose a different category.`);
-        return;
-      }
-    }
-    
-    if (words.length < numQuestions) {
-      alert(`Not enough words in this category. Please select a category with at least ${numQuestions} words or reduce the number of questions.`);
+      setNumQuestions(words.length);
+    } else {
+      alert('No failed words found to review!');
+      setReviewFailedWords(false);
       return;
     }
+  } else {
+    words = loadWords(selectedCategories); // Now accepts array
+  }
+  
+  // Rest of validation logic remains the same...
+  if (mode === 'play' && words.length < 4) {
+    alert('Not enough words in the selected categories.');
+    return;
+  }
+  
+  if ((mode === 'spelling' || mode === 'fillblank' || mode === 'speaking') && words.length < 1) {
+    alert('Not enough words in the selected categories.');
+    return;
+  }
+  
+  if (mode === 'fillblank') {
+    const wordsWithValidExamples = words.filter(w => {
+      if (!w.example) return false;
+      const exampleLower = w.example.toLowerCase();
+      const dutchLower = w.dutch.toLowerCase();
+      return exampleLower.includes(dutchLower);
+    });
     
-    // Use the mode parameter or fall back to currentGameMode
-    const actualMode = mode || currentGameMode || 'play';
-    
-    setWordBank(words);
-    setUsedWords([]);
-    setGameMode(actualMode);
-    setCurrentGameMode(actualMode);
-    setGameStartCategory(selectedCategory);
-    setScore(0);
-    setStreak(0);
-    setQuestionsAnswered(0);
-    setFeedback(null);
-    setWrongAnswers([]);
-    setSpellingAnswer('');
-    setFillBlankAnswer('');
-    setShowQuestionSelector(false);
-    setTranscript('');
-    setIsRecording(false);
-    
-    if (actualMode === 'spelling') {
-      generateSpellingQuestion(words, []);
-    } else if (actualMode === 'fillblank') {
-      generateFillBlankQuestion(words, []);
-    } else if (actualMode === 'speaking') {
-      generateSpeakingQuestion(words, []);
-    } else {
-      generateQuestion(words, []);
+    if (wordsWithValidExamples.length < numQuestions) {
+      alert(`Not enough words with suitable examples for Fill in the Blank mode. Only ${wordsWithValidExamples.length} words available. Please reduce the number of questions or choose different categories.`);
+      return;
     }
-  };
+  }
+  
+  if (words.length < numQuestions) {
+    alert(`Not enough words in the selected categories. Please select categories with at least ${numQuestions} words or reduce the number of questions.`);
+    return;
+  }
+  
+  const actualMode = mode || currentGameMode || 'play';
+  
+  setWordBank(words);
+  setUsedWords([]);
+  setGameMode(actualMode);
+  setCurrentGameMode(actualMode);
+  setGameStartCategory(selectedCategories.join(',')); // Store multiple categories
+  setScore(0);
+  setStreak(0);
+  setQuestionsAnswered(0);
+  setFeedback(null);
+  setWrongAnswers([]);
+  setSpellingAnswer('');
+  setFillBlankAnswer('');
+  setShowQuestionSelector(false);
+  setTranscript('');
+  setIsRecording(false);
+  
+  if (actualMode === 'spelling') {
+    generateSpellingQuestion(words, []);
+  } else if (actualMode === 'fillblank') {
+    generateFillBlankQuestion(words, []);
+  } else if (actualMode === 'speaking') {
+    generateSpeakingQuestion(words, []);
+  } else {
+    generateQuestion(words, []);
+  }
+};
 
 
   const openQuestionSelector = (mode) => {
@@ -1662,7 +1676,10 @@ const stopRecording = () => {
     setConjugationQuestion(null);
     setConjugationAnswer('');
     setReviewFailedWords(false);
+    setShowMultiSelect(false); // ADD THIS
+    setSelectedCategories(['all']); // ADD THIS
     stopConversation();
+
   };
 
   const handleSearch = (query) => {
@@ -3578,18 +3595,54 @@ if (showFillBlankStories && selectedStoryKey) {
             )}
               </div>
               
-              {/* Category Selection - MOBILE OPTIMIZED */}
-              <div className="mb-4 sm:mb-6">
-                <label className="block text-gray-700 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Choose a Thema category:</label>
-                {/* Clear selected indicator for mobile browsers */}
-                <div className="mb-2 sm:mb-3">
-                  <div className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border-2 border-orange-200 bg-orange-50">
-                    <span className="text-xs sm:text-sm text-gray-600 font-semibold">Selected Thema:</span>
-                    <span className="text-xs sm:text-sm font-bold text-orange-700">
-                      {selectedCategory === 'all' ? 'All Lessons' : selectedCategory.replace(/_/g, ' ').toUpperCase()}
-                    </span>
-                  </div>
+            {/* Category Selection - MOBILE OPTIMIZED WITH MULTI-SELECT */}
+            <div className="mb-4 sm:mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <label className="block text-gray-700 font-semibold text-sm sm:text-base">
+                  Choose Thema category:
+                </label>
+                <button
+                  onClick={() => setShowMultiSelect(!showMultiSelect)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    showMultiSelect 
+                      ? 'bg-purple-500 text-white' 
+                      : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                  }`}
+                >
+                  {showMultiSelect ? '✓ Multi-Select ON' : 'Multi-Select OFF'}
+                </button>
+              </div>
+              
+              {/* Selected Categories Display */}
+              <div className="mb-2 sm:mb-3">
+                <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 bg-orange-50 rounded-lg border-2 border-orange-200">
+                  <span className="text-xs sm:text-sm text-gray-600 font-semibold">Selected:</span>
+                  {selectedCategories.map(cat => (
+                    <div key={cat} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500 text-white text-xs font-bold">
+                      <span>{cat === 'all' ? 'All Lessons' : cat.replace(/_/g, ' ').toUpperCase()}</span>
+                      {showMultiSelect && selectedCategories.length > 1 && (
+                        <button
+                          onClick={() => {
+                            setSelectedCategories(prev => prev.filter(c => c !== cat));
+                          }}
+                          className="ml-1 hover:bg-orange-600 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {showMultiSelect && selectedCategories.length > 1 && (
+                    <button
+                      onClick={() => setSelectedCategories(['all'])}
+                      className="text-xs text-red-600 hover:text-red-700 font-semibold ml-2"
+                    >
+                      Clear All
+                    </button>
+                  )}
                 </div>
+              </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
                 {categories.map(cat => {
                   const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
@@ -3598,11 +3651,10 @@ if (showFillBlankStories && selectedStoryKey) {
 
                   const isCompleted = isCategoryCompleted(cat);
                   const progress = getCategoryProgress(cat);
-                  // Show partial progress if at least one (but not both) of the required modes is passed
                   const hasPartialProgress = ((progress.multipleChoice || progress.spelling) && !isCompleted);
 
                   const isLocked = isCategoryLocked(cat);
-                  const isSelected = selectedCategory === cat;
+                  const isSelected = selectedCategories.includes(cat);
                   
                   return (
                     <button
@@ -3616,12 +3668,37 @@ if (showFillBlankStories && selectedStoryKey) {
                             ? '🔒 Complete ALL A1 and A2 categories (Multiple Choice AND Spelling, 80%+) to unlock B1/B2.'
                             : '🔒 Complete ALL A1 categories (Multiple Choice AND Spelling, 80%+) to unlock A2.';
                           alert(reason);
+                          return;
+                        }
+                        
+                        if (showMultiSelect) {
+                          // Multi-select mode
+                          if (cat === 'all') {
+                            // If clicking 'all', select only 'all'
+                            setSelectedCategories(['all']);
+                          } else {
+                            setSelectedCategories(prev => {
+                              // Remove 'all' if present
+                              const withoutAll = prev.filter(c => c !== 'all');
+                              
+                              if (prev.includes(cat)) {
+                                // Deselect this category
+                                const updated = withoutAll.filter(c => c !== cat);
+                                // If nothing left, select 'all'
+                                return updated.length === 0 ? ['all'] : updated;
+                              } else {
+                                // Select this category
+                                return [...withoutAll, cat];
+                              }
+                            });
+                          }
                         } else {
-                          setSelectedCategory(cat);
+                          // Single-select mode (original behavior)
+                          setSelectedCategories([cat]);
                         }
                       }}
                       disabled={isLocked}
-                       style={{
+                      style={{
                         WebkitTapHighlightColor: 'transparent',
                         touchAction: 'manipulation',
                         backgroundColor: isLocked
@@ -3637,7 +3714,7 @@ if (showFillBlankStories && selectedStoryKey) {
                         border: isLocked
                           ? 'none'
                           : isSelected
-                          ? (isCompleted ? '2px solid #fbbf24' : '2px solid transparent')
+                          ? (isCompleted ? '2px solid #fbbf24' : '3px solid #dc2626')
                           : isCompleted
                           ? '2px solid #16a34a'
                           : hasPartialProgress
@@ -3652,8 +3729,8 @@ if (showFillBlankStories && selectedStoryKey) {
                       className="p-2 sm:p-3 rounded-xl font-medium text-xs relative"
                     >
                       {isSelected && (
-                        <div className="absolute -top-1 -left-1 bg-green-500 rounded-full px-1.5 py-0.5 shadow">
-                          <span className="text-white text-[10px] font-bold">Selected</span>
+                        <div className="absolute -top-1 -left-1 bg-red-500 rounded-full px-1.5 py-0.5 shadow z-10">
+                          <span className="text-white text-[10px] font-bold">✓</span>
                         </div>
                       )}
                       {isLocked && (
@@ -3686,7 +3763,22 @@ if (showFillBlankStories && selectedStoryKey) {
                   );
                 })}
               </div>
-              </div>
+              
+              {showMultiSelect && selectedCategories.length > 1 && !selectedCategories.includes('all') && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-blue-700 text-xs sm:text-sm text-center font-semibold">
+                    📚 Testing {selectedCategories.length} categories: {
+                      (() => {
+                        const totalWords = selectedCategories.reduce((sum, cat) => {
+                          return sum + (dutchWordBank[cat]?.length || 0);
+                        }, 0);
+                        return `${totalWords} total words available`;
+                      })()
+                    }
+                  </p>
+                </div>
+              )}
+            </div>
             {/* A1 Progress Indicator */}
             {!areAllA1CategoriesCompleted() && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -3876,67 +3968,67 @@ if (showFillBlankStories && selectedStoryKey) {
             <>
               <div className="text-center mb-6 sm:mb-8">
                 <h2 className="text-2xl sm:text-4xl font-bold text-orange-600 mb-2">
-{pendingGameMode === 'play' && (
-  <div className="mb-6 sm:mb-8">
-    <label className="block text-gray-700 font-semibold mb-3 text-center text-sm sm:text-base">
-      Difficulty Mode
-    </label>
-    <div className="grid grid-cols-2 gap-3">
-      <button
-        onClick={() => setDifficulty('normal')}
-        className={`p-4 rounded-xl font-semibold transition-all text-sm sm:text-base ${
-          difficulty === 'normal'
-            ? 'bg-orange-500 text-white shadow-lg scale-105'
-            : 'bg-white text-gray-700 hover:bg-orange-50 border border-gray-200'
-        }`}
-      >
-        <div className="text-lg sm:text-xl mb-1">🎯</div>
-        Normal
-        <div className="text-xs opacity-75 mt-1">English → Dutch word</div>
-      </button>
-      <button
-        onClick={() => {
-          const isUnlocked = isNormalModeCompleted(selectedCategory);
-          if (isUnlocked) {
-            setDifficulty('spelling');
-          } else {
-            alert('🔒 Complete Normal mode with 80%+ score on 80% of words to unlock Spelling mode!');
-          }
-        }}
-        disabled={!isNormalModeCompleted(selectedCategory)}
-        className={`p-4 rounded-xl font-semibold transition-all text-sm sm:text-base relative ${
-          difficulty === 'spelling'
-            ? 'bg-purple-500 text-white shadow-lg scale-105'
-            : isNormalModeCompleted(selectedCategory)
-            ? 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300'
-        }`}
-      >
-        {!isNormalModeCompleted(selectedCategory) && (
-          <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1.5">
-            <span className="text-white text-lg">🔒</span>
-          </div>
-        )}
-        <div className="text-lg sm:text-xl mb-1">
-          {isNormalModeCompleted(selectedCategory) ? '✍️' : '🔒'}
-        </div>
-        Spelling
-        <div className="text-xs opacity-75 mt-1">
-          {isNormalModeCompleted(selectedCategory) 
-            ? 'English → Similar spellings' 
-            : 'Complete Normal first'}
-        </div>
-      </button>
-    </div>
-    {!isNormalModeCompleted(selectedCategory) && (
-      <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-        <p className="text-yellow-700 text-xs sm:text-sm text-center font-semibold">
-          💡 Complete Normal mode quiz first to unlock Spelling difficulty!
-        </p>
-      </div>
-    )}
-  </div>
-)}
+                {pendingGameMode === 'play' && (
+                  <div className="mb-6 sm:mb-8">
+                    <label className="block text-gray-700 font-semibold mb-3 text-center text-sm sm:text-base">
+                      Difficulty Mode
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button
+                        onClick={() => setDifficulty('normal')}
+                        className={`p-4 rounded-xl font-semibold transition-all text-sm sm:text-base ${
+                          difficulty === 'normal'
+                            ? 'bg-orange-500 text-white shadow-lg scale-105'
+                            : 'bg-white text-gray-700 hover:bg-orange-50 border border-gray-200'
+                        }`}
+                      >
+                        <div className="text-lg sm:text-xl mb-1">🎯</div>
+                        Normal
+                        <div className="text-xs opacity-75 mt-1">English → Dutch word</div>
+                      </button>
+                      <button
+                        onClick={() => {
+                          const isUnlocked = isNormalModeCompleted(selectedCategory);
+                          if (isUnlocked) {
+                            setDifficulty('spelling');
+                          } else {
+                            alert('🔒 Complete Normal mode with 80%+ score on 80% of words to unlock Spelling mode!');
+                          }
+                        }}
+                        disabled={!isNormalModeCompleted(selectedCategory)}
+                        className={`p-4 rounded-xl font-semibold transition-all text-sm sm:text-base relative ${
+                          difficulty === 'spelling'
+                            ? 'bg-purple-500 text-white shadow-lg scale-105'
+                            : isNormalModeCompleted(selectedCategory)
+                            ? 'bg-white text-gray-700 hover:bg-purple-50 border border-gray-200'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300'
+                        }`}
+                      >
+                        {!isNormalModeCompleted(selectedCategory) && (
+                          <div className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1.5">
+                            <span className="text-white text-lg">🔒</span>
+                          </div>
+                        )}
+                        <div className="text-lg sm:text-xl mb-1">
+                          {isNormalModeCompleted(selectedCategory) ? '✍️' : '🔒'}
+                        </div>
+                        Spelling
+                        <div className="text-xs opacity-75 mt-1">
+                          {isNormalModeCompleted(selectedCategory) 
+                            ? 'English → Similar spellings' 
+                            : 'Complete Normal first'}
+                        </div>
+                      </button>
+                    </div>
+                    {!isNormalModeCompleted(selectedCategory) && (
+                      <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <p className="text-yellow-700 text-xs sm:text-sm text-center font-semibold">
+                          💡 Complete Normal mode quiz first to unlock Spelling difficulty!
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
                   {pendingGameMode === 'play' ? '🎯 Multiple Choice' : 
                   pendingGameMode === 'spelling' ? '✏️ Spelling' : 
                  pendingGameMode === 'speaking' ? '🎤 Speaking Test' :
@@ -3946,32 +4038,49 @@ if (showFillBlankStories && selectedStoryKey) {
               </div>
 
               <div className="mb-6 sm:mb-8">
-                <label className="block text-gray-700 font-semibold mb-3 sm:mb-4 text-center text-sm sm:text-base">
-                  Selected: <span className="text-orange-600">{selectedCategory === 'all' ? 'All Lessons' : selectedCategory.replace(/_/g, ' ').toUpperCase()}</span>
-                </label>
+              <label className="block text-gray-700 font-semibold mb-3 sm:mb-4 text-center text-sm sm:text-base">
+                Selected: <span className="text-orange-600">
+                  {selectedCategories.includes('all') 
+                    ? 'All Lessons' 
+                    : selectedCategories.length === 1
+                    ? selectedCategories[0].replace(/_/g, ' ').toUpperCase()
+                    : `${selectedCategories.length} Categories (${
+                        selectedCategories.reduce((sum, cat) => 
+                          sum + (dutchWordBank[cat]?.length || 0), 0
+                        )} words)`
+                  }
+                </span>
+              </label>
                 
                 <div className="bg-gray-50 p-4 sm:p-6 rounded-xl">
                   <label className="block text-gray-700 font-semibold mb-3 text-center text-sm sm:text-base">
                     Number of Questions/Words
                   </label>
                   {(() => {
-                    let availableWords = selectedCategory === 'all' 
-                      ? getTotalWordCount() 
-                      : (dutchWordBank[selectedCategory]?.length || 0);
-                    
-                    if (pendingGameMode === 'fillblank') {
-                      const words = loadWords(selectedCategory);
-                      const wordsWithValidExamples = words.filter(w => {
-                        if (!w.example) return false;
-                        const exampleLower = w.example.toLowerCase();
-                        const dutchLower = w.dutch.toLowerCase();
-                        return exampleLower.includes(dutchLower);
-                      });
-                      availableWords = wordsWithValidExamples.length;
-                    }
-                    
-                    const maxQuestions = availableWords;
-                    const minQuestions = 10;
+                    let availableWords;
+                      
+                      if (selectedCategories.includes('all')) {
+                        availableWords = getTotalWordCount();
+                      } else {
+                        // Calculate total words from selected categories
+                        availableWords = selectedCategories.reduce((sum, cat) => {
+                          return sum + (dutchWordBank[cat]?.length || 0);
+                        }, 0);
+                      }
+                      
+                      if (pendingGameMode === 'fillblank') {
+                        const words = loadWords(selectedCategories);
+                        const wordsWithValidExamples = words.filter(w => {
+                          if (!w.example) return false;
+                          const exampleLower = w.example.toLowerCase();
+                          const dutchLower = w.dutch.toLowerCase();
+                          return exampleLower.includes(dutchLower);
+                        });
+                        availableWords = wordsWithValidExamples.length;
+                      }
+                      
+                      const maxQuestions = availableWords;
+                      const minQuestions = 10;
                     
                     if (numQuestions > maxQuestions) {
                       setNumQuestions(maxQuestions);
@@ -4001,18 +4110,38 @@ if (showFillBlankStories && selectedStoryKey) {
                       </>
                     );
                   })()}
-                  {(() => {
-                    const availableWords = selectedCategory === 'all' 
-                      ? getTotalWordCount() 
-                      : (dutchWordBank[selectedCategory]?.length || 0);
-                    const requiredQuestions = Math.ceil(availableWords * 0.8);
-                    
-                    return pendingGameMode !== 'learn' && numQuestions >= requiredQuestions && (
-                      <div className="mt-4 p-3 bg-green-100 rounded-lg text-center">
-                        <p className="text-green-700 font-semibold text-xs sm:text-sm">✓ Score 80%+ to unlock!</p>
-                      </div>
-                    );
-                  })()}
+                    {(() => {
+                      // Calculate available words based on selected categories (same logic as slider above)
+                      let availableWords;
+                      
+                      if (selectedCategories.includes('all')) {
+                        availableWords = getTotalWordCount();
+                      } else {
+                        // Calculate total words from selected categories
+                        availableWords = selectedCategories.reduce((sum, cat) => {
+                          return sum + (dutchWordBank[cat]?.length || 0);
+                        }, 0);
+                      }
+                      
+                      if (pendingGameMode === 'fillblank') {
+                        const words = loadWords(selectedCategories);
+                        const wordsWithValidExamples = words.filter(w => {
+                          if (!w.example) return false;
+                          const exampleLower = w.example.toLowerCase();
+                          const dutchLower = w.dutch.toLowerCase();
+                          return exampleLower.includes(dutchLower);
+                        });
+                        availableWords = wordsWithValidExamples.length;
+                      }
+                      
+                      const requiredQuestions = Math.ceil(availableWords * 0.8);
+                      
+                      return pendingGameMode !== 'learn' && numQuestions >= requiredQuestions && (
+                        <div className="mt-4 p-3 bg-green-100 rounded-lg text-center">
+                          <p className="text-green-700 font-semibold text-xs sm:text-sm">✓ Score 80%+ to unlock!</p>
+                        </div>
+                      );
+                    })()}
                 </div>
               </div>
 
