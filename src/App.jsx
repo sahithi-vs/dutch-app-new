@@ -319,54 +319,83 @@ useEffect(() => {
     setAttemptHistory([]);
   }
 };
-
-const saveAttemptToHistory = (category, mode, score, total, wrongAnswers, difficulty = 'normal') => {
-  if (!user || category === 'all') return;
+const saveAttemptToHistory = (categories, mode, score, total, wrongAnswers, difficulty = 'normal') => {
+  if (!user) return;
   
-  const attempt = {
-    id: Date.now(),
-    date: new Date().toISOString(),
-    category,
-    mode,
-    difficulty,
-    score,
-    total,
-    percentage: Math.round((score / total) * 100),
-    wrongAnswers: wrongAnswers.map(w => ({
-      dutch: w.dutch,
-      english: w.english,
-      userAnswer: w.userAnswer,
-      type: w.type,
-      example: w.example,
-      correctAnswer: w.correctAnswer
-    }))
-  };
+  // Convert to array if needed
+  const categoryArray = typeof categories === 'string' 
+    ? categories.split(',').filter(c => c && c !== 'all')
+    : Array.isArray(categories) 
+    ? categories.filter(c => c !== 'all')
+    : [];
   
-  const updatedHistory = [attempt, ...attemptHistory].slice(0, 100);
+  if (categoryArray.length === 0) return;
   
-  try {
-    localStorage.setItem(`history_${user.sub}`, JSON.stringify(updatedHistory));
-    setAttemptHistory(updatedHistory);
-  } catch (error) {
-    console.error('Failed to save history:', error);
-  }
+  // Save attempt for each category
+  categoryArray.forEach(category => {
+    const attempt = {
+      id: Date.now() + Math.random(), // Add random to avoid duplicate IDs
+      date: new Date().toISOString(),
+      category,
+      mode,
+      difficulty,
+      score,
+      total,
+      percentage: Math.round((score / total) * 100),
+      wrongAnswers: wrongAnswers.map(w => ({
+        dutch: w.dutch,
+        english: w.english,
+        userAnswer: w.userAnswer,
+        type: w.type,
+        example: w.example,
+        correctAnswer: w.correctAnswer
+      }))
+    };
+    
+    const updatedHistory = [attempt, ...attemptHistory].slice(0, 100);
+    
+    try {
+      localStorage.setItem(`history_${user.sub}`, JSON.stringify(updatedHistory));
+      setAttemptHistory(updatedHistory);
+    } catch (error) {
+      console.error('Failed to save history:', error);
+    }
+  });
 };
 
-// Get failed words for a specific category and mode
-const getFailedWords = (category, mode) => {
+// Get failed words for specific categories and mode (supports both single and multi-category)
+const getFailedWords = (categories, mode) => {
   if (!user) return [];
   
-  const relevantAttempts = attemptHistory.filter(
-    a => a.category === category && a.mode === mode && a.wrongAnswers && a.wrongAnswers.length > 0
-  );
+  // Convert to array if it's a string or single category
+  const categoryArray = Array.isArray(categories) ? categories : [categories];
   
-  if (relevantAttempts.length === 0) return [];
+  // Get failed words from all selected categories
+  const allFailedWords = [];
+  const seenWords = new Set(); // To avoid duplicates
   
-  // Get the most recent attempt
-  const latestAttempt = relevantAttempts[0];
+  categoryArray.forEach(category => {
+    const relevantAttempts = attemptHistory.filter(
+      a => a.category === category && a.mode === mode && a.wrongAnswers && a.wrongAnswers.length > 0
+    );
+    
+    if (relevantAttempts.length > 0) {
+      // Get the most recent attempt for this category
+      const latestAttempt = relevantAttempts[0];
+      
+      latestAttempt.wrongAnswers.forEach(word => {
+        const wordKey = `${word.dutch}_${word.english}`;
+        if (!seenWords.has(wordKey)) {
+          seenWords.add(wordKey);
+          allFailedWords.push(word);
+        }
+      });
+    }
+  });
   
-  return latestAttempt.wrongAnswers || [];
+  return allFailedWords;
 };
+
 
 const handleSpeakingResult = (spokenText) => {
   if (!currentWord) return;
@@ -801,75 +830,83 @@ const getSRSPrioritizedWords = (words) => {
     .sort((a, b) => b.priority - a.priority);
 };
 
-const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
-  if (!user || category === 'all') return;
+const checkAndUpdateProgress = (categories, mode, score, totalQuestions) => {
+  if (!user) return;
+
+  // Convert categories to array if it's a string (backward compatibility)
+  const categoryArray = typeof categories === 'string' 
+    ? categories.split(',').filter(c => c && c !== 'all')
+    : Array.isArray(categories) 
+    ? categories.filter(c => c !== 'all')
+    : [];
+
+  if (categoryArray.length === 0) return;
 
   // Only track progress for 'play' (multiple choice) and 'spelling' modes
   if (mode !== 'play' && mode !== 'spelling') return;
 
   const percentage = (score / totalQuestions) * 100;
-  const availableWords = dutchWordBank[category]?.length || 0;
-  const requiredQuestions = Math.ceil(availableWords * 0.8);
-  const passed = percentage >= 80 && totalQuestions >= requiredQuestions;
 
+  // Create a copy of current progress
   const updatedProgress = { ...userProgress };
-  
-  if (!updatedProgress[category]) {
-    updatedProgress[category] = {
-      multipleChoice: { score: 0, wordsAttempted: 0, passed: false },
-      spelling: { score: 0, wordsAttempted: 0, passed: false },
-      spellingDifficulty: { score: 0, wordsAttempted: 0, passed: false },
-      completed: false
-    };
-  }
 
-  // Only update progress if:
-  // 1. User attempted the required number of questions (80% of words), OR
-  // 2. The new result is better than existing (higher score with sufficient attempts)
-  // 3. Never downgrade from "passed" to "not passed" unless attempting with required questions
-  
-  if (mode === 'play') {
-    if (difficulty === 'spelling') {
-      const existing = updatedProgress[category].spellingDifficulty;
-      // Only update if attempting required questions OR improving score OR not yet passed
-      if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
-        // If already passed, don't revert to not-passed unless this is a full attempt
-        const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
-        updatedProgress[category].spellingDifficulty = {
-          score: percentage,
-          wordsAttempted: totalQuestions,
-          passed: newPassed
-        };
-      }
-    } else {
-      const existing = updatedProgress[category].multipleChoice;
-      if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
-        const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
-        updatedProgress[category].multipleChoice = {
-          score: percentage,
-          wordsAttempted: totalQuestions,
-          passed: newPassed
-        };
-      }
-    }
-  } else if (mode === 'spelling') {
-    const existing = updatedProgress[category].spelling;
-    if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
-      const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
-      updatedProgress[category].spelling = {
-        score: percentage,
-        wordsAttempted: totalQuestions,
-        passed: newPassed
+  // Update progress for each selected category
+  categoryArray.forEach(category => {
+    const availableWords = dutchWordBank[category]?.length || 0;
+    const requiredQuestions = Math.ceil(availableWords * 0.8);
+     const passed = percentage >= 80 && totalQuestions >= requiredQuestions;
+
+    // Initialize category progress if it doesn't exist
+    if (!updatedProgress[category]) {
+      updatedProgress[category] = {
+        multipleChoice: { score: 0, wordsAttempted: 0, passed: false },
+        spelling: { score: 0, wordsAttempted: 0, passed: false },
+        spellingDifficulty: { score: 0, wordsAttempted: 0, passed: false },
+        completed: false
       };
     }
-  }
 
-// Category is completed when BOTH normal multiple choice AND spelling mode are passed
-// Spelling difficulty in multiple choice is just for practice (not required)
-  updatedProgress[category].completed = 
-    updatedProgress[category].multipleChoice.passed && 
-    updatedProgress[category].spelling.passed;
+    if (mode === 'play') {
+      if (difficulty === 'spelling') {
+        const existing = updatedProgress[category].spellingDifficulty;
+        if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
+          const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
+          updatedProgress[category].spellingDifficulty = {
+            score: percentage,
+            wordsAttempted: totalQuestions,
+            passed: newPassed
+          };
+        }
+      } else {
+        const existing = updatedProgress[category].multipleChoice;
+        if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
+          const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
+          updatedProgress[category].multipleChoice = {
+            score: percentage,
+            wordsAttempted: totalQuestions,
+            passed: newPassed
+          };
+        }
+      }
+    } else if (mode === 'spelling') {
+      const existing = updatedProgress[category].spelling;
+      if (totalQuestions >= requiredQuestions || !existing.passed || percentage > existing.score) {
+        const newPassed = totalQuestions >= requiredQuestions ? passed : (existing.passed || passed);
+        updatedProgress[category].spelling = {
+          score: percentage,
+          wordsAttempted: totalQuestions,
+          passed: newPassed
+        };
+      }
+    }
 
+    // Category is completed when BOTH normal multiple choice AND spelling mode are passed
+    updatedProgress[category].completed = 
+      updatedProgress[category].multipleChoice.passed && 
+      updatedProgress[category].spelling.passed;
+  });
+
+  // Save the updated progress for ALL categories at once
   saveUserProgress(updatedProgress);
 };
 
@@ -990,33 +1027,38 @@ const startLearnMode = () => {
   setShowQuestionSelector(false);
 };
 
-  const startGame = (mode = 'play') => {
+const startGame = (mode = 'play') => {
   setQuizStartTime(Date.now());
   
   // Check if we should review failed words
   let words;
-  if (reviewFailedWords && !selectedCategories.includes('all') && selectedCategories.length === 1) {
-    const failedWords = getFailedWords(selectedCategories[0], mode);
-    if (failedWords.length > 0) {
-      const allCategoryWords = loadWords(selectedCategories);
-      words = failedWords.map(fw => {
-        return allCategoryWords.find(w => w.dutch === fw.dutch && w.english === fw.english);
-      }).filter(w => w !== undefined);
-      
-      if (words.length === 0) {
-        alert('No failed words found to review!');
-        setReviewFailedWords(false);
-        return;
-      }
-      
-      setNumQuestions(words.length);
-    } else {
+  if (reviewFailedWords) {
+    // Get failed words from selected categories
+    const failedWords = getFailedWords(selectedCategories, mode);
+    
+    if (failedWords.length === 0) {
+      alert('No failed words found to review! You haven\'t taken any spelling tests yet or got all correct.');
+      setReviewFailedWords(false);
+      return;
+    }
+    
+    // Load all words from selected categories
+    const allCategoryWords = loadWords(selectedCategories);
+    
+    // Map failed words to full word objects
+    words = failedWords.map(fw => {
+      return allCategoryWords.find(w => w.dutch === fw.dutch && w.english === fw.english);
+    }).filter(w => w !== undefined);
+    
+    if (words.length === 0) {
       alert('No failed words found to review!');
       setReviewFailedWords(false);
       return;
     }
+    
+    setNumQuestions(words.length);
   } else {
-    words = loadWords(selectedCategories); // Now accepts array
+    words = loadWords(selectedCategories);
   }
   
   // Rest of validation logic remains the same...
@@ -1055,6 +1097,7 @@ const startLearnMode = () => {
   setUsedWords([]);
   setGameMode(actualMode);
   setCurrentGameMode(actualMode);
+  setGameStartCategory(selectedCategories);
   setGameStartCategory(selectedCategories.join(',')); // Store multiple categories
   setScore(0);
   setStreak(0);
@@ -3820,26 +3863,33 @@ if (showFillBlankStories && selectedStoryKey) {
                   <span className="text-base sm:text-xl">✏️ Spelling</span>
                 </button>
                 {/* ADD THIS NEW BUTTON */}
-                <button
-                  onClick={() => {
-                    if (selectedCategory === 'all') {
-                      alert('Please select a specific category to review failed words!');
-                      return;
-                    }
-                    const failedWords = getFailedWords(selectedCategory, 'spelling');
-                    if (failedWords.length === 0) {
-                      alert('No failed words to review! You haven\'t taken any spelling tests yet or got all correct.');
-                      return;
-                    }
-                    setReviewFailedWords(true);
-                    setPendingGameMode('spelling');
-                    setNumQuestions(failedWords.length);
-                    setShowQuestionSelector(true);
-                  }}
-                  className="w-full bg-gradient-to-r from-red-500 to-rose-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🔄 Practice Failed Words</span>
-                </button>
+<button
+  onClick={() => {
+    if (selectedCategories.includes('all') || selectedCategories.length === 0) {
+      alert('Please select specific categories to review failed words!');
+      return;
+    }
+    
+    // Get failed words from all selected categories
+    const failedWords = getFailedWords(selectedCategories, 'spelling');
+    
+    if (failedWords.length === 0) {
+      alert(`No failed words to review! You haven't taken any spelling tests yet or got all correct in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}`);
+      return;
+    }
+    
+    // Show info about failed words
+    alert(`Found ${failedWords.length} failed words from your last spelling tests in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}\n\nReady to practice them!`);
+    
+    setReviewFailedWords(true);
+    setNumQuestions(failedWords.length);
+    startGame('spelling');
+  }}
+  className="w-full bg-gradient-to-r from-red-500 to-rose-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+>
+  <span className="text-sm sm:text-xl">🔄 Practice Failed Words</span>
+</button>
+
                 <button
                   onClick={() => openQuestionSelector('speaking')}
                   className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
