@@ -1,0 +1,1260 @@
+import React, { useState, useEffect } from 'react';
+import { Volume2, Check, X, Trophy, RefreshCw, Home, BookOpen, GraduationCap, ChevronRight, ChevronLeft, LogOut, User, Menu } from 'lucide-react';
+import { GoogleLogin, googleLogout } from '@react-oauth/google';
+import { jwtDecode } from 'jwt-decode';
+
+import { dutchWordBank } from './data/dutchWordBank';
+import { stories } from './data/stories';
+
+const getAllWords = () => {
+  const allWords = [];
+  Object.entries(dutchWordBank).forEach(([category, words]) => {
+    words.forEach(word => allWords.push({ ...word, category }));
+  });
+  return allWords;
+};
+
+const getTotalWordCount = () => getAllWords().length;
+
+export default function DutchLearningGame() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [storyQuestions, setStoryQuestions] = useState([]);
+  const [currentStoryQuestion, setCurrentStoryQuestion] = useState(0);
+  const [storyScore, setStoryScore] = useState(0);
+  const [showStoryQuiz, setShowStoryQuiz] = useState(false);
+  const [storyQuizFeedback, setStoryQuizFeedback] = useState(null);
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const [user, setUser] = useState(null);
+  const [userProgress, setUserProgress] = useState({});
+  const [gameMode, setGameMode] = useState('menu');
+  const [currentWord, setCurrentWord] = useState(null);
+  const [options, setOptions] = useState([]);
+  const [score, setScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [questionsAnswered, setQuestionsAnswered] = useState(0);
+  const [feedback, setFeedback] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [wordBank, setWordBank] = useState([]);
+  const [usedWords, setUsedWords] = useState([]);
+  const [learnIndex, setLearnIndex] = useState(0);
+  const [learnWords, setLearnWords] = useState([]);
+  const [spellingAnswer, setSpellingAnswer] = useState('');
+  const [numQuestions, setNumQuestions] = useState(10);
+  const [showQuestionSelector, setShowQuestionSelector] = useState(false);
+  const [pendingGameMode, setPendingGameMode] = useState(null);
+  const [showStories, setShowStories] = useState(false);
+  const [selectedStory, setSelectedStory] = useState(null);
+  const [currentGameMode, setCurrentGameMode] = useState(null);
+  const [gameStartCategory, setGameStartCategory] = useState(null);
+  const [fillBlankAnswer, setFillBlankAnswer] = useState('');
+  const [fillBlankSentence, setFillBlankSentence] = useState('');
+
+  // Add global styles
+  if (typeof document !== 'undefined') {
+    const style = document.createElement('style');
+    style.textContent = `
+      @media (hover: none) {
+        *:hover {
+          background-color: inherit !important;
+          color: inherit !important;
+        }
+      }
+    `;
+    if (!document.getElementById('mobile-hover-fix')) {
+      style.id = 'mobile-hover-fix';
+      document.head.appendChild(style);
+    }
+  }
+
+  // Load user from localStorage on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem('dutch_app_user');
+    const loginTime = localStorage.getItem('dutch_app_login_time');
+    
+    if (savedUser && loginTime) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        const timeDifference = Date.now() - parseInt(loginTime);
+        const oneHour = 60 * 60 * 1000;
+        
+        if (timeDifference < oneHour) {
+          setUser(parsedUser);
+        } else {
+          localStorage.removeItem('dutch_app_user');
+          localStorage.removeItem('dutch_app_login_time');
+        }
+      } catch (error) {
+        localStorage.removeItem('dutch_app_user');
+        localStorage.removeItem('dutch_app_login_time');
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (gameMode === 'results' && user && gameStartCategory && currentGameMode) {
+      checkAndUpdateProgress(gameStartCategory, currentGameMode, score, numQuestions);
+      setTimeout(() => goToMenu(), 2000);
+    }
+  }, [gameMode]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSearchResults && !event.target.closest('.search-container')) {
+        setShowSearchResults(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showSearchResults]);
+
+  useEffect(() => {
+    loadUserProgress();
+  }, [user]);
+
+  const loadUserProgress = () => {
+    if (!user) return;
+    
+    try {
+      const saved = localStorage.getItem(`progress_${user.sub}`);
+      if (saved) {
+        setUserProgress(JSON.parse(saved));
+      }
+    } catch (error) {
+      setUserProgress({});
+    }
+  };
+
+  const saveUserProgress = (progress) => {
+    if (!user) return;
+    
+    try {
+      localStorage.setItem(`progress_${user.sub}`, JSON.stringify(progress));
+      setUserProgress(progress);
+    } catch (error) {
+      console.error('Failed to save progress:', error);
+    }
+  };
+
+  const handleLoginSuccess = (credentialResponse) => {
+    const decoded = jwtDecode(credentialResponse.credential);
+    setUser(decoded);
+    localStorage.setItem('dutch_app_user', JSON.stringify(decoded));
+    localStorage.setItem('dutch_app_login_time', Date.now().toString());
+  };
+
+  const handleLogout = () => {
+    googleLogout();
+    setUser(null);
+    setUserProgress({});
+    localStorage.removeItem('dutch_app_user');
+    localStorage.removeItem('dutch_app_login_time');
+    goToMenu();
+  };
+
+  const checkAndUpdateProgress = (category, mode, score, totalQuestions) => {
+    if (!user || category === 'all') return;
+
+    const percentage = (score / totalQuestions) * 100;
+    const availableWords = dutchWordBank[category]?.length || 0;
+    const requiredQuestions = Math.ceil(availableWords * 0.8);
+    const passed = percentage >= 80 && totalQuestions >= requiredQuestions;
+
+    const updatedProgress = { ...userProgress };
+    
+    if (!updatedProgress[category]) {
+      updatedProgress[category] = {
+        multipleChoice: { score: 0, wordsAttempted: 0, passed: false },
+        spelling: { score: 0, wordsAttempted: 0, passed: false },
+        completed: false
+      };
+    }
+
+    if (mode === 'play') {
+      updatedProgress[category].multipleChoice = {
+        score: percentage,
+        wordsAttempted: totalQuestions,
+        passed: passed
+      };
+    } else if (mode === 'spelling') {
+      updatedProgress[category].spelling = {
+        score: percentage,
+        wordsAttempted: totalQuestions,
+        passed: passed
+      };
+    }
+
+    updatedProgress[category].completed = 
+      updatedProgress[category].multipleChoice.passed && 
+      updatedProgress[category].spelling.passed;
+
+    saveUserProgress(updatedProgress);
+  };
+
+  const isCategoryCompleted = (category) => {
+    if (!user || category === 'all') return false;
+    return userProgress[category]?.completed || false;
+  };
+
+  const getCategoryProgress = (category) => {
+    if (!user || category === 'all') return { multipleChoice: false, spelling: false };
+    return {
+      multipleChoice: userProgress[category]?.multipleChoice?.passed || false,
+      spelling: userProgress[category]?.spelling?.passed || false
+    };
+  };
+
+  const categories = ['all', ...Object.keys(dutchWordBank)];
+
+  const loadWords = (category) => {
+    let words = [];
+    if (category === 'all') {
+      words = getAllWords();
+    } else {
+      words = (dutchWordBank[category] || []).map(w => ({ ...w, category }));
+    }
+    return words.sort(() => Math.random() - 0.5);
+  };
+
+  const startLearnMode = () => {
+    const words = loadWords(selectedCategory);
+    if (words.length === 0) {
+      alert('Not enough words in this category.');
+      return;
+    }
+    if (words.length < numQuestions) {
+      alert(`Not enough words in this category. Please select a category with at least ${numQuestions} words or reduce the number of questions.`);
+      return;
+    }
+    setLearnWords(words.slice(0, numQuestions));
+    setLearnIndex(0);
+    setGameMode('learn');
+    setShowQuestionSelector(false);
+  };
+
+  const startGame = (mode = 'play') => {
+    const words = loadWords(selectedCategory);
+    
+    if (mode === 'play' && words.length < 4) {
+      alert('Not enough words in this category.');
+      return;
+    }
+    
+    if ((mode === 'spelling' || mode === 'fillblank') && words.length < 1) {
+      alert('Not enough words in this category.');
+      return;
+    }
+    
+    if (mode === 'fillblank') {
+      const wordsWithValidExamples = words.filter(w => {
+        if (!w.example) return false;
+        const exampleLower = w.example.toLowerCase();
+        const dutchLower = w.dutch.toLowerCase();
+        return exampleLower.includes(dutchLower);
+      });
+      
+      if (wordsWithValidExamples.length < numQuestions) {
+        alert(`Not enough words with suitable examples for Fill in the Blank mode. Only ${wordsWithValidExamples.length} words available. Please reduce the number of questions or choose a different category.`);
+        return;
+      }
+    }
+    
+    if (words.length < numQuestions) {
+      alert(`Not enough words in this category. Please select a category with at least ${numQuestions} words or reduce the number of questions.`);
+      return;
+    }
+    
+    setWordBank(words);
+    setUsedWords([]);
+    setGameMode(mode);
+    setCurrentGameMode(mode);
+    setGameStartCategory(selectedCategory);
+    setScore(0);
+    setStreak(0);
+    setQuestionsAnswered(0);
+    setFeedback(null);
+    setSpellingAnswer('');
+    setFillBlankAnswer('');
+    setShowQuestionSelector(false);
+    
+    if (mode === 'spelling') {
+      generateSpellingQuestion(words, []);
+    } else if (mode === 'fillblank') {
+      generateFillBlankQuestion(words, []);
+    } else {
+      generateQuestion(words, []);
+    }
+  };
+
+  const openQuestionSelector = (mode) => {
+    setPendingGameMode(mode);
+    setShowQuestionSelector(true);
+  };
+
+  const startGameWithQuestions = () => {
+    const availableWords = selectedCategory === 'all' 
+      ? getTotalWordCount() 
+      : (dutchWordBank[selectedCategory]?.length || 0);
+    const maxQuestions = availableWords;
+    
+    if (numQuestions < 10 || numQuestions > maxQuestions) {
+      alert(`Please select between 10 and ${maxQuestions} questions.`);
+      return;
+    }
+    if (pendingGameMode === 'learn') {
+      startLearnMode();
+    } else {
+      startGame(pendingGameMode);
+    }
+  };
+
+  const generateQuestion = (words = wordBank, used = usedWords) => {
+    if (words.length < 4) return;
+    
+    const availableWords = words.filter(w => 
+      !used.some(u => u.dutch === w.dutch && u.english === w.english)
+    );
+    
+    if (availableWords.length < 4) {
+      setUsedWords([]);
+      generateQuestion(words, []);
+      return;
+    }
+    
+    const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
+    const wrongOptions = availableWords
+      .filter(w => w.english !== correct.english)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3);
+    
+    const allOptions = [correct, ...wrongOptions].sort(() => Math.random() - 0.5);
+    
+    setCurrentWord(correct);
+    setOptions(allOptions);
+    setFeedback(null);
+    setUsedWords([...used, correct]);
+  };
+
+  const generateSpellingQuestion = (words = wordBank, used = usedWords) => {
+    if (words.length === 0) return;
+    
+    const availableWords = words.filter(w => 
+      !used.some(u => u.dutch === w.dutch && u.english === w.english)
+    );
+    
+    if (availableWords.length === 0) {
+      setUsedWords([]);
+      generateSpellingQuestion(words, []);
+      return;
+    }
+    
+    const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
+    
+    setCurrentWord(correct);
+    setSpellingAnswer('');
+    setFeedback(null);
+    setUsedWords([...used, correct]);
+  };
+
+  const generateFillBlankQuestion = (words = wordBank, used = usedWords) => {
+    if (words.length === 0) return;
+    
+    const availableWords = words.filter(w => {
+      if (!w.example || !used.every(u => u.dutch !== w.dutch || u.english !== w.english)) {
+        return false;
+      }
+      const exampleLower = w.example.toLowerCase();
+      const dutchLower = w.dutch.toLowerCase();
+      return exampleLower.includes(dutchLower);
+    });
+    
+    if (availableWords.length === 0) {
+      const wordsWithExamples = words.filter(w => {
+        if (!w.example) return false;
+        const exampleLower = w.example.toLowerCase();
+        const dutchLower = w.dutch.toLowerCase();
+        return exampleLower.includes(dutchLower);
+      });
+      
+      if (wordsWithExamples.length === 0) {
+        alert('Not enough words with suitable examples for Fill in the Blank mode in this category.');
+        goToMenu();
+        return;
+      }
+      
+      setUsedWords([]);
+      generateFillBlankQuestion(words, []);
+      return;
+    }
+    
+    const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
+    
+    const regex = new RegExp(`\\b${correct.dutch}\\b`, 'gi');
+    let sentence = correct.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
+    let blankCreated = false;
+
+    sentence = sentence.replace(regex, (match) => {
+      if (!blankCreated) {
+        blankCreated = true;
+        return '____';
+      }
+      return match;
+    });
+    
+    if (!blankCreated) {
+      return generateFillBlankQuestion(words, [...used, correct]);
+    }
+    
+    setCurrentWord(correct);
+    setFillBlankSentence(sentence);
+    setFillBlankAnswer('');
+    setFeedback(null);
+    setUsedWords([...used, correct]);
+  };
+
+  const handleAnswer = (selected) => {
+    const isCorrect = selected.english === currentWord.english;
+    playSound(isCorrect);
+
+    if (isCorrect) {
+      setScore(score + 1);
+      setStreak(streak + 1);
+      setFeedback({ correct: true, message: 'Goed gedaan! (Well done!)' });
+      
+      setTimeout(() => {
+        if (questionsAnswered + 1 >= numQuestions) {
+          setGameMode('results');
+        } else {
+          generateQuestion();
+        }
+      }, 1500);
+    } else {
+      setStreak(0);
+      setFeedback({ 
+        correct: false, 
+        message: `Niet helemaal! The correct answer is "${currentWord.english}"` 
+      });
+    }
+    
+    setQuestionsAnswered(questionsAnswered + 1);
+  };
+
+  const handleNext = () => {
+    setSpellingAnswer('');
+    setFillBlankAnswer('');
+    if (questionsAnswered >= numQuestions) {
+      setGameMode('results');
+    } else {
+      if (gameMode === 'spelling') {
+        generateSpellingQuestion();
+      } else if (gameMode === 'fillblank') {
+        generateFillBlankQuestion();
+      } else {
+        generateQuestion();
+      }
+    }
+  };
+
+  const handleSpellingSubmit = (e) => {
+    if (e) e.preventDefault();
+    
+    if (!spellingAnswer.trim()) {
+      return;
+    }
+    
+    const userAnswer = spellingAnswer.trim().toLowerCase();
+    const correctAnswer = currentWord.dutch.toLowerCase();
+    const isCorrect = userAnswer === correctAnswer;
+    
+    playSound(isCorrect); 
+    setQuestionsAnswered(questionsAnswered + 1);
+    
+    if (isCorrect) {
+      setScore(score + 1);
+      setStreak(streak + 1);
+      setFeedback({ correct: true, message: 'Perfect! Goed gedaan! (Well done!)' });
+      
+      setTimeout(() => {
+        if (questionsAnswered + 1  >= numQuestions) {
+          setGameMode('results');
+        } else {
+          setSpellingAnswer('');
+          generateSpellingQuestion();
+        }
+      }, 1500);
+    } else {
+      setStreak(0);
+      setFeedback({ 
+        correct: false, 
+        message: `Not quite! The correct spelling is "${currentWord.dutch}"` 
+      });
+    }
+  };
+
+  const handleFillBlankSubmit = (e) => {
+    if (e) e.preventDefault();
+    
+    if (!fillBlankAnswer.trim()) {
+      return;
+    }
+    
+    const userAnswer = fillBlankAnswer.trim().toLowerCase();
+    const correctAnswer = currentWord.dutch.toLowerCase();
+    const isCorrect = userAnswer === correctAnswer;
+    
+    playSound(isCorrect); 
+    setQuestionsAnswered(questionsAnswered + 1);
+    
+    if (isCorrect) {
+      setScore(score + 1);
+      setStreak(streak + 1);
+      setFeedback({ correct: true, message: 'Perfect! Goed gedaan! (Well done!)' });
+      
+      setTimeout(() => {
+        if (questionsAnswered + 1 >= numQuestions) {
+          setGameMode('results');
+        } else {
+          setFillBlankAnswer('');
+          generateFillBlankQuestion();
+        }
+      }, 1500);
+    } else {
+      setStreak(0);
+      setFeedback({ 
+        correct: false, 
+        message: `Not quite! The correct word is "${currentWord.dutch}"` 
+      });
+    }
+  };
+
+  const playSound = (isCorrect) => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    if (isCorrect) {
+      oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(500, audioContext.currentTime + 0.05);
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.15);
+      gainNode.gain.setValueAtTime(0.4, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.3);
+    } else {
+      oscillator.frequency.setValueAtTime(300, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.4);
+      gainNode.gain.setValueAtTime(0.25, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5);
+    }
+  };
+
+  const speakDutch = (text) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'nl-NL';
+    utterance.rate = 0.8;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const goToMenu = () => {
+    setGameMode('menu');
+    setScore(0);
+    setStreak(0);
+    setQuestionsAnswered(0);
+    setFeedback(null);
+    setUsedWords([]);
+    setLearnIndex(0);
+    setLearnWords([]);
+    setCurrentWord(null);
+    setOptions([]);
+    setWordBank([]);
+    setSpellingAnswer('');
+    setFillBlankAnswer('');
+    setFillBlankSentence('');
+    setShowQuestionSelector(false);
+    setPendingGameMode(null);
+    setNumQuestions(10);
+    setCurrentGameMode(null);
+    setGameStartCategory(null);
+  };
+
+  const handleSearch = (query) => {
+    setSearchQuery(query);
+    
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+    
+    const allWords = getAllWords();
+    const queryLower = query.toLowerCase();
+    
+    const results = allWords.filter(word => 
+      word.dutch.toLowerCase().includes(queryLower) ||
+      word.english.toLowerCase().includes(queryLower) ||
+      word.example?.toLowerCase().includes(queryLower)
+    );
+    
+    const sortedResults = results.sort((a, b) => {
+      const aDutch = a.dutch.toLowerCase();
+      const bDutch = b.dutch.toLowerCase();
+      const aEnglish = a.english.toLowerCase();
+      const bEnglish = b.english.toLowerCase();
+      
+      if (aDutch === queryLower) return -1;
+      if (bDutch === queryLower) return 1;
+      if (aEnglish === queryLower) return -1;
+      if (bEnglish === queryLower) return 1;
+      
+      const aStartsDutch = aDutch.startsWith(queryLower);
+      const bStartsDutch = bDutch.startsWith(queryLower);
+      if (aStartsDutch && !bStartsDutch) return -1;
+      if (!aStartsDutch && bStartsDutch) return 1;
+      
+      const aStartsEnglish = aEnglish.startsWith(queryLower);
+      const bStartsEnglish = bEnglish.startsWith(queryLower);
+      if (aStartsEnglish && !bStartsEnglish) return -1;
+      if (!aStartsEnglish && bStartsEnglish) return 1;
+      
+      const aContainsDutch = aDutch.includes(queryLower);
+      const bContainsDutch = bDutch.includes(queryLower);
+      if (aContainsDutch && !bContainsDutch) return -1;
+      if (!aContainsDutch && bContainsDutch) return 1;
+      
+      const aContainsEnglish = aEnglish.includes(queryLower);
+      const bContainsEnglish = bEnglish.includes(queryLower);
+      if (aContainsEnglish && !bContainsEnglish) return -1;
+      if (!aContainsEnglish && bContainsEnglish) return 1;
+      
+      return aDutch.localeCompare(bDutch);
+    });
+    
+    setSearchResults(sortedResults.slice(0, 20));
+    setShowSearchResults(sortedResults.length > 0);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setShowSearchResults(false);
+  };
+
+  const mobileHoverFix = (
+    <style>{`
+      @media (hover: none) and (pointer: coarse) {
+        button:hover {
+          background-color: inherit !important;
+          color: inherit !important;
+          transform: none !important;
+          scale: none !important;
+        }
+      }
+      
+      .animate-fadeIn {
+        animation: fadeIn 0.3s ease-in;
+      }
+      
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    `}</style>
+  );
+
+  // Login screen - MOBILE OPTIMIZED
+  if (!user) {
+    return (
+      <>
+        {mobileHoverFix}
+        <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-md w-full text-center">
+            <h1 className="text-3xl sm:text-5xl font-bold text-orange-600 mb-3 sm:mb-4">🇳🇱 Leer Nederlands</h1>
+            <p className="text-gray-600 text-base sm:text-lg mb-6 sm:mb-8">Sign in to track your progress</p>
+            
+            <div className="bg-orange-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 text-sm sm:text-base">
+              <p className="text-gray-700 mb-3 sm:mb-4">✓ Track your learning progress</p>
+              <p className="text-gray-700 mb-3 sm:mb-4">✓ Unlock categories with 80%+ score</p>
+              <p className="text-gray-700">✓ Complete 40+ words per challenge</p>
+            </div>
+
+            <div className="flex justify-center">
+              <GoogleLogin
+                onSuccess={handleLoginSuccess}
+                onError={() => console.log('Login Failed')}
+                useOneTap
+              />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Stories mode - MOBILE OPTIMIZED
+  if (gameMode === 'stories' && !selectedStory) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-3 sm:p-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-xl w-full">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-yellow-700">📖 Choose a Story</h2>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
+          <div className="space-y-3 sm:space-y-4">
+            {stories.map(story => (
+              <button
+                key={story.id}
+                onClick={() => {
+                  setSelectedStory(story);
+                  setShowStoryQuiz(false);
+                  setCurrentStoryQuestion(0);
+                  setStoryScore(0);
+                  setStoryQuizFeedback(null);
+                }}
+                className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-lg font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                {story.title}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => { 
+              setGameMode('menu'); 
+              setShowStories(false);
+              setSelectedStory(null);
+              setScore(0);
+              setStreak(0);
+              setQuestionsAnswered(0);
+              setFeedback(null);
+            }}
+            className="mt-6 sm:mt-8 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Back to Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (gameMode === 'stories' && selectedStory) {
+    // Story quiz results - MOBILE OPTIMIZED
+    if (showStoryQuiz && currentStoryQuestion >= selectedStory.questions.length) {
+      const percentage = Math.round((storyScore / selectedStory.questions.length) * 100);
+      
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-lg w-full text-center">
+            <Trophy className="w-16 h-16 sm:w-24 sm:h-24 text-yellow-500 mx-auto mb-4" />
+            <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-4">
+              {percentage >= 80 ? 'Uitstekend! Perfect begrip!' :
+               percentage >= 60 ? 'Goed gedaan! Je begrijpt het verhaal!' :
+               'Lees het verhaal nog een keer!'}
+            </h2>
+            <div className="mb-6">
+              <div className="text-4xl sm:text-6xl font-bold text-yellow-600 mb-2">{storyScore}/{selectedStory.questions.length}</div>
+              <div className="text-xl sm:text-2xl text-gray-600">{percentage}% Correct</div>
+            </div>
+            
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setShowStoryQuiz(false);
+                  setCurrentStoryQuestion(0);
+                  setStoryScore(0);
+                  setStoryQuizFeedback(null);
+                }}
+                className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                <RefreshCw className="w-5 h-5" />
+                Probeer Opnieuw (Try Again)
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedStory(null);
+                  setShowStoryQuiz(false);
+                  setCurrentStoryQuestion(0);
+                  setStoryScore(0);
+                  setStoryQuizFeedback(null);
+                }}
+                className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                Terug naar Verhalen (Back to Stories)
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    
+    // Story quiz questions - MOBILE OPTIMIZED
+    if (showStoryQuiz) {
+      const question = selectedStory.questions[currentStoryQuestion];
+      
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 max-w-2xl w-full">
+            {/* Story Text Section - MOBILE OPTIMIZED */}
+            <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                <span className="text-xl sm:text-2xl">📖</span>
+                <h3 className="text-base sm:text-xl font-bold text-yellow-700">{selectedStory.title}</h3>
+              </div>
+              <div className="prose prose-sm max-w-none text-gray-700 max-h-40 sm:max-h-60 overflow-y-auto p-3 sm:p-4 bg-white rounded-lg text-sm sm:text-base" style={{ whiteSpace: 'pre-line' }}>
+                {selectedStory.text}
+              </div>
+            </div>
+            
+            {/* Quiz controls - MOBILE OPTIMIZED */}
+            <div className="mb-4 sm:mb-6">
+              <div className="flex flex-wrap justify-between items-center mb-3 sm:mb-4 gap-2">
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      if (confirm('Weet je zeker dat je wilt stoppen? (Are you sure you want to quit?)')) {
+                        setShowStoryQuiz(false);
+                        setCurrentStoryQuestion(0);
+                        setStoryScore(0);
+                        setStoryQuizFeedback(null);
+                        setGameMode('menu');
+                        setSelectedStory(null);
+                        setShowStories(false);
+                      }
+                    }}
+                    className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-1 sm:gap-2"
+                    title="Back to Menu"
+                  >
+                    <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+                    <span className="font-semibold text-xs sm:text-sm">Menu</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (confirm('Terug naar het verhaal? (Back to story?)')) {
+                        setShowStoryQuiz(false);
+                        setCurrentStoryQuestion(0);
+                        setStoryScore(0);
+                        setStoryQuizFeedback(null);
+                      }
+                    }}
+                    className="bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-200 p-2 rounded-lg transition-all flex items-center gap-1 sm:gap-2"
+                    title="Back to Story"
+                  >
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-700" />
+                    <span className="font-semibold text-xs sm:text-sm hidden sm:inline">Verhaal</span>
+                  </button>
+                </div>
+                <div className="flex gap-2 sm:gap-3 items-center">
+                  <div className="bg-yellow-100 px-2 sm:px-4 py-1 sm:py-2 rounded-lg">
+                    <span className="text-yellow-700 font-bold text-xs sm:text-base">Score: {storyScore}/{selectedStory.questions.length}</span>
+                  </div>
+                  <div className="text-gray-600 font-semibold text-xs sm:text-base">
+                    {currentStoryQuestion + 1}/{selectedStory.questions.length}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 transition-all duration-300"
+                  style={{ width: `${((currentStoryQuestion) / selectedStory.questions.length) * 100}%` }}
+                />
+              </div>
+            </div>
+            
+            <h3 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 text-center">{question.question}</h3>
+            
+            <div className="grid grid-cols-1 gap-2 sm:gap-3 mb-4 sm:mb-6">
+              {question.options.map((option, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    const isCorrect = option === question.correct;
+                    playSound(isCorrect);
+                    
+                    if (isCorrect) {
+                      setStoryScore(storyScore + 1);
+                      setStoryQuizFeedback({ correct: true, message: 'Goed gedaan! (Well done!)' });
+                    } else {
+                      setStoryQuizFeedback({ 
+                        correct: false, 
+                        message: `Niet helemaal! Het juiste antwoord is "${question.correct}"` 
+                      });
+                    }
+                    
+                    setTimeout(() => {
+                      setStoryQuizFeedback(null);
+                      setCurrentStoryQuestion(currentStoryQuestion + 1);
+                    }, 2000);
+                  }}
+                  disabled={storyQuizFeedback !== null}
+                  className={`p-3 sm:p-4 text-sm sm:text-lg font-semibold rounded-xl transition-all transform ${
+                    storyQuizFeedback === null
+                      ? `bg-gray-100 text-gray-800 ${!isTouchDevice ? 'hover:bg-yellow-100 hover:text-yellow-600' : 'active:bg-yellow-100'}`
+                      : storyQuizFeedback.correct && option === question.correct
+                      ? 'bg-green-500 text-white'
+                      : !storyQuizFeedback.correct && option === question.correct
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-100 text-gray-400'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            
+            {storyQuizFeedback && (
+              <div className={`p-3 sm:p-4 rounded-xl ${
+                storyQuizFeedback.correct ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  {storyQuizFeedback.correct ? (
+                    <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0" />
+                  ) : (
+                    <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0" />
+                  )}
+                  <p className={`font-semibold text-sm sm:text-base ${
+                    storyQuizFeedback.correct ? 'text-green-700' : 'text-red-700'
+                  }`}>
+                    {storyQuizFeedback.message}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    // Show story text - MOBILE OPTIMIZED
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-3 sm:p-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full">
+          <h2 className="text-2xl sm:text-3xl font-bold text-yellow-700 mb-4 sm:mb-6 text-center">{selectedStory.title}</h2>
+          <div className="prose prose-sm sm:prose-lg max-w-none text-gray-800 mb-6 sm:mb-8 text-sm sm:text-base" style={{ whiteSpace: 'pre-line' }}>
+            {selectedStory.text}
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            {selectedStory.questions && selectedStory.questions.length > 0 && (
+              <button
+                onClick={() => {
+                  setShowStoryQuiz(true);
+                  setCurrentStoryQuestion(0);
+                  setStoryScore(0);
+                  setStoryQuizFeedback(null);
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                <GraduationCap className="w-5 h-5" />
+                Start Quiz
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setSelectedStory(null);
+                setGameMode('stories');
+                setShowStoryQuiz(false);
+                setCurrentStoryQuestion(0);
+                setStoryScore(0);
+                setStoryQuizFeedback(null);
+              }}
+              className="w-full bg-yellow-400 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-yellow-500 active:bg-yellow-500 transition-all flex items-center justify-center gap-2"
+            >
+              <ChevronLeft className="w-5 h-5" />
+              Back to Stories
+            </button>
+            <button
+              onClick={() => { 
+                setGameMode('menu'); 
+                setShowStories(false); 
+                setSelectedStory(null);
+                setScore(0);
+                setStreak(0);
+                setQuestionsAnswered(0);
+                setFeedback(null);
+              }}
+              className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+            >
+              <Home className="w-5 h-5" />
+              Menu
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // MENU SCREEN - MOBILE OPTIMIZED
+  if (gameMode === 'menu') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 max-w-4xl w-full">
+          {!showQuestionSelector ? (
+            <>
+              <div className="text-center mb-6 sm:mb-8">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 bg-blue-100 px-3 sm:px-4 py-2 rounded-lg w-full sm:w-auto">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    <span className="text-blue-700 font-semibold text-sm sm:text-base truncate">{user.name}</span>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm sm:text-base w-full sm:w-auto justify-center"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </button>
+                </div>
+                <h1 className="text-3xl sm:text-5xl font-bold text-orange-600 mb-2">🇳🇱 Leer Nederlands</h1>
+                <p className="text-gray-600 text-sm sm:text-lg">1000+ Most Common Dutch Words - A1 🟢 & A2 🔵</p>
+                
+                {/* Search Bar - MOBILE OPTIMIZED */}
+                <div className="mt-4 sm:mt-6 relative search-container">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => handleSearch(e.target.value)}
+                      placeholder="🔍 Search Dutch/English word..."
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 pl-10 sm:pl-12 text-sm sm:text-lg border-2 border-orange-300 rounded-xl focus:border-orange-500 focus:outline-none"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={clearSearch}
+                        className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 active:text-gray-600"
+                      >
+                        <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Search Results Dropdown - MOBILE OPTIMIZED */}
+                  {showSearchResults && (
+                    <div className="absolute z-10 w-full mt-2 bg-white border-2 border-orange-300 rounded-xl shadow-xl max-h-64 sm:max-h-96 overflow-y-auto">
+                      <div className="p-2 sm:p-3 bg-orange-50 border-b border-orange-200 sticky top-0">
+                        <p className="text-xs sm:text-sm font-semibold text-orange-700">
+                          Found {searchResults.length} word{searchResults.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      {searchResults.map((word, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 sm:p-4 hover:bg-orange-50 active:bg-orange-50 border-b border-gray-100 last:border-b-0 transition-all"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-lg sm:text-2xl font-bold text-orange-600">{word.dutch}</span>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    speakDutch(word.dutch);
+                                  }}
+                                  className="p-1 hover:bg-orange-100 active:bg-orange-100 rounded-full transition-all"
+                                >
+                                  <Volume2 className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600" />
+                                </button>
+                                <span className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-bold ${
+                                  word.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                  {word.level}
+                                </span>
+                              </div>
+                              <p className="text-sm sm:text-lg text-gray-700 mb-1">{word.english}</p>
+                              {word.example && (
+                                <p className="text-xs sm:text-sm text-gray-500 italic line-clamp-2">{word.example}</p>
+                              )}
+                              <p className="text-xs text-gray-400 mt-1">
+                                {word.category.replace(/_/g, ' ').toUpperCase()}
+                              </p>
+                              
+                              {/* Practice buttons - MOBILE OPTIMIZED */}
+                              <div className="mt-2 sm:mt-3 flex flex-wrap gap-2">
+                                <button
+                                  onClick={() => {
+                                    setLearnWords([word]);
+                                    setLearnIndex(0);
+                                    setGameMode('learn');
+                                    clearSearch();
+                                  }}
+                                  className="px-2 sm:px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-lg hover:bg-blue-600 active:bg-blue-600 transition-all"
+                                >
+                                  📚 Study
+                                </button>
+                                <button
+                                  onClick={() => speakDutch(word.dutch)}
+                                  className="px-2 sm:px-3 py-1 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 active:bg-orange-600 transition-all"
+                                >
+                                  🔊 Hear
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-3 sm:mt-4 inline-flex items-center gap-2 bg-green-100 px-3 sm:px-4 py-2 rounded-full">
+                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                  <span className="text-green-700 font-bold text-xs sm:text-base">{getTotalWordCount()} Words!</span>
+                </div>
+              </div>
+              
+              {/* Category Selection - MOBILE OPTIMIZED */}
+              <div className="mb-4 sm:mb-6">
+                <label className="block text-gray-700 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">Choose a Thema category:</label>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                  {categories.map(cat => {
+                    const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
+                    const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
+                    const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
+                    const isCompleted = isCategoryCompleted(cat);
+                    const progress = getCategoryProgress(cat);
+                    const hasPartialProgress = (progress.multipleChoice || progress.spelling) && !isCompleted;
+                    
+                    return (
+                      <button
+                        key={cat}
+                        onClick={() => setSelectedCategory(cat)}
+                        className={`p-2 sm:p-3 rounded-xl font-medium transition-all text-xs relative ${
+                          selectedCategory === cat
+                            ? (isCompleted 
+                                ? 'bg-green-600 text-white shadow-lg scale-105 border-2 border-yellow-400' 
+                                : hasPartialProgress
+                                ? 'bg-yellow-500 text-white shadow-lg scale-105'
+                                : 'bg-orange-500 text-white shadow-lg scale-105')
+                            : isCompleted
+                            ? `bg-green-500 text-white ${!isTouchDevice ? 'hover:bg-green-600' : 'active:bg-green-600'} border-2 border-green-600`
+                            : hasPartialProgress
+                            ? `bg-yellow-400 text-gray-800 ${!isTouchDevice ? 'hover:bg-yellow-500' : 'active:bg-yellow-500'} border-2 border-yellow-500`
+                            : `bg-white text-gray-700 ${!isTouchDevice ? 'hover:bg-orange-50' : 'active:bg-orange-50'} border border-gray-200`
+                        }`}
+                      >
+                        {isCompleted && (
+                          <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
+                            <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                          </div>
+                        )}
+                        {!isCompleted && hasPartialProgress && (
+                          <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1 sm:px-1.5 py-0.5">
+                            <span className="text-white text-xs font-bold">
+                              {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✓' : ''}
+                            </span>
+                          </div>
+                        )}
+                        <div className="font-bold text-xs sm:text-sm">{cat === 'all' ? 'All' : cat.replace(/_/g, ' ').replace(/lesson /g, 'L').toUpperCase()}</div>
+                        <div className="opacity-75 mt-1 text-xs">
+                          {wordCount} words
+                          {(hasA1 || hasA2) && (
+                            <span className="block sm:inline sm:ml-1">
+                              {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Game Mode Buttons - MOBILE OPTIMIZED */}
+              <div className="space-y-2 sm:space-y-3">
+                <button
+                  onClick={() => openQuestionSelector('learn')}
+                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span className="text-sm sm:text-xl">Learn Mode</span>
+                </button>
+                
+                <button
+                  onClick={() => openQuestionSelector('play')}
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
+                  <span className="text-sm sm:text-xl">Multiple Choice</span>
+                </button>
+                
+                <button
+                  onClick={() => openQuestionSelector('spelling')}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-base sm:text-xl">✏️ Spelling</span>
+                </button>
+                
+                <button
+                  onClick={() => openQuestionSelector('fillblank')}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">📝 Fill Blank</span>
+                </button>
+                
+                <button
+                  onClick={() => { setShowStories(true); setGameMode('stories'); }}
+                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">📖 Stories</span>
+                </button>
+              </div>
+
+              {/* Info Box - MOBILE OPTIMIZED */}
+              <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-orange-50 rounded-xl">
+                <div className="text-xs sm:text-sm text-gray-600 space-y-1 sm:space-y-2">
+                  <p className="text-center font-bold text-orange-600 mb-2 text-sm sm:text-base">Official "1000+ Dutch Words" Course</p>
+                  <p><span className="font-bold">🟢 A1:</span> Basic words</p>
+                  <p><span className="font-bold">🔵 A2:</span> Intermediate</p>
+                  <p className="mt-2 sm:mt-3 text-center font-semibold text-xs sm:text-sm">📚 Learn → ✅ Quiz → ✏️ Spell → 📝 Fill</p>
+                  <p className="mt-2 text-center font-bold text-green-600 text-xs sm:text-sm">🏆 Get 80% on 80% of words!</p>
+                </div>
+              </div>
+            </>
+          ) : (
+            // Question Selector - MOBILE OPTIMIZED
+            <>
+              <div className="text-center mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-4xl font-bold text-orange-600 mb-2">
+                  {pendingGameMode === 'play' ? '🎯 Multiple Choice' : 
+                  pendingGameMode === 'spelling' ? '✏️ Spelling' : 
+                  pendingGameMode === 'fillblank' ? '📝 Fill Blank' :
+                  '📚 Learn Mode'}
+                </h2>
+                <p className="text-gray-600 text-sm sm:text-lg">How many words?</p>
+              </div>
+
+              <div className="mb-6 sm:mb-8">
+                <label className="block text-gray-700 font-semibold mb-3 sm:mb-4 text-center text-sm sm:text-base">
+                  Selected: <span className="text-orange-600">{selectedCategory === 'all' ? 'All Lessons' : selectedCategory.replace(/_/g, ' ').toUpperCase()}</span>
+                </label>
+                
+                <div className="bg-gray-50 p-4 sm:p-6 rounded-xl">
+                  <label className="block text-gray-700 font-semibold mb-3 text-center text-sm sm:text-base">
+                    Number of Questions/Words
+                  </label>
+                  {(() => {
+                    let availableWords = selectedCategory === 'all' 
+                      ? getTotalWordCount() 
+                      : (dutchWordBank[selectedCategory]?.length || 0);
+                    
+                    if (pendingGameMode === 'fillblank') {
