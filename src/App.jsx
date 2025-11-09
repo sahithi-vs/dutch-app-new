@@ -108,6 +108,7 @@ export default function DutchLearningGame() {
   const [recognition, setRecognition] = useState(null);
   const [transcript, setTranscript] = useState('');
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [reviewMode, setReviewMode] = useState(null); // 'failed_words' or null
 
 // Add global styles
   if (typeof document !== 'undefined') {
@@ -1121,6 +1122,49 @@ const startGame = (mode = 'play') => {
   }
 };
 
+// NEW FUNCTION - Get ALL failed words from history (not just latest attempt)
+const getAllFailedWordsFromHistory = (categories, mode = 'spelling') => {
+  if (!user) return [];
+  
+  // Convert to array if needed
+  const categoryArray = Array.isArray(categories) ? categories : [categories];
+  
+  // Collect ALL failed words from ALL attempts in history
+  const allFailedWords = new Map(); // Use Map to track unique words with their fail count
+  
+  categoryArray.forEach(category => {
+    const relevantAttempts = attemptHistory.filter(
+      a => a.category === category && 
+           a.mode === mode && 
+           a.wrongAnswers && 
+           a.wrongAnswers.length > 0
+    );
+    
+    relevantAttempts.forEach(attempt => {
+      attempt.wrongAnswers.forEach(word => {
+        const wordKey = `${word.dutch}_${word.english}`;
+        
+        if (allFailedWords.has(wordKey)) {
+          // Increment fail count if word already exists
+          const existing = allFailedWords.get(wordKey);
+          allFailedWords.set(wordKey, {
+            ...existing,
+            failCount: existing.failCount + 1
+          });
+        } else {
+          // Add new failed word
+          allFailedWords.set(wordKey, {
+            ...word,
+            failCount: 1
+          });
+        }
+      });
+    });
+  });
+  
+  // Convert Map to array and sort by fail count (most failed first)
+  return Array.from(allFailedWords.values()).sort((a, b) => b.failCount - a.failCount);
+};
 
   const openQuestionSelector = (mode) => {
     setPendingGameMode(mode);
@@ -1721,6 +1765,7 @@ const stopRecording = () => {
     setReviewFailedWords(false);
     setShowMultiSelect(false); // ADD THIS
     setSelectedCategories(['all']); // ADD THIS
+    setReviewMode(null); //
     stopConversation();
 
   };
@@ -3863,29 +3908,77 @@ if (showFillBlankStories && selectedStoryKey) {
                   <span className="text-base sm:text-xl">✏️ Spelling</span>
                 </button>
                 {/* ADD THIS NEW BUTTON */}
+{/* NEW PRACTICE FAILED WORDS 2 - WORKING VERSION */}
 <button
   onClick={() => {
+    // Check if specific categories are selected
     if (selectedCategories.includes('all') || selectedCategories.length === 0) {
-      alert('Please select specific categories to review failed words!');
+      alert('⚠️ Please select specific categories (not "All") to review failed words!');
       return;
     }
     
-    // Get failed words from all selected categories
-    const failedWords = getFailedWords(selectedCategories, 'spelling');
+    // Get ALL failed words from history
+    const failedWordsData = getAllFailedWordsFromHistory(selectedCategories, 'spelling');
     
-    if (failedWords.length === 0) {
-      alert(`No failed words to review! You haven't taken any spelling tests yet or got all correct in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}`);
+    if (failedWordsData.length === 0) {
+      alert(`✅ No failed words found!\n\nYou haven't taken any spelling tests yet or got everything correct in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}`);
       return;
     }
     
-    // Show info about failed words
-    alert(`Found ${failedWords.length} failed words from your last spelling tests in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}\n\nReady to practice them!`);
+    // Load all words from selected categories
+    const allCategoryWords = loadWords(selectedCategories);
     
-    setReviewFailedWords(true);
-    setNumQuestions(failedWords.length);
-    startGame('spelling');
+    // Map failed words data to full word objects
+    const failedWordObjects = failedWordsData.map(fw => {
+      const fullWord = allCategoryWords.find(w => 
+        w.dutch.toLowerCase() === fw.dutch.toLowerCase() && 
+        w.english.toLowerCase() === fw.english.toLowerCase()
+      );
+      
+      if (fullWord) {
+        return {
+          ...fullWord,
+          failCount: fw.failCount // Add fail count for tracking
+        };
+      }
+      return null;
+    }).filter(w => w !== null);
+    
+    if (failedWordObjects.length === 0) {
+      alert('❌ Could not find the failed words in the selected categories. This might be a data issue.');
+      return;
+    }
+    
+    // Show confirmation with details
+    const mostFailed = failedWordObjects.slice(0, 3).map(w => `${w.dutch} (${w.failCount}x)`).join(', ');
+    const confirmMsg = `📚 Found ${failedWordObjects.length} failed words!\n\nMost failed: ${mostFailed}\n\nReady to practice?`;
+    
+    if (!confirm(confirmMsg)) {
+      return;
+    }
+    
+    // Set up the review mode
+    setReviewMode('failed_words');
+    setWordBank(failedWordObjects);
+    setUsedWords([]);
+    setGameMode('spelling');
+    setCurrentGameMode('spelling');
+    setGameStartCategory(selectedCategories.join(','));
+    setScore(0);
+    setStreak(0);
+    setQuestionsAnswered(0);
+    setFeedback(null);
+    setWrongAnswers([]);
+    setSpellingAnswer('');
+    setNumQuestions(failedWordObjects.length);
+    setShowQuestionSelector(false);
+    setTranscript('');
+    setIsRecording(false);
+    
+    // Generate first question
+    generateSpellingQuestion(failedWordObjects, []);
   }}
-  className="w-full bg-gradient-to-r from-red-500 to-rose-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+  className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
 >
   <span className="text-sm sm:text-xl">🔄 Practice Failed Words</span>
 </button>
@@ -4631,7 +4724,13 @@ if (gameMode === 'results') {
             <div className="text-xl sm:text-2xl text-gray-600">{percentage}% Correct</div>
           </div>
         </div>
-        
+          {reviewMode === 'failed_words' && (
+            <div className="mb-4 p-3 sm:p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+              <p className="text-blue-700 font-bold text-sm sm:text-base text-center">
+                📚 Failed Words Review Mode - You practiced {numQuestions} previously failed word{numQuestions > 1 ? 's' : ''}!
+              </p>
+            </div>
+          )}
         {/* Wrong Answers Review Section */}
         {wrongAnswers.length > 0 && (
           <div className="mb-6 max-h-96 overflow-y-auto">

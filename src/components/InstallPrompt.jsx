@@ -53,7 +53,7 @@ const InstallPrompt = () => {
   if (isStandalone || !showInstall) return null;
 
   const lastClosed = localStorage.getItem('installPromptClosed');
-  if (lastClosed && Date.now() - parseInt(lastClosed) < 7 * 24 * 60 * 60 * 1000) {
+  if (lastClosed && Date.now() - parseInt(lastClosed) < 1 * 24 * 60 * 60 * 1000) {
     return null;
   }
 
