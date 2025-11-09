@@ -1,485 +1,239 @@
-// Example stories data
 export const stories = [
- {
+  {
     id: 1,
     title: 'De Nieuwe Buurman',
-    text: `Jan woont in een klein huis in Amsterdam. Hij heeft een tuin met veel bloemen en een kleine schuur. Op maandag komt er een nieuwe buurman. De buurman heet Piet. Hij is aardig en jong.
+    text: `Jan woont in een klein huis in Amsterdam. Hij heeft een tuin vol bloemen en een kleine schuur. Op maandag krijgt hij een nieuwe buurman. De buurman heet Piet. Hij is jong en vriendelijk.
 
-    "Hallo, ik ben Piet," zegt de man. "Welkom in de buurt!" zegt Jan. "Wil je koffie of thee?" "Ja, graag een kopje koffie," antwoordt Piet. Ze gaan naar de keuken en zitten aan de tafel.
+"Hallo, ik ben Piet," zegt de man. "Welkom in de buurt!" zegt Jan. "Wil je koffie of thee?"  
+"Ja, graag een kopje koffie," antwoordt Piet. Ze gaan in de keuken zitten en praten.
 
-"Waar kom je vandaan?" vraagt Jan. "Ik kom uit Rotterdam," zegt Piet. "Maar nu werk ik hier in Amsterdam. Ik ben leraar op een school." "Leuk!" zegt Jan. "Ik werk op een kantoor in het centrum."
-Piet heeft geen meubels in zijn nieuwe flat. "Kan je me helpen?" vraagt hij aan Jan. "Natuurlijk!" zegt Jan. Samen gaan ze naar de winkel. Ze kopen een bed, een bank, een tafel en vier stoelen. Alles is niet te duur, want er is een goede aanbieding.
-De volgende dag helpt Jan met het verhuizen. Ze brengen alle spullen naar boven. De flat is op de derde verdieping. Er is geen lift, dus ze moeten de trap nemen. Het is zwaar werk! Na twee uur zijn ze klaar. Piet is heel blij.
+"Waar kom je vandaan?" vraagt Jan. "Ik kom uit Rotterdam," zegt Piet. "Ik werk nu in Amsterdam. Ik ben leraar op een school."  
+"Leuk!" zegt Jan. "Ik werk op een kantoor in het centrum."
 
-"Dank je wel voor je hulp," zegt Piet. "Graag gedaan," zegt Jan. "Kom vanavond bij mij eten. Mijn vrouw kookt lekker!" Piet komt om zes uur. Ze eten aardappels, groente en vlees. Het is gezellig. Ze praten over werk, familie en hobby's.
-Vanaf die dag zijn Jan en Piet goede vrienden. Ze drinken vaak samen koffie. Soms gaan ze naar het park of kijken ze samen naar voetbal op televisie. Jan is gelukkig dat hij zo'n aardige buurman heeft.`,
-  questions: [
-    {
-      question: "Waar woont Jan?",
-      options: ["Rotterdam", "Amsterdam", "Utrecht", "Den Haag"],
-      correct: "Amsterdam"
-    },
-    {
-      question: "Wat is het beroep van Piet?",
-      options: ["Dokter", "Leraar", "Kok", "Advocaat"],
-      correct: "Leraar"
-    },
-    {
-      question: "Op welke verdieping woont Piet?",
-      options: ["Eerste", "Tweede", "Derde", "Vierde"],
-      correct: "Derde"
-    },
-    {
-      question: "Wat eten Jan en Piet samen?",
-      options: ["Pizza", "Pasta", "Aardappels met groente en vlees", "Rijst"],
-      correct: "Aardappels met groente en vlees"
-    }
-  ] 
-},
+Piet heeft nog geen meubels in zijn nieuwe flat. "Kun je me helpen?" vraagt hij.  
+"Natuurlijk!" zegt Jan. Ze gaan samen naar de winkel. Ze kopen een bed, een bank, een tafel en vier stoelen. Er is een goede aanbieding, dus alles is niet te duur.
+
+De volgende dag helpt Jan met verhuizen. De flat is op de derde verdieping. Er is geen lift, dus ze moeten de trap nemen. Het is zwaar werk, maar na twee uur zijn ze klaar. Piet is erg blij.
+
+"Dank je wel voor je hulp," zegt Piet. "Graag gedaan," zegt Jan. "Kom vanavond bij ons eten. Mijn vrouw kookt lekker!"  
+Die avond eten ze samen aardappels, groente en vlees. Het is gezellig. Ze praten over werk, familie en hobby’s.
+
+Vanaf die dag zijn Jan en Piet goede vrienden. Ze drinken vaak samen koffie. Soms gaan ze naar het park of kijken ze voetbal op televisie. Jan is blij met zo’n aardige buurman.`,
+    questions: [
+      { question: "Waar woont Jan?", options: ["Rotterdam", "Amsterdam", "Utrecht", "Den Haag"], correct: "Amsterdam" },
+      { question: "Wat is het beroep van Piet?", options: ["Dokter", "Leraar", "Kok", "Advocaat"], correct: "Leraar" },
+      { question: "Op welke verdieping woont Piet?", options: ["Eerste", "Tweede", "Derde", "Vierde"], correct: "Derde" },
+      { question: "Wat eten Jan en Piet samen?", options: ["Pizza", "Pasta", "Aardappels met groente en vlees", "Rijst"], correct: "Aardappels met groente en vlees" }
+    ]
+  },
   {
     id: 2,
     title: 'Een Dagje naar het Strand',
-    text: `Het is zaterdag en het weer is mooi. De zon schijnt en het is warm. Lisa wil naar het strand gaan. Ze belt haar vriendin Sophie. "Heb je zin om naar zee te gaan?" vraagt Lisa. "Ja, leuk!" zegt Sophie. "Om hoe laat gaan we?"
-"We kunnen om tien uur vertrekken," zegt Lisa. "Oké, tot straks!" zegt Sophie. Lisa pakt haar tas. Ze neemt een handdoek, een boek, wat water en fruit mee. Ze trekt haar blauwe rok aan en doet haar zonnebril op.
-Om kwart voor tien staat Sophie voor de deur. "Ben je klaar?" vraagt ze. "Ja, laten we gaan!" zegt Lisa. Ze nemen de trein naar de kust. Het station is dichtbij hun huis. De trein vertrekt om tien uur precies.
-In de trein zitten veel mensen. Sommige gaan ook naar het strand. Lisa en Sophie vinden twee plaatsen naast het raam. Ze kijken naar buiten. Ze zien huizen, weiden met koeien en schapen, en kleine dorpen.
-Na een uur komen ze aan. Het strand is groot en mooi. Er zijn veel mensen. Kinderen spelen met een bal. Sommige mensen zwemmen in de zee. Lisa en Sophie zoeken een rustige plek. Ze leggen hun handdoeken op het zand.
-"Het water ziet er koud uit," zegt Sophie. "Zullen we eerst zonnen?" "Goed idee," zegt Lisa. Ze liggen in de zon en lezen hun boeken. Later eten ze fruit en drinken water. Het is heerlijk!
-Om drie uur gaan ze zwemmen. Het water is inderdaad koud, maar fris. Ze blijven een half uur in zee. Daarna lopen ze langs het water. Ze zoeken schelpen en kijken naar de boten.
-Om vijf uur nemen ze de trein terug naar huis. "Wat een fijne dag!" zegt Sophie. "Ja, we moeten dit vaker doen!" zegt Lisa. Thuis is Lisa moe maar gelukkig. Ze heeft veel plezier gehad.`,
-questions: [
-  {
-    question: "Welke dag gaan Lisa en Sophie naar het strand?",
-    options: ["Vrijdag", "Zaterdag", "Zondag", "Maandag"],
-    correct: "Zaterdag"
+    text: `Het is zaterdag en het weer is prachtig. De zon schijnt en het is warm. Lisa wil naar het strand. Ze belt haar vriendin Sophie.  
+"Heb je zin om naar zee te gaan?" vraagt Lisa.  
+"Ja, leuk!" zegt Sophie. "Om hoe laat?"  
+"Om tien uur," zegt Lisa. "Tot straks!"
+
+Lisa pakt haar tas. Ze neemt een handdoek, een boek, water en fruit mee. Ze trekt haar blauwe rok aan en zet haar zonnebril op.  
+Om kwart voor tien staat Sophie voor de deur. "Ben je klaar?" vraagt ze. "Ja, laten we gaan!" zegt Lisa.
+
+Ze nemen de trein naar de kust. In de trein is het druk. Veel mensen gaan ook naar het strand. Lisa en Sophie vinden twee plaatsen bij het raam. Ze kijken naar buiten en zien huizen, weilanden met koeien en schapen, en kleine dorpen.
+
+Na een uur komen ze aan. Het strand is groot en mooi. Kinderen spelen met een bal, en sommige mensen zwemmen. Lisa en Sophie zoeken een rustige plek en leggen hun handdoeken neer.  
+"Het water lijkt koud," zegt Sophie. "Zullen we eerst zonnen?"  
+"Goed idee," zegt Lisa.
+
+Ze liggen in de zon, lezen en eten fruit. Later, om drie uur, gaan ze zwemmen. Het water is fris, maar lekker. Daarna wandelen ze langs het water en zoeken schelpen.  
+Om vijf uur nemen ze de trein terug naar huis. "Wat een fijne dag!" zegt Sophie. "Ja, dat moeten we vaker doen!" zegt Lisa. Thuis is Lisa moe maar gelukkig.`,
+    questions: [
+      { question: "Welke dag gaan Lisa en Sophie naar het strand?", options: ["Vrijdag", "Zaterdag", "Zondag", "Maandag"], correct: "Zaterdag" },
+      { question: "Hoe laat vertrekt de trein?", options: ["Half tien", "Tien uur", "Kwart voor tien", "Kwart over tien"], correct: "Tien uur" },
+      { question: "Wat zien ze vanuit de trein?", options: ["Bergen", "Weiden met koeien en schapen", "De zee", "Alleen huizen"], correct: "Weiden met koeien en schapen" },
+      { question: "Hoe laat gaan ze zwemmen?", options: ["Tien uur", "Twaalf uur", "Drie uur", "Vijf uur"], correct: "Drie uur" }
+    ]
   },
   {
-    question: "Hoe laat vertrekt de trein?",
-    options: ["Half tien", "Tien uur", "Kwart voor tien", "Kwart over tien"],
-    correct: "Tien uur"
-  },
-  {
-    question: "Wat zien ze vanuit de trein?",
-    options: ["Bergen", "Weiden met koeien en schapen", "De zee", "Alleen huizen"],
-    correct: "Weiden met koeien en schapen"
-  },
-  {
-    question: "Hoe laat gaan ze zwemmen?",
-    options: ["Tien uur", "Twaalf uur", "Drie uur", "Vijf uur"],
-    correct: "Drie uur"
-  }
-]
-  
-},
-  {    id: 3,
+    id: 3,
     title: 'De Eerste Dag op School',
-    text: `Mohammed is nieuw in Nederland. Hij komt uit Syrië. Nu woont hij in Utrecht met zijn familie. Vandaag is zijn eerste dag op de Nederlandse school. Hij is een beetje zenuwachtig maar ook blij.
-Om acht uur gaat hij naar school. De school is niet ver van zijn huis. Hij loopt tien minuten. Bij de ingang staat een vrouw. "Goedemorgen!" zegt ze vriendelijk. "Ik ben mevrouw De Vries, de docent Nederlands. Jij bent Mohammed, toch?" "Ja, dat klopt," antwoordt Mohammed.
-Mevrouw De Vries brengt hem naar het lokaal. In de klas zitten twaalf cursisten. Ze komen uit verschillende landen: Polen, Turkije, Marokko, China en Roemenië. Iedereen zegt "hallo" tegen Mohammed. Hij voelt zich welkom.
-"Goed," zegt mevrouw De Vries. "We gaan beginnen met de les. Vandaag leren we over familie." Ze schrijft woorden op het bord: vader, moeder, broer, zus, opa, oma. "Wie kan een zin maken?" vraagt ze.
-Een meisje steekt haar hand op. "Ik heb twee broers en één zus," zegt ze. "Heel goed!" zegt de docent. Mohammed luistert goed. Hij schrijft alle nieuwe woorden in zijn schrift. Na een uur is er pauze. Alle cursisten gaan naar buiten.
-Mohammed praat met een jongen die Ahmed heet. Ahmed komt ook uit Syrië. "Hoe vind je de les?" vraagt Ahmed. "Moeilijk, maar interessant," zegt Mohammed. "Ja, Nederlands is niet makkelijk," zegt Ahmed. "Maar mevrouw De Vries is aardig en helpt veel."
-Na de pauze gaan ze terug naar de klas. Ze oefenen met luisteren en spreken. Mohammed maakt een opdracht met een andere cursist. Ze vragen en antwoorden: "Hoe heet je?" "Waar woon je?" "Hoeveel kinderen heb je?"
-Om twaalf uur is de les klaar. Mohammed is moe. Zijn hoofd zit vol met nieuwe woorden! Maar hij is ook tevreden. Hij weet nu dat hij veel kan leren hier. Thuis vertelt hij zijn vrouw alles over zijn eerste dag. "Morgen ga ik weer," zegt hij met een glimlach.`,
-questions: [
-  {
-    question: "Uit welk land komt Mohammed?",
-    options: ["Turkije", "Marokko", "Syrië", "Egypte"],
-    correct: "Syrië"
+    text: `Mohammed is nieuw in Nederland. Hij komt uit Syrië en woont nu met zijn familie in Utrecht. Vandaag is zijn eerste dag op de Nederlandse school. Hij is een beetje zenuwachtig, maar ook blij.
+
+Om acht uur vertrekt hij naar school. De school is niet ver, hij loopt tien minuten. Bij de ingang staat een vrouw. "Goedemorgen!" zegt ze. "Ik ben mevrouw De Vries, je docent Nederlands. Jij bent Mohammed, toch?"  
+"Ja, dat klopt," zegt Mohammed.
+
+Ze gaan samen naar het lokaal. In de klas zitten twaalf cursisten uit verschillende landen: Polen, Turkije, Marokko, China en Roemenië. Iedereen zegt "hallo" tegen Mohammed. Hij voelt zich welkom.
+
+"Vandaag leren we over familie," zegt mevrouw De Vries. Ze schrijft woorden op het bord: vader, moeder, broer, zus, opa, oma. "Wie kan een zin maken?" vraagt ze.  
+Een meisje zegt: "Ik heb twee broers en één zus." "Heel goed!" zegt de docent.
+
+Na een uur is het pauze. Mohammed praat met een jongen die Ahmed heet. Ahmed komt ook uit Syrië. "Hoe vind je de les?" vraagt Ahmed. "Moeilijk, maar interessant," zegt Mohammed. "Ja, Nederlands is niet makkelijk, maar de docent helpt goed," zegt Ahmed.
+
+Na de pauze oefenen ze met luisteren en spreken. Mohammed maakt opdrachten met andere cursisten. Om twaalf uur is de les voorbij. Mohammed is moe maar tevreden. Thuis vertelt hij zijn vrouw alles over zijn eerste dag. "Morgen ga ik weer!" zegt hij met een glimlach.`,
+    questions: [
+      { question: "Uit welk land komt Mohammed?", options: ["Turkije", "Marokko", "Syrië", "Egypte"], correct: "Syrië" },
+      { question: "Hoe heet de docent Nederlands?", options: ["Mevrouw De Vries", "Mevrouw Jansen", "Mevrouw Bakker", "Mevrouw Peters"], correct: "Mevrouw De Vries" },
+      { question: "Hoeveel cursisten zitten er in de klas?", options: ["Tien", "Twaalf", "Vijftien", "Acht"], correct: "Twaalf" },
+      { question: "Over welk onderwerp gaat de eerste les?", options: ["Eten", "Familie", "Werk", "Huisdieren"], correct: "Familie" }
+    ]
   },
   {
-    question: "Hoe heet de docent Nederlands?",
-    options: ["Mevrouw De Vries", "Mevrouw Jansen", "Mevrouw Bakker", "Mevrouw Peters"],
-    correct: "Mevrouw De Vries"
-  },
-  {
-    question: "Hoeveel cursisten zitten er in de klas?",
-    options: ["Tien", "Twaalf", "Vijftien", "Acht"],
-    correct: "Twaalf"
-  },
-  {
-    question: "Over welk onderwerp gaat de eerste les?",
-    options: ["Eten", "Familie", "Werk", "Huisdieren"],
-    correct: "Familie"
-  }
-]
-  },
-  {    id: 4,
+    id: 4,
     title: 'Boodschappen Doen',
-    text: `Fatima moet boodschappen doen. Ze kijkt in de koelkast. Er is bijna niets meer: geen melk, geen kaas, geen groente. "Ik ga naar de supermarkt," zegt ze tegen haar man Hassan.
-Ze pakt haar tas en loopt naar de winkel. De supermarkt is groot en druk. Fatima neemt een winkelwagentje. Eerst gaat ze naar de groente afdeling. Ze koopt tomaten, komkommers, uien en aardappels. De groenten zijn vers en niet duur.
-Dan gaat ze naar het brood. Ze pakt twee broden. Bij de zuivel neemt ze melk, boter, yoghurt en kaas. Hassan houdt veel van kaas op zijn boterham! Ze kijkt ook naar het vlees. Er is kip in de aanbieding. "Perfect!" denkt Fatima. "Vanavond maak ik kip met rijst."
-Bij het fruit kijkt ze naar de prijzen. Appels kosten twee euro per kilo. Bananen zijn goedkoop: één euro vijftig per kilo. Ze neemt een kilo appels en twee kilo bananen. De kinderen eten graag fruit.
-In de gang ziet ze drop. Hassan vindt drop lekker, maar Fatima vindt het vies! Ze koopt het toch voor hem. Ook neemt ze wat koekjes en een taart voor zondag. Dan komt de familie op bezoek.
-Bij de dranken pakt ze water, thee en sap. Hassan drinkt iedere ochtend thee. De kinderen willen altijd sap. Fatima kijkt in haar wagentje. Het is bijna vol!
-Ze gaat naar de kassa. De verkoper scant alle producten. "Dat is zestig euro en vijftig cent," zegt hij. Fatima betaalt met haar bankpas. Ze pint en krijgt een bon.  
-Met vier volle tassen loopt ze naar huis. Het is zwaar! Thuis zet ze alles in de kasten en de koelkast. "Zo," zegt ze tevreden. "Nu hebben we genoeg eten voor een week!"
-Hassan komt de keuken in. Hij ziet de drop. "Voor mij?" vraagt hij blij. Fatima lacht. "Ja, voor jou!" Ze is moe maar blij dat het klaar is.`,
-questions: [
-  {
-    question: "Wat is er bijna niet meer in de koelkast?",
-    options: ["Alleen brood", "Melk, kaas en groente", "Alleen vlees", "Alleen fruit"],
-    correct: "Melk, kaas en groente"
+    text: `Fatima kijkt in de koelkast. Er is bijna niets meer: geen melk, geen kaas en geen groente. "Ik ga naar de supermarkt," zegt ze tegen haar man Hassan.
+
+De supermarkt is groot en druk. Fatima pakt een winkelwagentje. Eerst gaat ze naar de groenteafdeling. Ze koopt tomaten, komkommers, uien en aardappels. Daarna haalt ze brood, melk, yoghurt en kaas. Hassan houdt van kaas op zijn boterham!
+
+Bij het vlees ziet ze dat kip in de aanbieding is. "Perfect!" denkt ze. "Vanavond maak ik kip met rijst."  
+Ze koopt ook fruit: appels en bananen. De kinderen eten dat graag. Appels kosten twee euro per kilo, bananen maar één euro vijftig.
+
+In de gang ziet ze drop. Hassan vindt dat lekker, maar Fatima niet. Toch koopt ze het voor hem. Ze neemt ook koekjes en een taart voor zondag, als de familie op bezoek komt.  
+Bij de dranken pakt ze water, thee en sap. Het wagentje is vol!
+
+Bij de kassa zegt de verkoper: "Dat is zestig euro en vijftig cent." Fatima betaalt met haar pinpas en krijgt de bon. Met vier volle tassen loopt ze naar huis. Het is zwaar, maar ze is tevreden.  
+Thuis zet ze alles in de kasten. Hassan komt binnen. "Voor mij?" vraagt hij als hij de drop ziet. Fatima lacht. "Ja, voor jou!" Ze is moe maar blij dat het klaar is.`,
+    questions: [
+      { question: "Wat is er bijna niet meer in de koelkast?", options: ["Alleen brood", "Melk, kaas en groente", "Alleen vlees", "Alleen fruit"], correct: "Melk, kaas en groente" },
+      { question: "Wat is er in de aanbieding?", options: ["Vis", "Kip", "Kaas", "Brood"], correct: "Kip" },
+      { question: "Hoeveel kosten de bananen per kilo?", options: ["Eén euro", "Één euro vijftig", "Twee euro", "Drie euro"], correct: "Één euro vijftig" },
+      { question: "Hoeveel betaalt Fatima in totaal?", options: ["Vijftig euro", "Zestig euro en vijftig cent", "Zeventig euro", "Vijftig euro en vijftig cent"], correct: "Zestig euro en vijftig cent" }
+    ]
   },
   {
-    question: "Wat is er in de aanbieding?",
-    options: ["Vis", "Kip", "Kaas", "Brood"],
-    correct: "Kip"
-  },
-  {
-    question: "Hoeveel kosten de bananen per kilo?",
-    options: ["Eén euro", "Één euro vijftig", "Twee euro", "Drie euro"],
-    correct: "Één euro vijftig"
-  },
-  {
-    question: "Hoeveel betaalt Fatima in totaal?",
-    options: ["Vijftig euro", "Zestig euro en vijftig cent", "Zeventig euro", "Vijftig euro en vijftig cent"],
-    correct: "Zestig euro en vijftig cent"
-  }
-]
-  },
-{    id: 5,
+    id: 5,
     title: 'Bij de Dokter',
-    text: `Tom voelt zich niet goed. Hij heeft pijn in zijn keel en hij hoest veel. Ook heeft hij koorts. Zijn vrouw zegt: "Je moet naar de huisarts gaan." Tom vindt het niet leuk, maar hij weet dat ze gelijk heeft. 
-    Hij belt de assistente. "Goedemiddag, met de praktijk van dokter Jansen," zegt ze. "Hallo, ik ben Tom Bakker. Ik voel me ziek. Kan ik vandaag nog komen?" vraagt Tom. "Een moment alstublieft," zegt de assistente. "Ja, u kunt om drie uur komen."
-Om kwart voor drie gaat Tom naar de praktijk. Hij zit in de wachtkamer. Er zijn meer mensen: een moeder met haar baby, een oude man en een jonge vrouw. Tom wacht twintig minuten. Dan roept de assistente zijn naam.
-Hij gaat naar de spreekkamer. Dokter Jansen zit achter zijn bureau. "Dag meneer Bakker," zegt hij vriendelijk. "Wat zijn uw klachten?" Tom vertelt over de keelpijn, het hoesten en de koorts.
-De dokter onderzoekt hem. Hij kijkt in zijn keel en luistert naar zijn longen. "U heeft griep," zegt dokter Jansen. "Het is nu winter en veel mensen zijn ziek. U moet thuis blijven en veel rusten. Drink veel water en thee."
-"Heb ik medicijnen nodig?" vraagt Tom. "Ja, ik schrijf een recept voor u," zegt de dokter. "Dit helpt tegen de pijn en de koorts. Neem drie keer per dag één pil in. Na het eten, met water."
-Tom krijgt het recept. Hij bedankt de dokter en gaat naar de apotheek. De apotheek is naast de praktijk. Hij geeft het recept aan de apotheker. "Een ogenblik," zegt de man. Na vijf minuten krijgt Tom een doosje met pillen.
-"Gebruik dit zoals de dokter heeft gezegd," zegt de apotheker. "En beterschap!" "Dank u wel," zegt Tom. Thuis gaat hij meteen naar bed. Zijn vrouw maakt hete thee voor hem. Tom slaapt veel en neemt zijn medicijnen.
-Na vier dagen voelt Tom zich beter. De koorts is weg en hij hoest minder. Hij is blij dat hij naar de dokter is gegaan!`,
-questions: [
-  {
-    question: "Wat zijn Tom's klachten?",
-    options: ["Hoofdpijn", "Buikpijn", "Keelpijn en hoesten", "Rugpijn"],
-    correct: "Keelpijn en hoesten"
+    text: `Tom voelt zich niet goed. Hij heeft keelpijn, hoest veel en heeft koorts. Zijn vrouw zegt: "Je moet naar de huisarts gaan."  
+Tom belt de praktijk. "Goedemiddag, met de praktijk van dokter Jansen," zegt de assistente.  
+"Hallo, ik ben Tom Bakker. Ik voel me ziek. Kan ik vandaag nog komen?"  
+"Ja, u kunt om drie uur komen," zegt ze.
+
+Om kwart voor drie gaat Tom naar de praktijk. Hij wacht twintig minuten in de wachtkamer. Dan roept de assistente zijn naam.  
+Dokter Jansen onderzoekt hem. "Wat zijn uw klachten?" vraagt hij. Tom vertelt alles.  
+De dokter kijkt in zijn keel en luistert naar zijn longen. "U heeft griep," zegt hij. "Blijf thuis, rust goed uit en drink veel water en thee."
+
+"Heb ik medicijnen nodig?" vraagt Tom. "Ja," zegt de dokter. "Ik schrijf een recept voor pijn en koorts. Neem drie keer per dag één pil na het eten."  
+Tom haalt het recept op bij de apotheek naast de praktijk. De apotheker geeft hem de medicijnen. "Beterschap!" zegt hij.  
+Thuis gaat Tom meteen naar bed. Zijn vrouw maakt thee voor hem. Na vier dagen voelt hij zich beter. De koorts is weg. Hij is blij dat hij naar de dokter is gegaan.`,
+    questions: [
+      { question: "Wat zijn Tom's klachten?", options: ["Hoofdpijn", "Buikpijn", "Keelpijn en hoesten", "Rugpijn"], correct: "Keelpijn en hoesten" },
+      { question: "Hoe laat kan Tom naar de dokter komen?", options: ["Twee uur", "Drie uur", "Vier uur", "Vijf uur"], correct: "Drie uur" },
+      { question: "Wat heeft Tom volgens de dokter?", options: ["Verkoudheid", "Griep", "Longontsteking", "Allergie"], correct: "Griep" },
+      { question: "Hoe vaak moet Tom de pillen innemen?", options: ["Eén keer per dag", "Twee keer per dag", "Drie keer per dag", "Vier keer per dag"], correct: "Drie keer per dag" }
+    ]
   },
   {
-    question: "Hoe laat kan Tom naar de dokter komen?",
-    options: ["Twee uur", "Drie uur", "Vier uur", "Vijf uur"],
-    correct: "Drie uur"
-  },
-  {
-    question: "Wat heeft Tom volgens de dokter?",
-    options: ["Verkoudheid", "Griep", "Longontsteking", "Allergie"],
-    correct: "Griep"
-  },
-  {
-    question: "Hoe vaak moet Tom de pillen innemen?",
-    options: ["Eén keer per dag", "Twee keer per dag", "Drie keer per dag", "Vier keer per dag"],
-    correct: "Drie keer per dag"
-  }
-]
-},
-{    id: 6,
+    id: 6,
     title: 'Een Nieuwe Baan',
-    text: `Sarah werkt in een winkel. Ze verkoopt kleding. Het werk is oké, maar het salaris is laag. Ze wil een andere baan zoeken. Op het internet ziet ze een advertentie. Een groot bedrijf zoekt een verkoopmedewerker.
-Sarah besluit te solliciteren. Ze schrijft een brief en maakt haar cv klaar. In de brief vertelt ze over haar ervaring. Ze werkt al vijf jaar in de winkel. Ze stuurt alles per e-mail naar het bedrijf.
-Na twee weken belt het bedrijf. "Wij willen graag een sollicitatiegesprek met u," zegt een vrouw. Sarah is blij! Het gesprek is volgende week dinsdag om twee uur.
-Sarah bereidt zich goed voor. Ze zoekt informatie over het bedrijf op internet. Ook oefent ze haar antwoorden. Wat zijn haar sterke punten? Waarom wil ze deze baan?
-Op dinsdag trekt Sarah haar mooie pak aan. Ze wil er netjes uitzien. Ze neemt de trein naar de stad. Het kantoor is in het centrum, naast het station. Om kwart voor twee is ze er al.
-In de wachtkamer zit ze zenuwachtig te wachten. Om twee uur precies komt een man binnen. "Goedemiddag, ik ben de heer Van Dijk, de directeur," zegt hij. Ze gaan naar zijn kantoor.
-De heer Van Dijk stelt veel vragen. "Waarom wilt u bij ons werken?" "Wat is uw ervaring met klanten?" "Kunt u goed samenwerken?" Sarah antwoordt rustig en duidelijk. Ze vertelt over haar werk in de winkel. Ze helpt klanten graag en werkt goed met collega's samen.
-"Wat vindt u belangrijk in een baan?" vraagt de heer Van Dijk. "Ik vind het belangrijk dat ik kan leren en groeien," zegt Sarah. "Ook wil ik werk doen dat ik leuk vind."
-Het gesprek duurt een uur. "Dank u wel voor uw tijd," zegt de heer Van Dijk. "U hoort binnen een week van ons." Sarah gaat naar huis. Ze denkt dat het goed ging!
-Vijf dagen later krijgt ze een e-mail. Ze heeft de baan! Sarah is heel blij. Het salaris is hoger en het werk is interessant. Ze begint over drie weken. Eindelijk een nieuwe baan!`,
-questions: [
-  {
-    question: "Waar werkt Sarah nu?",
-    options: ["In een restaurant", "In een winkel", "Op kantoor", "In een school"],
-    correct: "In een winkel"
-  },
-  {
-    question: "Hoeveel jaar ervaring heeft Sarah?",
-    options: ["Drie jaar", "Vijf jaar", "Zeven jaar", "Tien jaar"],
-    correct: "Vijf jaar"
-  },
-  {
-    question: "Wie is de heer Van Dijk?",
-    options: ["De receptionist", "De directeur", "De collega", "De assistent"],
-    correct: "De directeur"
-  },
-  {
-    question: "Wanneer hoort Sarah of ze de baan heeft?",
-    options: ["De volgende dag", "Binnen drie dagen", "Binnen een week", "Binnen twee weken"],
-    correct: "Binnen een week"
-  }
-]
-},
+    text: `Sarah werkt in een kledingwinkel. Het werk is leuk, maar het salaris is laag. Ze wil graag een andere baan.  
+Op internet ziet ze een vacature bij een groot bedrijf. Ze zoeken een verkoopmedewerker. Sarah besluit te solliciteren. Ze schrijft een nette brief en stuurt haar cv.
 
-{    id: 7,
+Twee weken later krijgt ze een telefoontje. "Wij willen graag een sollicitatiegesprek met u," zegt een vrouw. Sarah is blij! Het gesprek is volgende week dinsdag om twee uur.
+
+Sarah bereidt zich goed voor. Ze leest over het bedrijf en oefent haar antwoorden. Op dinsdag draagt ze haar mooiste pak. Ze wil er professioneel uitzien.  
+Ze gaat met de trein naar het centrum. Het kantoor ligt naast het station. Om kwart voor twee is ze er al.
+
+In de wachtkamer wacht ze zenuwachtig. Dan komt de heer Van Dijk, de directeur. "Goedemiddag," zegt hij vriendelijk. Ze praten over haar ervaring en haar motivatie. Sarah vertelt rustig over haar werk in de winkel en hoe ze klanten helpt.  
+"Wat vindt u belangrijk in een baan?" vraagt hij. "Dat ik kan leren en groeien," zegt Sarah.
+
+Na een uur is het gesprek klaar. "Binnen een week hoort u van ons," zegt de heer Van Dijk. Vijf dagen later krijgt Sarah een e-mail: ze heeft de baan!  
+Ze is dolblij. Het salaris is hoger en het werk is interessant. Over drie weken begint ze aan haar nieuwe baan.`,
+    questions: [
+      { question: "Waar werkt Sarah nu?", options: ["In een restaurant", "In een winkel", "Op kantoor", "In een school"], correct: "In een winkel" },
+      { question: "Hoeveel jaar ervaring heeft Sarah?", options: ["Drie jaar", "Vijf jaar", "Zeven jaar", "Tien jaar"], correct: "Vijf jaar" },
+      { question: "Wie is de heer Van Dijk?", options: ["De receptionist", "De directeur", "De collega", "De assistent"], correct: "De directeur" },
+      { question: "Wanneer hoort Sarah of ze de baan heeft?", options: ["De volgende dag", "Binnen drie dagen", "Binnen een week", "Binnen twee weken"], correct: "Binnen een week" }
+    ]
+  },
+  {
+    id: 7,
     title: 'De Trein Missen',
-    text: `Peter moet om negen uur op zijn werk zijn. Het is maandag ochtend. Hij wordt laat wakker. Zijn telefoon heeft geen alarm gegeven! Het is al half acht.
-"O nee!" roept Peter. Hij springt uit bed en rent naar de badkamer. Hij doucht snel en poetst zijn tanden. Dan kleedt hij zich aan. Hij trekt een overhemd, een broek en zijn schoenen aan. Geen tijd voor ontbijt!
-Hij pakt zijn tas en rent naar het station. Het station is tien minuten lopen van zijn huis. Maar Peter rent en is er in vijf minuten. Hij kijkt naar het bord. Zijn trein vertrekt om kwart voor acht.
-Peter rent naar het spoor. Hij ziet de trein al staan! Maar wanneer hij bij het perron komt, sluit de deur. De trein vertrekt. "Nee, wacht!" roept Peter. Maar het is te laat. Hij heeft de trein gemist.
-Peter is boos op zichzelf. Nu moet hij wachten op de volgende trein. Die vertrekt om acht uur. Hij belt zijn baas. "Sorry, ik kom te laat," zegt hij. "Ik heb mijn trein gemist. Ik ben er om half tien."
-"Geen probleem," zegt zijn baas. "Tot straks." Peter is opgelucht. Gelukkig is zijn baas aardig! Hij koopt een kop koffie en wacht in de stationshal. Om acht uur stapt hij in de trein.
-In de trein is het druk. Peter moet staan. Veel mensen gaan naar hun werk. Hij kijkt uit het raam. De trein rijdt door velden en langs kleine dorpen. Na veertig minuten komt de trein aan.
-Peter loopt snel naar kantoor. Zijn collega's zijn er al. "Goedemorgen," zegt hij. "Sorry dat ik te laat ben." "Geen zorgen," zegt zijn collega Anna. "We hebben allemaal weleens een slechte ochtend!"
-Peter gaat aan zijn bureau zitten. Hij start zijn computer en begint met werken. De rest van de dag gaat goed. 's Avonds thuis zet hij drie alarmen op zijn telefoon. "Dit gebeurt niet nog een keer!" denkt hij.`,
-questions: [
-  {
-    question: "Waarom wordt Peter laat wakker?",
-    options: ["Hij is ziek", "Zijn telefoon heeft geen alarm gegeven", "Hij vergeet de tijd", "Hij slaapt door"],
-    correct: "Zijn telefoon heeft geen alarm gegeven"
-  },
-  {
-    question: "Hoe laat vertrekt Peters trein?",
-    options: ["Half acht", "Kwart voor acht", "Acht uur", "Kwart over acht"],
-    correct: "Kwart voor acht"
-  },
-  {
-    question: "Hoe laat komt Peter op zijn werk aan?",
-    options: ["Negen uur", "Half tien", "Tien uur", "Half elf"],
-    correct: "Half tien"
-  },
-  {
-    question: "Hoeveel alarmen zet Peter 's avonds?",
-    options: ["Eén", "Twee", "Drie", "Vier"],
-    correct: "Drie"
-  }
-]
+    text: `Het is maandagochtend. Peter moet om negen uur op zijn werk zijn. Maar hij wordt te laat wakker. Zijn telefoon heeft geen alarm gegeven! Het is al half acht.  
+"O nee!" roept hij. Hij springt uit bed, doucht snel en kleedt zich aan. Geen tijd voor ontbijt!
 
-},
-{    id: 8,
+Hij rent naar het station. Normaal duurt dat tien minuten, maar nu doet hij er vijf over. De trein vertrekt om kwart voor acht. Peter ziet de trein staan, maar net als hij bij het perron komt, sluiten de deuren.  
+"Nee, wacht!" roept hij. Te laat — de trein vertrekt.
+
+Peter is boos op zichzelf. De volgende trein gaat om acht uur. Hij belt zijn baas. "Sorry, ik kom te laat. Ik heb mijn trein gemist."  
+"Geen probleem," zegt zijn baas. "Tot straks."
+
+Peter koopt koffie en wacht. In de trein moet hij staan; het is druk. Na veertig minuten komt hij aan. Op kantoor zegt hij: "Sorry dat ik te laat ben."  
+"Geen zorgen," zegt zijn collega Anna. "Dat overkomt iedereen wel eens."
+
+De rest van de dag gaat goed. ’s Avonds zet Peter drie alarmen op zijn telefoon. "Dit gebeurt niet nog een keer!" denkt hij.`,
+    questions: [
+      { question: "Waarom wordt Peter laat wakker?", options: ["Hij is ziek", "Zijn telefoon heeft geen alarm gegeven", "Hij vergeet de tijd", "Hij slaapt door"], correct: "Zijn telefoon heeft geen alarm gegeven" },
+      { question: "Hoe laat vertrekt Peters trein?", options: ["Half acht", "Kwart voor acht", "Acht uur", "Kwart over acht"], correct: "Kwart voor acht" },
+      { question: "Hoe laat komt Peter op zijn werk aan?", options: ["Negen uur", "Half tien", "Tien uur", "Half elf"], correct: "Half tien" },
+      { question: "Hoeveel alarmen zet Peter 's avonds?", options: ["Eén", "Twee", "Drie", "Vier"], correct: "Drie" }
+    ]
+  },
+  {
+    id: 8,
     title: 'Op Vakantie',
     text: `Maria en Carlos wonen in Den Haag. Ze hebben twee kinderen: Rosa en Miguel. Het is juli en tijd voor vakantie. De familie gaat kamperen in Frankrijk.
-Ze pakken hun spullen in: kleding, eten, de tent, slaapzakken en speelgoed voor de kinderen. De auto is vol! Op zaterdag om zes uur 's ochtends vertrekken ze. Het is nog donker, maar de kinderen zijn wakker en opgewonden.
-"Hoeveel uur rijden we?" vraagt Rosa. "Ongeveer negen uur," zegt Carlos. "Dat is lang!" zegt Miguel. Maria lacht. "Daarom hebben we spelletjes en snacks meegenomen!"
-Ze rijden via België naar Frankrijk. Onderweg stoppen ze twee keer. Eén keer bij een tankstation voor benzine en koffie. De tweede keer bij een picknickplaats om te lunchen. De kinderen rennen rond en spelen met hun bal.
-Om vier uur komen ze aan op de camping. De camping ligt bij een meer. Er zijn veel bomen en het is rustig. "Wat mooi!" zegt Maria. Ze zoeken een goede plek voor hun tent. Carlos en Maria zetten de tent op. Rosa en Miguel helpen mee.
-Na een uur is de tent klaar. "Nu gaan we zwemmen!" zegt Carlos. De kinderen rennen naar het water. Het meer is groot en het water is schoon. Ze zwemmen en spelen tot zes uur. Dan zijn ze moe en hebben ze honger.
-Maria maakt eten op de camping kookplaat. Ze eten spaghetti met tomatensaus. "Lekker!" zegt Miguel. Na het eten zitten ze bij het vuur. Carlos vertelt verhalen. De kinderen luisteren en kijken naar de sterren.
-Die nacht slapen ze allemaal goed in de tent. De volgende dag gaan ze wandelen in de natuur. Ze zien vogels, bloemen en zelfs een konijn! Rosa vindt het prachtig.
-Twee weken later rijden ze terug naar Nederland. "Wanneer gaan we weer op vakantie?" vraagt Rosa. "Volgend jaar!" zegt Maria. Iedereen is gelukkig. Het was een perfecte vakantie.`,
-questions: [
-  {
-    question: "Waar gaat de familie kamperen?",
-    options: ["In België", "In Duitsland", "In Frankrijk", "In Spanje"],
-    correct: "In Frankrijk"
+
+Ze pakken kleding, eten, een tent, slaapzakken en speelgoed in. De auto zit helemaal vol. Op zaterdag vertrekken ze om zes uur ’s ochtends. Het is nog donker, maar de kinderen zijn al wakker en blij.
+
+"Hoe lang rijden we?" vraagt Rosa. "Ongeveer negen uur," zegt Carlos. "Dat is lang!" zegt Miguel.  
+Daarom hebben ze spelletjes en snacks meegenomen.
+
+Ze rijden via België naar Frankrijk. Onderweg stoppen ze twee keer: bij een tankstation voor koffie en bij een picknickplaats om te lunchen.  
+Om vier uur komen ze aan op de camping bij een groot meer. Er zijn veel bomen en het is rustig. Carlos en Maria zetten de tent op, met hulp van de kinderen.
+
+Daarna gaan ze zwemmen. Het water is koel en schoon. Ze spelen tot zes uur. ’s Avonds kookt Maria spaghetti met tomatensaus. Ze eten buiten en kijken daarna naar de sterren bij het kampvuur.
+
+De volgende dagen wandelen ze, zwemmen en spelen. Twee weken later rijden ze terug naar Nederland. "Wanneer gaan we weer op vakantie?" vraagt Rosa. "Volgend jaar!" zegt Maria. Iedereen is blij. Het was een perfecte vakantie.`,
+    questions: [
+      { question: "Waar gaat de familie kamperen?", options: ["In België", "In Duitsland", "In Frankrijk", "In Spanje"], correct: "In Frankrijk" },
+      { question: "Hoe laat vertrekken ze?", options: ["Vier uur", "Zes uur", "Acht uur", "Tien uur"], correct: "Zes uur" },
+      { question: "Wat eten ze op de camping?", options: ["Rijst", "Spaghetti met tomatensaus", "Pizza", "Soep"], correct: "Spaghetti met tomatensaus" },
+      { question: "Hoe lang duurt hun vakantie?", options: ["Eén week", "Twee weken", "Drie weken", "Vier weken"], correct: "Twee weken" }
+    ]
   },
   {
-    question: "Hoeveel kinderen hebben Maria en Carlos?",
-    options: ["Eén", "Twee", "Drie", "Vier"],
-    correct: "Twee"
+    id: 9,
+    title: 'Een Cadeau voor de Verjaardag',
+    text: `Anna’s broer Max is morgen jarig. Hij wordt dertig jaar. Anna wil een cadeau voor hem kopen, maar ze weet niet wat.  
+Max houdt van muziek en koken. "Misschien een kookboek?" denkt ze. Maar hij heeft er al veel. "Of een koptelefoon?" Ja, dat is een goed idee!
+
+Na haar werk gaat Anna naar de winkel. Ze bekijkt verschillende koptelefoons. Eén is zwart, één wit en één blauw. De blauwe is het mooist en niet te duur. Ze koopt die en laat hem mooi inpakken.
+
+Thuis schrijft ze een kaart: "Lieve Max, gefeliciteerd met je verjaardag! Veel plezier met je cadeau. Groetjes, Anna." Ze legt het cadeau op tafel.
+
+De volgende dag gaat ze naar Max’ huis. Er zijn veel vrienden en familie. Op tafel staan taart en koffie.  
+"Gefeliciteerd!" zegt Anna. "Dank je!" zegt Max blij. Hij pakt haar cadeau uit.  
+"Wauw, een koptelefoon! Precies wat ik wilde!" zegt hij.  
+Anna glimlacht. Het feest is gezellig en iedereen danst later op muziek. Het was een leuke dag.`,
+    questions: [
+      { question: "Hoe oud wordt Max?", options: ["25", "28", "30", "32"], correct: "30" },
+      { question: "Wat koopt Anna voor Max?", options: ["Een kookboek", "Een koptelefoon", "Een boek", "Een horloge"], correct: "Een koptelefoon" },
+      { question: "Welke kleur kiest Anna?", options: ["Zwart", "Wit", "Blauw", "Rood"], correct: "Blauw" },
+      { question: "Wat staat er op de kaart?", options: ["Gefeliciteerd!", "Veel succes!", "Fijne vakantie!", "Beterschap!"], correct: "Gefeliciteerd!" }
+    ]
   },
   {
-    question: "Hoe lang rijden ze naar de camping?",
-    options: ["Zes uur", "Zeven uur", "Acht uur", "Negen uur"],
-    correct: "Negen uur"
-  },
-  {
-    question: "Wat ligt er bij de camping?",
-    options: ["Een rivier", "Een meer", "De zee", "Een bos"],
-    correct: "Een meer"
-  }
-]
-},
-{    id: 9,
-    title: 'Jarig!',
-    text: `Het is woensdag en Anna is jarig. Ze wordt dertig jaar oud. Haar man Erik heeft een verrassing voor haar georganiseerd. Anna weet er niets van!
-'s Ochtends wordt Anna wakker. Erik brengt ontbijt op bed. "Gefeliciteerd!" zegt hij met een kus. Hij geeft haar een mooie armband. "Wat lief!" zegt Anna. Ze is blij met het cadeau.
-"Wat gaan we vandaag doen?" vraagt Anna. "Dat is een verrassing," zegt Erik geheimzinnig. Na het ontbijt gaan ze naar de stad. Erik heeft kaarten gekocht voor het museum. Anna houdt van kunst en schilderijen.
-In het museum kijken ze naar mooie werken. Anna maakt foto's. "Dit is prachtig!" zegt ze. Na twee uur gaan ze naar een restaurant voor de lunch. Ze eten vis en drinken wijn. Het is gezellig.
-Maar Erik heeft nog meer gepland! Na de lunch gaan ze naar het theater. Er is een toneelstuk. Anna lacht veel tijdens de voorstelling. Het is een leuke comedy. "Wat een fantastische dag!" zegt Anna tegen Erik.
-Als ze thuiskomen, hoort Anna stemmen in huis. "Wat is dat?" vraagt ze verbaasd. Erik lacht. "Ga maar kijken!" Anna opent de deur van de woonkamer. "Verrassing!" roepen twintig mensen. Alle vrienden en familie zijn er!
-De kamer is versierd met ballonnen en slingers. Op de tafel staat een grote taart met dertig kaarsjes. Anna is ontroerd. "Dit hadden jullie niet hoeven te doen!" zegt ze. "Natuurlijk wel," zegt haar zus. "Je wordt maar één keer dertig!"
-Iedereen zingt "Lang zal ze leven" voor Anna. Ze blaast de kaarsjes uit en maakt een wens. Dan snijdt ze de taart aan. Er is ook muziek. Mensen dansen en praten. Anna krijgt veel cadeaus: boeken, bloemen, een sjaal en parfum.
-De hele avond is er feest. Om middernacht gaan de gasten naar huis. Anna is moe maar gelukkig. "Dank je wel," zegt ze tegen Erik. "Dit was de beste verjaardag ooit!" Erik glimlacht. "Voor jou alleen het beste!"`,
-questions: [
-  {
-    question: "Hoe oud wordt Anna?",
-    options: ["Vijfentwintig", "Dertig", "Vijfendertig", "Veertig"],
-    correct: "Dertig"
-  },
-  {
-    question: "Wat krijgt Anna van Erik als eerste cadeau?",
-    options: ["Een ketting", "Een armband", "Een ring", "Oorbellen"],
-    correct: "Een armband"
-  },
-  {
-    question: "Waar gaan ze 's middags naartoe?",
-    options: ["Naar de bioscoop", "Naar het theater", "Naar een concert", "Naar het park"],
-    correct: "Naar het theater"
-  },
-  {
-    question: "Hoeveel mensen komen naar het verjaardagsfeest?",
-    options: ["Tien", "Vijftien", "Twintig", "Vijfentwintig"],
-    correct: "Twintig"
-  }
-]
-},
-{    id: 10,
-    title: 'De Sportclub',
-    text: `Kevin wil fitter worden. Hij zit de hele dag op kantoor voor zijn computer. Hij beweegt bijna niet. Zijn vrouw Lisa zegt: "Je moet meer sporten! Het is gezond."
-Kevin zoekt op internet naar een sportclub. Hij vindt een voetbalclub in zijn buurt. De club heet VV Utrecht. Ze trainen twee keer per week: op dinsdag en donderdag om zeven uur. "Perfect!" denkt Kevin.
-Hij belt de club. Een man neemt op. "Dag, met VV Utrecht, met Peter," zegt hij. "Hallo, ik wil graag voetballen," zegt Kevin. "Leuk! Wanneer kun je komen trainen?" vraagt Peter. "Dinsdag?" zegt Kevin. "Prima, tot dinsdag!"
-Op dinsdag gaat Kevin naar de sporthal. Hij heeft nieuwe sportschoenen gekocht en draagt een T-shirt en korte broek. In de kleedkamer zijn tien andere mannen. Iedereen stelt zich voor. "Welkom bij het team!" zegt Peter. Hij is de trainer.
-Ze gaan naar het veld. Eerst doen ze warming-up oefeningen. Kevin vindt het moeilijk! Hij is niet gewend om te rennen. Na tien minuten is hij moe. Maar hij geeft niet op.
-Dan spelen ze een wedstrijd: vijf tegen vijf. Kevin is niet goed in voetballen. Hij mist de bal vaak. Maar de andere spelers helpen hem. "Niet erg," zegt een collega. "Je wordt beter met oefenen!" Kevin voelt zich beter.
-Na een uur is de training klaar. Kevin is heel moe en zijn benen doen pijn. Maar hij voelt zich ook goed! "Hoe was het?" vraagt Peter. "Zwaar, maar leuk!" zegt Kevin. "Kom je donderdag weer?" "Ja, zeker!" zegt Kevin.
-Thuis vertelt hij Lisa alles. "Ik heb vandaag gevoetbald!" zegt hij trots. "Goed zo!" zegt Lisa. "Zie je? Sporten is leuk!"
-Na twee maanden traint Kevin nog steeds. Hij is fitter en sterker. Donderdag heeft zijn team een wedstrijd tegen een ander team. Kevin is zenuwachtig maar ook opgewonden. "Veel succes!" zegt Lisa.
-Het team wint de wedstrijd: drie tegen twee! Kevin scoort zelfs een doelpunt. Alle spelers zijn blij. Na de wedstrijd gaan ze samen borrelen in het café. Kevin heeft nieuwe vrienden gemaakt en hij is gezonder. "Ik ben blij dat ik ben begonnen met voetballen!" denkt hij.`,
-questions: [
-  {
-    question: "Waarom wil Kevin sporten?",
-    options: ["Hij is ziek", "Hij wil fitter worden", "Hij verveelt zich", "Zijn dokter zegt het"],
-    correct: "Hij wil fitter worden"
-  },
-  {
-    question: "Hoe heet de voetbalclub?",
-    options: ["FC Utrecht", "VV Utrecht", "Ajax", "PSV"],
-    correct: "VV Utrecht"
-  },
-  {
-    question: "Hoe vaak traint de club per week?",
-    options: ["Eén keer", "Twee keer", "Drie keer", "Vier keer"],
-    correct: "Twee keer"
-  },
-  {
-    question: "Wat gebeurt er in de wedstrijd?",
-    options: ["Ze verliezen", "Het is gelijk", "Ze winnen en Kevin scoort", "De wedstrijd wordt geannuleerd"],
-    correct: "Ze winnen en Kevin scoort"
-  }
-]
-},
-{
-  id: 11,
-  title: 'Een Nieuwe Baan Zoeken',
-  text: `Sarah werkt al vijf jaar in een winkel, maar ze verdient niet veel. Het salaris is laag en ze wil een nieuwe baan zoeken. Ze zoekt op internet naar vacatures. Ze vindt een advertentie van een groot bedrijf. Ze hebben interesse in iemand met ervaring.
+    id: 10,
+    title: 'De Kapotte Fiets',
+    text: `Lisa fietst elke dag naar haar werk. Het is goed voor haar gezondheid en ze vindt het fijn om buiten te zijn.  
+Op een ochtend hoort ze onderweg een raar geluid. "Wat is dat?" denkt ze. De ketting van haar fiets valt eraf. Ze stapt af en probeert hem zelf terug te leggen, maar dat lukt niet.
 
-Sarah besluit te solliciteren. Ze schrijft een sollicitatiebrief en maakt haar cv klaar. In de brief beschrijft ze haar werkervaring. Ze heeft kennis van verkoop en kan goed omgaan met klanten. Ze stuurt alles per e-mail naar de werkgever.
+Een man die voorbijloopt vraagt: "Gaat het?"  
+"Nee, mijn ketting is kapot," zegt Lisa.  
+"Ik kan wel even helpen," zegt hij vriendelijk. Na vijf minuten is de ketting weer goed.  
+"Dank u wel!" zegt Lisa. "Geen probleem, fijne dag!" zegt de man.
 
-Na twee weken krijgt Sarah een reactie. Het bedrijf wil graag een sollicitatiegesprek. Het gesprek is volgende week dinsdag om twee uur op kantoor. Sarah is blij maar ook zenuwachtig. Ze bereidt zich goed voor.
+Lisa komt iets te laat op haar werk, maar haar baas begrijpt het. "Dat kan gebeuren," zegt hij.  
+’s Middags gaat Lisa naar de fietsenmaker. "Kunt u mijn fiets nakijken?" vraagt ze.  
+"Ja, natuurlijk," zegt de fietsenmaker. "Uw ketting is oud. Ik vervang hem vandaag nog."  
+Om vijf uur haalt ze haar fiets op. Hij rijdt weer perfect.
 
-Op de dag van het gesprek trekt Sarah netjes kleding aan. Ze neemt de trein naar het centrum. Het kantoor is in een groot gebouw naast het station. Om kwart voor twee is ze er al. Ze wacht in de hal.
+’s Avonds vertelt ze haar vriend over de man die haar hielp. "Wat aardig van hem," zegt hij. Lisa knikt. "Ja, zulke mensen maken je dag beter."`,
+    questions: [
+      { question: "Wat is er kapot aan Lisa’s fiets?", options: ["Het wiel", "De bel", "De ketting", "Het zadel"], correct: "De ketting" },
+      { question: "Wie helpt Lisa op straat?", options: ["Een vrouw", "Een man", "Een kind", "Een politieman"], correct: "Een man" },
+      { question: "Wat doet Lisa na haar werk?", options: ["Ze gaat naar de fietsenmaker", "Ze gaat winkelen", "Ze gaat eten", "Ze gaat slapen"], correct: "Ze gaat naar de fietsenmaker" },
+      { question: "Wat zegt Lisa aan het einde van de dag?", options: ["Ik ben moe", "Zulke mensen maken je dag beter", "Ik wil een nieuwe fiets", "Het was een slechte dag"], correct: "Zulke mensen maken je dag beter" }
+    ]
+  
 
-De directeur komt binnen. "Goedemiddag, ik ben meneer Van Dijk," zegt hij vriendelijk. Ze gaan naar zijn bureau. Hij stelt veel vragen over haar functie, haar opleiding en haar ervaring. Sarah antwoordt eerlijk en duidelijk.
-
-"Wat is uw niveau Nederlands?" vraagt hij. "Ik spreek goed Nederlands," zegt Sarah. "Ik volg ook een cursus om mijn kennis te verbeteren." De directeur knikt. "Uitstekend. We zoeken iemand die zelfstandig kan werken."
-
-Het gesprek duurt een uur. Sarah vertelt over haar kwaliteiten. Ze kan hard werken en is creatief. Ook kan ze goed samenwerken met collega's. De directeur luistert goed.
-
-"Dank u wel voor uw tijd," zegt de directeur ten slotte. "U hoort binnen een week van ons." Sarah bedankt hem en gaat naar huis. Ze heeft een goed gevoel over het gesprek.
-
-Vijf dagen later krijgt Sarah een e-mail. Ze heeft de baan! Het loon is hoger en het werk is interessant. Ze begint over drie weken. Sarah is ontzettend blij. Eindelijk een nieuwe baan! Ze belt direct haar familie om het goede nieuws te delen.`,
-  questions: [
-    {
-      question: "Waarom zoekt Sarah een nieuwe baan?",
-      options: ["Ze is werkloos", "Het salaris is te laag", "Ze is met pensioen", "Ze verhuist"],
-      correct: "Het salaris is te laag"
-    },
-    {
-      question: "Hoe bereidt Sarah zich voor op het gesprek?",
-      options: ["Ze doet niets", "Ze oefent thuis", "Ze bereidt zich goed voor", "Ze vraagt haar baas"],
-      correct: "Ze bereidt zich goed voor"
-    },
-    {
-      question: "Hoe laat is het sollicitatiegesprek?",
-      options: ["Tien uur", "Twee uur", "Drie uur", "Vier uur"],
-      correct: "Twee uur"
-    },
-    {
-      question: "Wanneer hoort Sarah of ze de baan heeft?",
-      options: ["De volgende dag", "Na vijf dagen", "Na twee weken", "Na een maand"],
-      correct: "Na vijf dagen"
-    }
-  ]
-},
-{
-  id: 12,
-  title: 'De Verjaardag van Oma',
-  text: `Morgen is oma jarig. Ze wordt tachtig jaar! De hele familie komt bij elkaar om het te vieren. Anna en haar man besluit een speciaal cadeau te geven. Ze reserveren een tafel in een mooi restaurant.
-
-Anna belt haar oma. "Lieve oma," zegt ze. "Morgen kom ik je ophalen om half twee. We gaan samen lunchen." Oma is verrast en blij. "Wat lief van je!" zegt ze. Anna vertelt niets over de verrassing.
-
-De volgende dag rijdt Anna naar oma's woning. Oma woont in een rustige wijk. Anna belt aan en oma doet de deur open. Ze draagt een mooie jurk. "Je ziet er prachtig uit!" zegt Anna. Ze geeft oma een kus.
-
-In de auto praten ze over de familie. "Hoe gaat het met je kinderen?" vraagt oma. "Goed," zegt Anna. "Lisa studeert aan de universiteit en Tom werkt op een basisschool. Hij geeft les aan jonge kinderen."
-
-Ze komen aan bij het restaurant. Anna parkeert de auto. Als ze binnenkomen, roepen plots alle familieleden: "Verrassing! Gefeliciteerd!" Oma is heel ontroerd. Haar ogen worden nat van geluk.
-
-Iedereen is er: haar drie kinderen, acht kleinkinderen en zelfs twee achterkleinkinderen. De zaal is versierd met ballonnen en slingers. Op een grote tafel staat een fantastische taart met tachtig kaarsjes.
-
-De familie zingt "Lang zal ze leven" voor oma. Ze blaast de kaarsjes uit en maakt een wens. Dan gaat iedereen zitten voor de maaltijd. De ober brengt de menukaart. Er is keuze tussen vis, vlees en vegetarisch.
-
-Oma kiest de vis. Het eten smaakt heerlijk. Tijdens het eten vertelt oma verhalen uit het verleden. Over vroeger, toen ze nog jong was. De kinderen luisteren aandachtig. Het is bijzonder om haar verhalen te horen.
-
-Na het eten krijgt oma veel cadeaus: bloemen, chocola, een mooie sjaal en een fotoboek met foto's van de hele familie. Oma is zeer gelukkig. "Dit is de beste verjaardag ooit!" zegt ze. "Dank jullie wel allemaal!"
-
-Om vijf uur brengt Anna oma terug naar huis. "Het was een geweldige dag," zegt oma. "Ik zal dit nooit vergeten." Anna geeft haar een laatste kus. "Tot gauw, lieve oma!"`,
-  questions: [
-    {
-      question: "Hoe oud wordt oma?",
-      options: ["Zeventig", "Tachtig", "Negentig", "Honderd"],
-      correct: "Tachtig"
-    },
-    {
-      question: "Waar viert de familie de verjaardag?",
-      options: ["Thuis bij oma", "In het park", "In een restaurant", "Op school"],
-      correct: "In een restaurant"
-    },
-    {
-      question: "Wat doet Tom voor werk?",
-      options: ["Hij is arts", "Hij werkt op een basisschool", "Hij is leraar op de universiteit", "Hij werkt in een winkel"],
-      correct: "Hij werkt op een basisschool"
-    },
-    {
-      question: "Wat krijgt oma als cadeau?",
-      options: ["Alleen bloemen", "Bloemen, chocola, een sjaal en een fotoboek", "Alleen een taart", "Een nieuwe jurk"],
-      correct: "Bloemen, chocola, een sjaal en een fotoboek"
-    }
-  ]
-},
-{
-  id: 13,
-  title: 'Problemen met de Auto',
-  text: `Het is maandagochtend en Jan moet naar zijn werk. Hij stapt in zijn auto en draait de sleutel om. Maar de auto start niet. Hij probeert het opnieuw. Niets. De motor maakt een raar geluid en stopt dan helemaal.
-
-"O nee!" zegt Jan. Hij belt zijn baas. "Sorry, ik kom te laat. Mijn auto is stuk. Ik moet een monteur bellen." Zijn baas is aardig. "Geen probleem," zegt hij. "Neem de tijd."
-
-Jan belt de garage. De monteur komt over een uur. Jan wacht thuis. Hij drinkt koffie en leest de krant. Om tien uur komt de monteur aan in zijn vrachtwagen.
-
-De monteur kijkt naar de auto. Hij opent de motorkap en controleert alles. "Het probleem zit in de batterij," zegt hij. "De batterij is oud en werkt niet meer. U heeft een nieuwe batterij nodig."
-
-"Kunt u die nu vervangen?" vraagt Jan. "Ja, dat kan," zegt de monteur. "Ik heb een batterij in mijn wagen. Het duurt ongeveer anderhalf uur om te repareren."
-
-De monteur begint met het onderhoud. Hij haalt de oude batterij eruit en plaatst de nieuwe erin. Hij controleert ook de olie en de remmen. "De remmen zijn goed," zegt hij. "Maar de olie moet vervangen worden."
-
-Na anderhalf uur is het klaar. Jan start de auto. De motor loopt perfect! "Geweldig!" zegt Jan. "Hoeveel kost het?" De monteur geeft hem de rekening. "Tweehonderd euro voor de batterij en het werk."
-
-Jan betaalt met zijn pinpas. De monteur geeft hem de bon. "Bedankt voor uw hulp," zegt Jan. "Graag gedaan," zegt de monteur. "Als u problemen heeft, bel me direct."
-
-Jan rijdt naar zijn werk. Hij komt om half twaalf aan. Zijn collega's vragen: "Is alles okÃ©?" Jan vertelt over de batterij. "Gelukkig kon de monteur het snel repareren," zegt hij.
-
-Die avond rijdt Jan naar de supermarkt. Hij moet boodschappen doen. De auto rijdt soepel. Hij is opgelucht dat alles weer werkt. "Geen problemen meer!" denkt hij.
-
-Thuis vertelt hij zijn vrouw over de dag. "We moeten regelmatig onderhoud doen aan de auto," zegt zijn vrouw. "Dan gebeurt dit niet meer." Jan knikt. "Je hebt gelijk. Volgende maand ga ik naar de garage voor een volledige controle."`,
-  questions: [
-    {
-      question: "Wat is er mis met de auto van Jan?",
-      options: ["De banden zijn lek", "De batterij werkt niet", "De remmen zijn kapot", "Er is geen benzine"],
-      correct: "De batterij werkt niet"
-    },
-    {
-      question: "Hoe lang duurt de reparatie?",
-      options: ["Een half uur", "Een uur", "Anderhalf uur", "Twee uur"],
-      correct: "Anderhalf uur"
-    },
-    {
-      question: "Hoeveel kost de reparatie?",
-      options: ["Honderd euro", "Tweehonderd euro", "Driehonderd euro", "Vijftig euro"],
-      correct: "Tweehonderd euro"
-    },
-    {
-      question: "Hoe laat komt Jan op zijn werk aan?",
-      options: ["Negen uur", "Tien uur", "Half twaalf", "Twaalf uur"],
-      correct: "Half twaalf"
-    }
-  ]
 },
 {
   id: 14,

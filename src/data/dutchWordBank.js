@@ -1269,7 +1269,7 @@ export const dutchWordBankA1 = {
   { dutch: 'hiervandaan', english: 'from here', level: 'A2', example: 'Hiervandaan is het dichtbij. (From here it is close.)' },
   { dutch: 'daarvandaan', english: 'from there', level: 'A2', example: 'Daarvandaan kwam hij. (From there he came.)' },
   
-  // More Prepositions
+  // More Directional Words
   { dutch: 'mee', english: 'with/along', level: 'A1', example: 'Ga je mee? (Are you coming along?)' },
   { dutch: 'weg', english: 'away', level: 'A1', example: 'Ga weg! (Go away!)' },
   { dutch: 'terug', english: 'back', level: 'A1', example: 'Kom terug! (Come back!)' },
@@ -1352,7 +1352,9 @@ export const dutchWordBankA1 = {
   { dutch: 'namelijk', english: 'namely', level: 'A2', example: 'Ik ga, namelijk naar huis. (I go, namely home.)' },
   { dutch: 'aldus', english: 'thus', level: 'A2', example: 'Aldus sprak hij. (Thus he spoke.)' },
   { dutch: 'derhalve', english: 'therefore', level: 'A2', example: 'Derhalve moet ik gaan. (Therefore I must go.)' },
-  { dutch: 'niettemin', english: 'nonetheless', level: 'A2', example: 'Niettemin probeer ik het. (Nonetheless I try.)' }
+  { dutch: 'niettemin', english: 'nonetheless', level: 'A2', example: 'Niettemin probeer ik het. (Nonetheless I try.)' },
+  { dutch: 'niettemin', english: 'nonetheless', level: 'A2', example: 'Niettemin probeer ik het. (Nonetheless I try.)' },
+
 
  ],
 'all_other_words' : [

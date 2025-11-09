@@ -1774,61 +1774,76 @@ const stopRecording = () => {
 
   };
 
-  const handleSearch = (query) => {
-    setSearchQuery(query);
+// Replace your handleSearch function with this fixed version:
+
+const handleSearch = (query) => {
+  setSearchQuery(query);
+  
+  if (query.trim().length < 2) {
+    setSearchResults([]);
+    setShowSearchResults(false);
+    return;
+  }
+  
+  const allWords = getAllWords();
+  const queryLower = query.toLowerCase();
+  
+  console.log('Searching for:', queryLower);
+  console.log('Total words available:', allWords.length);
+  console.log('Sample word:', allWords[0]); // Debug: see word structure
+  
+  const results = allWords.filter(word => {
+    if (!word) return false;
     
-    if (query.trim().length < 2) {
-      setSearchResults([]);
-      setShowSearchResults(false);
-      return;
-    }
+    const dutchMatch = word.dutch?.toLowerCase().includes(queryLower);
+    const englishMatch = word.english?.toLowerCase().includes(queryLower);
+    const exampleMatch = word.example?.toLowerCase().includes(queryLower);
     
-    const allWords = getAllWords();
-    const queryLower = query.toLowerCase();
+    return dutchMatch || englishMatch || exampleMatch;
+  });
+  
+  console.log('Found results:', results.length);
+  
+  const sortedResults = results.sort((a, b) => {
+    const aDutch = a.dutch?.toLowerCase() || '';
+    const bDutch = b.dutch?.toLowerCase() || '';
+    const aEnglish = a.english?.toLowerCase() || '';
+    const bEnglish = b.english?.toLowerCase() || '';
     
-    const results = allWords.filter(word => 
-      word.dutch.toLowerCase().includes(queryLower) ||
-      word.english.toLowerCase().includes(queryLower) ||
-      word.example?.toLowerCase().includes(queryLower)
-    );
+    // Exact match
+    if (aDutch === queryLower) return -1;
+    if (bDutch === queryLower) return 1;
+    if (aEnglish === queryLower) return -1;
+    if (bEnglish === queryLower) return 1;
     
-    const sortedResults = results.sort((a, b) => {
-      const aDutch = a.dutch.toLowerCase();
-      const bDutch = b.dutch.toLowerCase();
-      const aEnglish = a.english.toLowerCase();
-      const bEnglish = b.english.toLowerCase();
-      
-      if (aDutch === queryLower) return -1;
-      if (bDutch === queryLower) return 1;
-      if (aEnglish === queryLower) return -1;
-      if (bEnglish === queryLower) return 1;
-      
-      const aStartsDutch = aDutch.startsWith(queryLower);
-      const bStartsDutch = bDutch.startsWith(queryLower);
-      if (aStartsDutch && !bStartsDutch) return -1;
-      if (!aStartsDutch && bStartsDutch) return 1;
-      
-      const aStartsEnglish = aEnglish.startsWith(queryLower);
-      const bStartsEnglish = bEnglish.startsWith(queryLower);
-      if (aStartsEnglish && !bStartsEnglish) return -1;
-      if (!aStartsEnglish && bStartsEnglish) return 1;
-      
-      const aContainsDutch = aDutch.includes(queryLower);
-      const bContainsDutch = bDutch.includes(queryLower);
-      if (aContainsDutch && !bContainsDutch) return -1;
-      if (!aContainsDutch && bContainsDutch) return 1;
-      
-      const aContainsEnglish = aEnglish.includes(queryLower);
-      const bContainsEnglish = bEnglish.includes(queryLower);
-      if (aContainsEnglish && !bContainsEnglish) return -1;
-      if (!aContainsEnglish && bContainsEnglish) return 1;
-      
-      return aDutch.localeCompare(bDutch);
-    });
+    // Starts with
+    const aStartsDutch = aDutch.startsWith(queryLower);
+    const bStartsDutch = bDutch.startsWith(queryLower);
+    if (aStartsDutch && !bStartsDutch) return -1;
+    if (!aStartsDutch && bStartsDutch) return 1;
     
-    setSearchResults(sortedResults.slice(0, 20));
-    setShowSearchResults(sortedResults.length > 0);
-  };
+    const aStartsEnglish = aEnglish.startsWith(queryLower);
+    const bStartsEnglish = bEnglish.startsWith(queryLower);
+    if (aStartsEnglish && !bStartsEnglish) return -1;
+    if (!aStartsEnglish && bStartsEnglish) return 1;
+    
+    // Contains
+    const aContainsDutch = aDutch.includes(queryLower);
+    const bContainsDutch = bDutch.includes(queryLower);
+    if (aContainsDutch && !bContainsDutch) return -1;
+    if (!aContainsDutch && bContainsDutch) return 1;
+    
+    const aContainsEnglish = aEnglish.includes(queryLower);
+    const bContainsEnglish = bEnglish.includes(queryLower);
+    if (aContainsEnglish && !bContainsEnglish) return -1;
+    if (!aContainsEnglish && bContainsEnglish) return 1;
+    
+    return aDutch.localeCompare(bDutch);
+  });
+  
+  setSearchResults(sortedResults.slice(0, 20));
+  setShowSearchResults(sortedResults.length > 0);
+};
 
   const clearSearch = () => {
     setSearchQuery('');
