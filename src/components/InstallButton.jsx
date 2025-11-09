@@ -6,8 +6,22 @@ const InstallButton = () => {
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
+    // Check if user dismissed the button recently
+    const dismissedUntil = localStorage.getItem('installButtonDismissedUntil');
+    if (dismissedUntil) {
+      const dismissTime = parseInt(dismissedUntil, 10);
+      if (Date.now() < dismissTime) {
+        setIsDismissed(true);
+        return;
+      } else {
+        // Clear expired dismissal
+        localStorage.removeItem('installButtonDismissedUntil');
+      }
+    }
+
     // Check if iOS
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     setIsIOS(iOS);
@@ -68,6 +82,14 @@ const InstallButton = () => {
     setDeferredPrompt(null);
   };
 
+  const handleNotNow = () => {
+    // Set dismissal time to 24 hours from now
+    const dismissUntil = Date.now() + (24 * 60 * 60 * 1000); // 24 hours in milliseconds
+    localStorage.setItem('installButtonDismissedUntil', dismissUntil.toString());
+    setIsDismissed(true);
+    console.log('⏰ Install button dismissed for 24 hours');
+  };
+
   // Don't show button if already installed
   if (isStandalone) {
     return null;
@@ -78,18 +100,32 @@ const InstallButton = () => {
     return null;
   }
 
+  // Don't show if dismissed
+  if (isDismissed) {
+    return null;
+  }
+
   return (
     <>
-      {/* Install Button */}
-      <button
-        onClick={handleInstallClick}
-        className="fixed bottom-4 right-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all flex items-center gap-2 font-semibold z-40"
-      >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
-        <span>Install App</span>
-      </button>
+      {/* Install Button with Not Now */}
+      <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
+        <button
+          onClick={handleInstallClick}
+          className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all flex items-center gap-2 font-semibold"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          <span>Install App</span>
+        </button>
+        
+        <button
+          onClick={handleNotNow}
+          className="bg-white/90 backdrop-blur-sm text-gray-700 px-4 py-2 rounded-full shadow-md hover:shadow-lg hover:bg-white transition-all text-sm font-medium"
+        >
+          Not Now
+        </button>
+      </div>
 
       {/* iOS Instructions Modal */}
       {showInstructions && isIOS && (

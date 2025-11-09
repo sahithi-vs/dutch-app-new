@@ -161,27 +161,31 @@ useEffect(() => {
     try {
       const parsedUser = JSON.parse(savedUser);
       const timeDifference = Date.now() - parseInt(loginTime);
-      const oneHour = 60 * 60 * 1000;
+      const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
       
-      if (timeDifference < oneHour) {
+      if (timeDifference < sevenDays) {
         setUser(parsedUser);
         // Reset admin state first, then check
         setIsAdmin(false);
         if (ADMIN_EMAILS.includes(parsedUser.email)) {
           setIsAdmin(true);
         }
+        
+        // Update the login timestamp to extend the session
+        localStorage.setItem('dutch_app_login_time', Date.now().toString());
       } else {
+        // Session expired - clear everything
         localStorage.removeItem('dutch_app_user');
         localStorage.removeItem('dutch_app_login_time');
-        setIsAdmin(false); // ADD THIS
+        setIsAdmin(false);
       }
     } catch (error) {
       localStorage.removeItem('dutch_app_user');
       localStorage.removeItem('dutch_app_login_time');
-      setIsAdmin(false); // ADD THIS
+      setIsAdmin(false);
     }
   } else {
-    setIsAdmin(false); // ADD THIS
+    setIsAdmin(false);
   }
 }, []);
 
