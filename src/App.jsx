@@ -34,6 +34,8 @@ export default function DutchLearningGame() {
   'naveennimmala77@gmail.com',
   'naveennimmala50@gmail.com' 
 ];
+  const [fillBlankFilter, setFillBlankFilter] = useState('all'); // 'all', 'A1', 'A2', 'theme'
+  const [fillBlankThemeFilter, setFillBlankThemeFilter] = useState('all');
 
   const [selectedCategories, setSelectedCategories] = useState(['all']); // Change from single to array
   const [showMultiSelect, setShowMultiSelect] = useState(false);
@@ -1011,7 +1013,7 @@ const areAllA2CategoriesCompleted = () => {
 // Check if a category is locked (A2 locked until all A1 done; B1/B2 until all A1 & A2 done)
 const isCategoryLocked = (category) => {
   if (isAdmin) return false;
-
+  
   if (!user || category === 'all') return false;
   
   const words = dutchWordBank[category];
@@ -3453,13 +3455,25 @@ if (showHistory) {
   );
 }
 
-// FILL-IN-THE-BLANK STORIES LIST
+
+// In the stories list screen, add this BEFORE the stories grid:
 if (showFillBlankStories && !selectedStoryKey) {
+  // Get unique themes
+  const themes = [...new Set(Object.values(dutchStories).map(s => s.theme))];
+  const levels = [...new Set(Object.values(dutchStories).map(s => s.level))];
+  
+  // Filter stories
+  const filteredStories = Object.entries(dutchStories).filter(([key, story]) => {
+    const levelMatch = fillBlankFilter === 'all' || story.level === fillBlankFilter;
+    const themeMatch = fillBlankThemeFilter === 'all' || story.theme === fillBlankThemeFilter;
+    return levelMatch && themeMatch;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center p-3 sm:p-4">
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-xl w-full">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-          <h2 className="text-2xl sm:text-3xl font-bold text-emerald-700">✍️ Fill-in-the-Blank Stories</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-emerald-700">✏️ Fill-in-the-Blank Stories</h2>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
@@ -3468,36 +3482,87 @@ if (showFillBlankStories && !selectedStoryKey) {
             Logout
           </button>
         </div>
-        <p className="text-gray-600 mb-6 text-center text-sm sm:text-base">
-          Practice Dutch by completing sentences with the correct words!
-        </p>
-        <div className="space-y-3 sm:space-y-4">
-          {Object.entries(dutchStories).map(([key, story]) => (
-            <button
-              key={key}
-              onClick={() => setSelectedStoryKey(key)}
-              className="w-full bg-gradient-to-r from-emerald-400 to-teal-600 text-white p-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all text-left"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="text-base sm:text-lg font-bold">{story.title}</h3>
-                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                  story.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {story.level}
-                </span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-emerald-100">
-                <span>📝 {story.theme}</span>
-                <span>•</span>
-                <span>🎯 {story.sentences.length} questions</span>
-              </div>
-            </button>
-          ))}
+
+        {/* ADD FILTERS HERE */}
+        <div className="mb-6 space-y-3">
+          {/* Level Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Filter by Level:</label>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setFillBlankFilter('all')}
+                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                  fillBlankFilter === 'all'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All Levels ({Object.keys(dutchStories).length})
+              </button>
+              {levels.map(level => {
+                const count = Object.values(dutchStories).filter(s => s.level === level).length;
+                return (
+                  <button
+                    key={level}
+                    onClick={() => setFillBlankFilter(level)}
+                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                      fillBlankFilter === level
+                        ? level === 'A1' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {level} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+
+          {/* Results count */}
+          <div className="text-center text-sm text-gray-600 bg-gray-50 rounded-lg py-2">
+            Showing {filteredStories.length} {filteredStories.length === 1 ? 'story' : 'stories'}
+          </div>
         </div>
+
+        {/* Stories list - now using filteredStories */}
+        <div className="space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
+          {filteredStories.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg">No stories found</p>
+              <p className="text-sm mt-2">Try a different filter combination</p>
+            </div>
+          ) : (
+            filteredStories.map(([key, story]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedStoryKey(key)}
+                className="w-full bg-gradient-to-r from-emerald-400 to-teal-600 text-white p-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all text-left"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-base sm:text-lg font-bold">{story.title}</h3>
+                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                    story.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {story.level}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-emerald-100">
+                  <span>📚 {story.theme}</span>
+                  <span>•</span>
+                  <span>🎯 {story.sentences.length} questions</span>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+
         <button
           onClick={() => {
             setShowFillBlankStories(false);
             setSelectedStoryKey(null);
+            setFillBlankFilter('all');
+            setFillBlankThemeFilter('all');
           }}
           className="mt-6 sm:mt-8 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
         >
@@ -3751,231 +3816,190 @@ if (showFillBlankStories && selectedStoryKey) {
             )}
               </div>
               
-{/* Category Selection - MOBILE OPTIMIZED WITH MULTI-SELECT & ADMIN CONTROLS */}
-<div className="mb-4 sm:mb-6">
-  <div className="flex justify-between items-center mb-3">
-    <label className="block text-gray-700 font-semibold text-sm sm:text-base">
-      Choose Thema category:
-    </label>
-    <div className="flex gap-2">
-      {isAdmin && (
-        <span className="px-2 py-1 rounded-lg text-xs font-bold bg-purple-100 text-purple-700">
-          👑 ADMIN MODE
-        </span>
-      )}
-      <button
-        onClick={() => setShowMultiSelect(!showMultiSelect)}
-        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-          showMultiSelect 
-            ? 'bg-purple-500 text-white' 
-            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-        }`}
-      >
-        {showMultiSelect ? '✓ Multi-Select ON' : 'Multi-Select OFF'}
-      </button>
-    </div>
-  </div>
-  
-  {/* Selected Categories Display */}
-  <div className="mb-2 sm:mb-3">
-    <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 bg-orange-50 rounded-lg border-2 border-orange-200">
-      <span className="text-xs sm:text-sm text-gray-600 font-semibold">Selected:</span>
-      {selectedCategories.map(cat => (
-        <div key={cat} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500 text-white text-xs font-bold">
-          <span>{cat === 'all' ? 'All Lessons' : cat.replace(/_/g, ' ').toUpperCase()}</span>
-          {showMultiSelect && selectedCategories.length > 1 && (
-            <button
-              onClick={() => {
-                setSelectedCategories(prev => prev.filter(c => c !== cat));
-              }}
-              className="ml-1 hover:bg-orange-600 rounded-full p-0.5"
-            >
-              <X className="w-3 h-3" />
-            </button>
-          )}
-        </div>
-      ))}
-      {showMultiSelect && selectedCategories.length > 1 && (
-        <button
-          onClick={() => setSelectedCategories(['all'])}
-          className="text-xs text-red-600 hover:text-red-700 font-semibold ml-2"
-        >
-          Clear All
-        </button>
-      )}
-    </div>
-  </div>
+            {/* Category Selection - MOBILE OPTIMIZED WITH MULTI-SELECT */}
+            <div className="mb-4 sm:mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <label className="block text-gray-700 font-semibold text-sm sm:text-base">
+                  Choose Thema category:
+                </label>
+                <button
+                  onClick={() => setShowMultiSelect(!showMultiSelect)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    showMultiSelect 
+                      ? 'bg-purple-500 text-white' 
+                      : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                  }`}
+                >
+                  {showMultiSelect ? '✓ Multi-Select ON' : 'Multi-Select OFF'}
+                </button>
+              </div>
+              
+              {/* Selected Categories Display */}
+              <div className="mb-2 sm:mb-3">
+                <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 bg-orange-50 rounded-lg border-2 border-orange-200">
+                  <span className="text-xs sm:text-sm text-gray-600 font-semibold">Selected:</span>
+                  {selectedCategories.map(cat => (
+                    <div key={cat} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500 text-white text-xs font-bold">
+                      <span>{cat === 'all' ? 'All Lessons' : cat.replace(/_/g, ' ').toUpperCase()}</span>
+                      {showMultiSelect && selectedCategories.length > 1 && (
+                        <button
+                          onClick={() => {
+                            setSelectedCategories(prev => prev.filter(c => c !== cat));
+                          }}
+                          className="ml-1 hover:bg-orange-600 rounded-full p-0.5"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  {showMultiSelect && selectedCategories.length > 1 && (
+                    <button
+                      onClick={() => setSelectedCategories(['all'])}
+                      className="text-xs text-red-600 hover:text-red-700 font-semibold ml-2"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
+              </div>
 
-  {/* 🆕 NEW: Admin Controls */}
-  {isAdmin && selectedCategories.length === 1 && !selectedCategories.includes('all') && (
-    <div className="mb-3 p-3 bg-purple-50 rounded-lg border-2 border-purple-200">
-      <div className="flex flex-wrap gap-2 justify-center">
-        <button
-          onClick={() => adminCompleteCategory(selectedCategories[0])}
-          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-2"
-        >
-          <Trophy className="w-4 h-4" />
-          Mark as Completed
-        </button>
-        <button
-          onClick={() => adminResetCategory(selectedCategories[0])}
-          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-2"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Reset Progress
-        </button>
-      </div>
-      <p className="text-center text-purple-700 text-xs mt-2">
-        👑 Admin: Quick complete or reset this category
-      </p>
-    </div>
-  )}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+                {categories.map(cat => {
+                  const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
+                  const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
+                  const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
 
-  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
-    {categories.map(cat => {
-      const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
-      const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
-      const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
+                  const isCompleted = isCategoryCompleted(cat);
+                  const progress = getCategoryProgress(cat);
+                  const hasPartialProgress = ((progress.multipleChoice || progress.spelling) && !isCompleted);
 
-      const isCompleted = isCategoryCompleted(cat);
-      const progress = getCategoryProgress(cat);
-      const hasPartialProgress = ((progress.multipleChoice || progress.spelling) && !isCompleted);
-
-      const isLocked = isCategoryLocked(cat);
-      const isSelected = selectedCategories.includes(cat);
-      
-      return (
-        <button
-          key={cat}
-          onClick={() => {
-            if (isLocked) {
-              const words = dutchWordBank[cat] || [];
-              const hasA2 = words.some(w => w.level === 'A2');
-              const hasB = words.some(w => w.level === 'B1' || w.level === 'B2');
-              const reason = hasB
-                ? '🔒 Complete ALL A1 and A2 categories (Multiple Choice AND Spelling, 80%+) to unlock B1/B2.'
-                : '🔒 Complete ALL A1 categories (Multiple Choice AND Spelling, 80%+) to unlock A2.';
-              alert(reason);
-              return;
-            }
-            
-            if (showMultiSelect) {
-              if (cat === 'all') {
-                setSelectedCategories(['all']);
-              } else {
-                setSelectedCategories(prev => {
-                  const withoutAll = prev.filter(c => c !== 'all');
+                  const isLocked = isCategoryLocked(cat);
+                  const isSelected = selectedCategories.includes(cat);
                   
-                  if (prev.includes(cat)) {
-                    const updated = withoutAll.filter(c => c !== cat);
-                    return updated.length === 0 ? ['all'] : updated;
-                  } else {
-                    return [...withoutAll, cat];
-                  }
-                });
-              }
-            } else {
-              setSelectedCategories([cat]);
-            }
-          }}
-          disabled={isLocked}
-          style={{
-            WebkitTapHighlightColor: 'transparent',
-            touchAction: 'manipulation',
-            backgroundColor: isLocked
-              ? '#d1d5db'
-              : isSelected
-              ? (isCompleted ? '#16a34a' : hasPartialProgress ? '#eab308' : '#f97316')
-              : (isCompleted ? '#22c55e' : hasPartialProgress ? '#facc15' : '#ffffff'),
-            color: isLocked
-              ? '#6b7280'
-              : (isSelected || isCompleted || hasPartialProgress)
-              ? '#ffffff'
-              : '#374151',
-            border: isLocked
-              ? 'none'
-              : isSelected
-              ? (isCompleted ? '2px solid #fbbf24' : '3px solid #dc2626')
-              : isCompleted
-              ? '2px solid #16a34a'
-              : hasPartialProgress
-              ? '2px solid #eab308'
-              : '1px solid #e5e7eb',
-            transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-            boxShadow: isSelected ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none',
-            transition: 'all 0.2s ease',
-            opacity: isLocked ? 0.6 : 1,
-            cursor: isLocked ? 'not-allowed' : 'pointer'
-          }}
-          className="p-2 sm:p-3 rounded-xl font-medium text-xs relative"
-        >
-          {isSelected && (
-            <div className="absolute -top-1 -left-1 bg-red-500 rounded-full px-1.5 py-0.5 shadow z-10">
-              <span className="text-white text-[10px] font-bold">✓</span>
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => {
+                        if (isLocked) {
+                          const words = dutchWordBank[cat] || [];
+                          const hasA2 = words.some(w => w.level === 'A2');
+                          const hasB = words.some(w => w.level === 'B1' || w.level === 'B2');
+                          const reason = hasB
+                            ? '🔒 Complete ALL A1 and A2 categories (Multiple Choice AND Spelling, 80%+) to unlock B1/B2.'
+                            : '🔒 Complete ALL A1 categories (Multiple Choice AND Spelling, 80%+) to unlock A2.';
+                          alert(reason);
+                          return;
+                        }
+                        
+                        if (showMultiSelect) {
+                          // Multi-select mode
+                          if (cat === 'all') {
+                            // If clicking 'all', select only 'all'
+                            setSelectedCategories(['all']);
+                          } else {
+                            setSelectedCategories(prev => {
+                              // Remove 'all' if present
+                              const withoutAll = prev.filter(c => c !== 'all');
+                              
+                              if (prev.includes(cat)) {
+                                // Deselect this category
+                                const updated = withoutAll.filter(c => c !== cat);
+                                // If nothing left, select 'all'
+                                return updated.length === 0 ? ['all'] : updated;
+                              } else {
+                                // Select this category
+                                return [...withoutAll, cat];
+                              }
+                            });
+                          }
+                        } else {
+                          // Single-select mode (original behavior)
+                          setSelectedCategories([cat]);
+                        }
+                      }}
+                      disabled={isLocked}
+                      style={{
+                        WebkitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        backgroundColor: isLocked
+                          ? '#d1d5db'
+                          : isSelected
+                          ? (isCompleted ? '#16a34a' : hasPartialProgress ? '#eab308' : '#f97316')
+                          : (isCompleted ? '#22c55e' : hasPartialProgress ? '#facc15' : '#ffffff'),
+                        color: isLocked
+                          ? '#6b7280'
+                          : (isSelected || isCompleted || hasPartialProgress)
+                          ? '#ffffff'
+                          : '#374151',
+                        border: isLocked
+                          ? 'none'
+                          : isSelected
+                          ? (isCompleted ? '2px solid #fbbf24' : '3px solid #dc2626')
+                          : isCompleted
+                          ? '2px solid #16a34a'
+                          : hasPartialProgress
+                          ? '2px solid #eab308'
+                          : '1px solid #e5e7eb',
+                        transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                        boxShadow: isSelected ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none',
+                        transition: 'all 0.2s ease',
+                        opacity: isLocked ? 0.6 : 1,
+                        cursor: isLocked ? 'not-allowed' : 'pointer'
+                      }}
+                      className="p-2 sm:p-3 rounded-xl font-medium text-xs relative"
+                    >
+                      {isSelected && (
+                        <div className="absolute -top-1 -left-1 bg-red-500 rounded-full px-1.5 py-0.5 shadow z-10">
+                          <span className="text-white text-[10px] font-bold">✓</span>
+                        </div>
+                      )}
+                      {isLocked && (
+                        <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
+                          <span className="text-white text-xs">🔒</span>
+                        </div>
+                      )}
+                      {isCompleted && (
+                        <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
+                          <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                        </div>
+                      )}
+                      {!isCompleted && hasPartialProgress && (
+                        <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1 sm:px-1.5 py-0.5">
+                          <span className="text-white text-xs font-bold">
+                            {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✓' : ''}
+                          </span>
+                        </div>
+                      )}
+                      <div className="font-bold text-xs sm:text-sm">{cat === 'all' ? 'All' : cat.replace(/_/g, ' ').replace(/lesson /g, 'L').toUpperCase()}</div>
+                      <div className="opacity-75 mt-1 text-xs">
+                        {wordCount} words
+                        {(hasA1 || hasA2) && (
+                          <span className="block sm:inline sm:ml-1">
+                            {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'} 
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {showMultiSelect && selectedCategories.length > 1 && !selectedCategories.includes('all') && (
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <p className="text-blue-700 text-xs sm:text-sm text-center font-semibold">
+                    📚 Testing {selectedCategories.length} categories: {
+                      (() => {
+                        const totalWords = selectedCategories.reduce((sum, cat) => {
+                          return sum + (dutchWordBank[cat]?.length || 0);
+                        }, 0);
+                        return `${totalWords} total words available`;
+                      })()
+                    }
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-          {isLocked && !isAdmin && (
-            <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
-              <span className="text-white text-xs">🔒</span>
-            </div>
-          )}
-          {/* 🆕 NEW: Show crown for locked categories if admin */}
-          {isAdmin && isLocked && (
-            <div className="absolute -top-1 -right-1 bg-purple-500 rounded-full p-1">
-              <span className="text-white text-xs">👑</span>
-            </div>
-          )}
-          {isCompleted && (
-            <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
-              <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-            </div>
-          )}
-          {!isCompleted && hasPartialProgress && (
-            <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1 sm:px-1.5 py-0.5">
-              <span className="text-white text-xs font-bold">
-                {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✓' : ''}
-              </span>
-            </div>
-          )}
-          <div className="font-bold text-xs sm:text-sm">{cat === 'all' ? 'All' : cat.replace(/_/g, ' ').replace(/lesson /g, 'L').toUpperCase()}</div>
-          <div className="opacity-75 mt-1 text-xs">
-            {wordCount} words
-            {(hasA1 || hasA2) && (
-              <span className="block sm:inline sm:ml-1">
-                {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'} 
-              </span>
-            )}
-          </div>
-        </button>
-      );
-    })}
-  </div>
-  
-  {showMultiSelect && selectedCategories.length > 1 && !selectedCategories.includes('all') && (
-    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-      <p className="text-blue-700 text-xs sm:text-sm text-center font-semibold">
-        📚 Testing {selectedCategories.length} categories: {
-          (() => {
-            const totalWords = selectedCategories.reduce((sum, cat) => {
-              return sum + (dutchWordBank[cat]?.length || 0);
-            }, 0);
-            return `${totalWords} total words available`;
-          })()
-        }
-      </p>
-    </div>
-  )}
-  
-  {/* 🆕 NEW: Admin info message */}
-  {isAdmin && (
-    <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
-      <p className="text-purple-700 text-xs sm:text-sm text-center font-semibold">
-        👑 Admin Mode: All categories unlocked. Select a single category to see quick complete/reset buttons.
-      </p>
-    </div>
-  )}
-</div>
-
             {/* A1 Progress Indicator */}
             {!areAllA1CategoriesCompleted() && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -4161,12 +4185,6 @@ if (showFillBlankStories && selectedStoryKey) {
                   className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span className="text-sm sm:text-xl">📖 Stories</span>
-                </button>
-                <button
-                  onClick={() => openQuestionSelector('fillblank')}
-                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📝 Fill Blank</span>
                 </button>
                 <button
                   onClick={() => setShowHistory(true)}

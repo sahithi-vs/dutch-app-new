@@ -2180,6 +2180,765 @@ export const dutchStories = {
         hint: "Waterproof"
       }
     ]
+  },
+  'bibliotheek_boeken': {
+    level: "A1",
+    theme: "Cultuur & Lezen",
+    title: "In de Bibliotheek",
+    sentences: [
+      {
+        text: "Ik ga elke week naar de ____.",
+        answer: "bibliotheek",
+        options: ["bibliotheek", "winkel", "school", "kerk"],
+        hint: "Place with many books"
+      },
+      {
+        text: "Ik leen drie ____ voor twee weken.",
+        answer: "boeken",
+        options: ["boeken", "pennen", "stoelen", "tafels"],
+        hint: "You read them"
+      },
+      {
+        text: "De bibliothecaresse helpt me een boek te ____.",
+        answer: "zoeken",
+        options: ["zoeken", "kopen", "lezen", "schrijven"],
+        hint: "To search"
+      },
+      {
+        text: "Ik moet stil zijn in de ____.",
+        answer: "leeszaal",
+        options: ["leeszaal", "keuken", "tuin", "straat"],
+        hint: "Reading room"
+      },
+      {
+        text: "Voor ik naar huis ga, scan ik mijn ____.",
+        answer: "pasje",
+        options: ["pasje", "boek", "telefoon", "tas"],
+        hint: "Library card"
+      }
+    ]
+  },
+
+  'concert_muziek': {
+    level: "A2",
+    theme: "Muziek & Entertainment",
+    title: "Naar een Concert",
+    sentences: [
+      {
+        text: "Vanavond ga ik naar een ____ van mijn favoriete band.",
+        answer: "concert",
+        options: ["concert", "film", "museum", "restaurant"],
+        hint: "Live music event"
+      },
+      {
+        text: "Ik heb een ____ online gekocht.",
+        answer: "kaartje",
+        options: ["kaartje", "boek", "cd", "shirt"],
+        hint: "Ticket"
+      },
+      {
+        text: "De band speelt in een grote ____.",
+        answer: "zaal",
+        options: ["zaal", "kamer", "tuin", "straat"],
+        hint: "Concert hall"
+      },
+      {
+        text: "Iedereen ____ mee met de muziek.",
+        answer: "zingt",
+        options: ["zingt", "loopt", "eet", "slaapt"],
+        hint: "To sing"
+      },
+      {
+        text: "Na het concert koop ik een ____.",
+        answer: "t-shirt",
+        options: ["t-shirt", "boek", "fiets", "plant"],
+        hint: "Merchandise clothing"
+      }
+    ]
+  },
+
+  'tandenarts_gezondheid': {
+    level: "A2",
+    theme: "Gezondheid & Zorg",
+    title: "Bij de Tandarts",
+    sentences: [
+      {
+        text: "Ik heb een ____ bij de tandarts.",
+        answer: "afspraak",
+        options: ["afspraak", "vriend", "boek", "fiets"],
+        hint: "Appointment"
+      },
+      {
+        text: "Mijn ____ doet zeer.",
+        answer: "kies",
+        options: ["kies", "hoofd", "been", "arm"],
+        hint: "Tooth"
+      },
+      {
+        text: "De tandarts kijkt in mijn ____.",
+        answer: "mond",
+        options: ["mond", "oor", "neus", "oog"],
+        hint: "Mouth"
+      },
+      {
+        text: "Ik moet twee keer per dag mijn tanden ____.",
+        answer: "poetsen",
+        options: ["poetsen", "eten", "drinken", "wassen"],
+        hint: "To brush"
+      },
+      {
+        text: "De assistente geeft me een nieuwe ____.",
+        answer: "tandenborstel",
+        options: ["tandenborstel", "pen", "boek", "tas"],
+        hint: "Toothbrush"
+      }
+    ]
+  },
+
+  'autowassen_garage': {
+    level: "A1",
+    theme: "Auto & Onderhoud",
+    title: "De Auto Wassen",
+    sentences: [
+      {
+        text: "Mijn auto is vies, ik moet hem ____.",
+        answer: "wassen",
+        options: ["wassen", "kopen", "eten", "lezen"],
+        hint: "To clean with water"
+      },
+      {
+        text: "Ik ga naar de ____.",
+        answer: "wasstraat",
+        options: ["wasstraat", "winkel", "school", "tuin"],
+        hint: "Car wash"
+      },
+      {
+        text: "Eerst maak ik de auto nat met ____.",
+        answer: "water",
+        options: ["water", "melk", "sap", "thee"],
+        hint: "Clear liquid"
+      },
+      {
+        text: "Dan gebruik ik ____ en een spons.",
+        answer: "zeep",
+        options: ["zeep", "boter", "suiker", "zout"],
+        hint: "Soap"
+      },
+      {
+        text: "De auto is nu schoon en ____.",
+        answer: "glanzend",
+        options: ["glanzend", "vuil", "oud", "kapot"],
+        hint: "Shiny"
+      }
+    ]
+  },
+
+  'zwembad_zwemmen': {
+    level: "A1",
+    theme: "Sport & Vrije Tijd",
+    title: "Naar het Zwembad",
+    sentences: [
+      {
+        text: "Op zaterdag ga ik naar het ____.",
+        answer: "zwembad",
+        options: ["zwembad", "bos", "station", "museum"],
+        hint: "Swimming pool"
+      },
+      {
+        text: "Ik neem mijn ____ mee.",
+        answer: "zwembroek",
+        options: ["zwembroek", "jas", "schoenen", "boek"],
+        hint: "Swimming trunks"
+      },
+      {
+        text: "Het water is een beetje ____.",
+        answer: "koud",
+        options: ["koud", "warm", "heet", "droog"],
+        hint: "Opposite of warm"
+      },
+      {
+        text: "Ik spring van de ____.",
+        answer: "duikplank",
+        options: ["duikplank", "trap", "stoel", "bank"],
+        hint: "Diving board"
+      },
+      {
+        text: "Na het zwemmen neem ik een ____.",
+        answer: "douche",
+        options: ["douche", "ontbijt", "boek", "fiets"],
+        hint: "Shower"
+      }
+    ]
+  },
+
+  'verjaardag_feest': {
+    level: "A1",
+    theme: "Feesten & Vieringen",
+    title: "Mijn Verjaardag",
+    sentences: [
+      {
+        text: "Volgende week word ik tien jaar ____.",
+        answer: "oud",
+        options: ["oud", "groot", "klein", "jong"],
+        hint: "Age"
+      },
+      {
+        text: "Ik geef een groot ____.",
+        answer: "feest",
+        options: ["feest", "boek", "fiets", "huis"],
+        hint: "Party"
+      },
+      {
+        text: "Mijn vrienden brengen ____ mee.",
+        answer: "cadeaus",
+        options: ["cadeaus", "boeken", "schoenen", "fietsen"],
+        hint: "Presents"
+      },
+      {
+        text: "We eten ____ met kaarsjes.",
+        answer: "taart",
+        options: ["taart", "brood", "soep", "rijst"],
+        hint: "Birthday cake"
+      },
+      {
+        text: "We spelen spelletjes in de ____.",
+        answer: "tuin",
+        options: ["tuin", "keuken", "school", "winkel"],
+        hint: "Garden"
+      }
+    ]
+  },
+
+  'station_reizen': {
+    level: "A2",
+    theme: "Reizen & Transport",
+    title: "Op het Station",
+    sentences: [
+      {
+        text: "Ik kom aan op het ____.",
+        answer: "station",
+        options: ["station", "huis", "school", "park"],
+        hint: "Train station"
+      },
+      {
+        text: "Ik koop een ____ bij de automaat.",
+        answer: "kaartje",
+        options: ["kaartje", "boek", "krant", "pen"],
+        hint: "Ticket"
+      },
+      {
+        text: "De trein vertrekt van ____ 3.",
+        answer: "spoor",
+        options: ["spoor", "straat", "weg", "pad"],
+        hint: "Platform/track"
+      },
+      {
+        text: "Ik heb nog vijf ____ voordat de trein komt.",
+        answer: "minuten",
+        options: ["minuten", "uren", "dagen", "weken"],
+        hint: "Time unit (60 seconds)"
+      },
+      {
+        text: "In de trein zoek ik een lege ____.",
+        answer: "stoel",
+        options: ["stoel", "tafel", "bed", "bank"],
+        hint: "Seat"
+      }
+    ]
+  },
+
+  'kapper_haar': {
+    level: "A2",
+    theme: "Verzorging & Uiterlijk",
+    title: "Naar de Kapper",
+    sentences: [
+      {
+        text: "Mijn haar is te lang, ik ga naar de ____.",
+        answer: "kapper",
+        options: ["kapper", "dokter", "winkel", "school"],
+        hint: "Hairdresser"
+      },
+      {
+        text: "Ik wil mijn haar ____ laten knippen.",
+        answer: "kort",
+        options: ["kort", "lang", "groot", "dik"],
+        hint: "Short"
+      },
+      {
+        text: "De kapper wast eerst mijn ____.",
+        answer: "haar",
+        options: ["haar", "handen", "voeten", "gezicht"],
+        hint: "Hair"
+      },
+      {
+        text: "Ze gebruikt een ____ om te knippen.",
+        answer: "schaar",
+        options: ["schaar", "mes", "lepel", "vork"],
+        hint: "Scissors"
+      },
+      {
+        text: "Ik ben blij met mijn nieuwe ____.",
+        answer: "kapsel",
+        options: ["kapsel", "broek", "schoenen", "jas"],
+        hint: "Hairstyle"
+      }
+    ]
+  },
+
+  'bakker_brood': {
+    level: "A1",
+    theme: "Winkelen & Eten",
+    title: "Bij de Bakker",
+    sentences: [
+      {
+        text: "Elke ochtend koop ik vers ____.",
+        answer: "brood",
+        options: ["brood", "water", "papier", "boek"],
+        hint: "Bread"
+      },
+      {
+        text: "De ____ maakt het brood.",
+        answer: "bakker",
+        options: ["bakker", "dokter", "leraar", "kapper"],
+        hint: "Baker"
+      },
+      {
+        text: "Ik neem ook twee ____.",
+        answer: "croissants",
+        options: ["croissants", "boeken", "schoenen", "bloemen"],
+        hint: "French pastries"
+      },
+      {
+        text: "Het brood ruikt ____.",
+        answer: "lekker",
+        options: ["lekker", "vies", "oud", "koud"],
+        hint: "Delicious"
+      },
+      {
+        text: "Ik betaal drie ____.",
+        answer: "euro",
+        options: ["euro", "meter", "kilo", "liter"],
+        hint: "Currency"
+      }
+    ]
+  },
+
+  'bloemen_tuin': {
+    level: "A1",
+    theme: "Natuur & Tuinieren",
+    title: "Bloemen Planten",
+    sentences: [
+      {
+        text: "In de lente plant ik ____ in de tuin.",
+        answer: "bloemen",
+        options: ["bloemen", "boeken", "stoelen", "auto's"],
+        hint: "Flowers"
+      },
+      {
+        text: "Ik graaf een gat met een ____.",
+        answer: "schep",
+        options: ["schep", "lepel", "vork", "mes"],
+        hint: "Shovel"
+      },
+      {
+        text: "De bloemen hebben ____ nodig.",
+        answer: "water",
+        options: ["water", "brood", "melk", "thee"],
+        hint: "Clear liquid plants need"
+      },
+      {
+        text: "Ze groeien in de ____.",
+        answer: "zon",
+        options: ["zon", "maan", "nacht", "winter"],
+        hint: "Sun"
+      },
+      {
+        text: "De tuin ziet er nu ____ uit.",
+        answer: "mooi",
+        options: ["mooi", "lelijk", "vies", "oud"],
+        hint: "Beautiful"
+      }
+    ]
+  },
+
+  'koffie_cafe': {
+    level: "A2",
+    theme: "Eten & Drinken",
+    title: "Koffie Drinken",
+    sentences: [
+      {
+        text: "Ik ontmoet mijn vriend in het ____.",
+        answer: "café",
+        options: ["café", "ziekenhuis", "station", "zwembad"],
+        hint: "Coffee shop"
+      },
+      {
+        text: "Ik bestel een ____ met melk.",
+        answer: "koffie",
+        options: ["koffie", "bier", "wijn", "sap"],
+        hint: "Hot brown drink"
+      },
+      {
+        text: "Hij neemt een stuk ____.",
+        answer: "appelataart",
+        options: ["appeltaart", "brood", "kaas", "vlees"],
+        hint: "Apple pie"
+      },
+      {
+        text: "We zitten buiten op het ____.",
+        answer: "terras",
+        options: ["terras", "dak", "bed", "vloer"],
+        hint: "Outdoor seating area"
+      },
+      {
+        text: "De ober brengt de ____.",
+        answer: "rekening",
+        options: ["rekening", "krant", "telefoon", "fiets"],
+        hint: "Bill"
+      }
+    ]
+  },
+
+  'foto_maken': {
+    level: "A2",
+    theme: "Technologie & Hobby",
+    title: "Foto's Maken",
+    sentences: [
+      {
+        text: "Ik maak graag ____ met mijn telefoon.",
+        answer: "foto's",
+        options: ["foto's", "boeken", "eten", "huizen"],
+        hint: "Pictures"
+      },
+      {
+        text: "Deze camera maakt hele mooie ____.",
+        answer: "plaatjes",
+        options: ["plaatjes", "geluiden", "geuren", "smaken"],
+        hint: "Images"
+      },
+      {
+        text: "Ik fotografeer het mooie ____.",
+        answer: "landschap",
+        options: ["landschap", "huis", "boek", "bord"],
+        hint: "Landscape/scenery"
+      },
+      {
+        text: "De foto's bewaar ik op mijn ____.",
+        answer: "computer",
+        options: ["computer", "stoel", "tafel", "deur"],
+        hint: "PC"
+      },
+      {
+        text: "Ik deel ze op sociale ____.",
+        answer: "media",
+        options: ["media", "dieren", "planten", "stenen"],
+        hint: "Social networks"
+      }
+    ]
+  },
+
+  'hond_uitlaten': {
+    level: "A1",
+    theme: "Huisdieren & Dagelijks",
+    title: "De Hond Uitlaten",
+    sentences: [
+      {
+        text: "Elke avond laat ik mijn ____ uit.",
+        answer: "hond",
+        options: ["hond", "kat", "boek", "fiets"],
+        hint: "Dog"
+      },
+      {
+        text: "Ik doe hem aan de ____.",
+        answer: "riem",
+        options: ["riem", "tafel", "stoel", "deur"],
+        hint: "Leash"
+      },
+      {
+        text: "We lopen door het ____.",
+        answer: "park",
+        options: ["park", "huis", "winkel", "school"],
+        hint: "Green area with trees"
+      },
+      {
+        text: "Mijn hond rent en ____.",
+        answer: "speelt",
+        options: ["speelt", "eet", "slaapt", "leest"],
+        hint: "To play"
+      },
+      {
+        text: "Hij is daarna heel ____.",
+        answer: "moe",
+        options: ["moe", "wakker", "boos", "blij"],
+        hint: "Tired"
+      }
+    ]
+  },
+
+  'bank_geld': {
+    level: "A2",
+    theme: "Financiën & Diensten",
+    title: "Naar de Bank",
+    sentences: [
+      {
+        text: "Ik ga naar de ____ om geld op te nemen.",
+        answer: "bank",
+        options: ["bank", "winkel", "school", "kerk"],
+        hint: "Financial institution"
+      },
+      {
+        text: "Ik gebruik de ____.",
+        answer: "geldautomaat",
+        options: ["geldautomaat", "computer", "telefoon", "kassa"],
+        hint: "ATM"
+      },
+      {
+        text: "Ik typ mijn ____ in.",
+        answer: "pincode",
+        options: ["pincode", "naam", "adres", "telefoon"],
+        hint: "Secret number"
+      },
+      {
+        text: "Ik neem vijftig ____ op.",
+        answer: "euro",
+        options: ["euro", "cent", "dollar", "pond"],
+        hint: "European currency"
+      },
+      {
+        text: "Het geld gaat in mijn ____.",
+        answer: "portemonnee",
+        options: ["portemonnee", "tas", "zak", "auto"],
+        hint: "Wallet"
+      }
+    ]
+  },
+
+  'voetbal_wedstrijd': {
+    level: "A2",
+    theme: "Sport & Vrije Tijd",
+    title: "Voetbalwedstrijd",
+    sentences: [
+      {
+        text: "Zondag spelen we een belangrijke ____.",
+        answer: "wedstrijd",
+        options: ["wedstrijd", "training", "film", "boek"],
+        hint: "Match/game"
+      },
+      {
+        text: "Ik ben de ____ van het team.",
+        answer: "aanvoerder",
+        options: ["aanvoerder", "coach", "scheidsrechter", "toeschouwer"],
+        hint: "Captain"
+      },
+      {
+        text: "We spelen tegen het beste ____ van de stad.",
+        answer: "team",
+        options: ["team", "huis", "restaurant", "museum"],
+        hint: "Group of players"
+      },
+      {
+        text: "Ik draag mijn nieuwe voetbal____.",
+        answer: "schoenen",
+        options: ["schoenen", "handschoenen", "sokken", "broek"],
+        hint: "Football boots"
+      },
+      {
+        text: "We winnen met 3-1! Dat is een mooie ____.",
+        answer: "overwinning",
+        options: ["overwinning", "nederlaag", "gelijkspel", "training"],
+        hint: "Victory"
+      }
+    ]
+  },
+
+  'pizza_bestellen': {
+    level: "A1",
+    theme: "Eten & Technologie",
+    title: "Pizza Bestellen",
+    sentences: [
+      {
+        text: "Vanavond eet ik ____.",
+        answer: "pizza",
+        options: ["pizza", "soep", "brood", "rijst"],
+        hint: "Italian food"
+      },
+      {
+        text: "Ik bestel via de ____.",
+        answer: "app",
+        options: ["app", "brief", "boek", "krant"],
+        hint: "Phone application"
+      },
+      {
+        text: "Ik kies een pizza met ____.",
+        answer: "kaas",
+        options: ["kaas", "water", "papier", "hout"],
+        hint: "Yellow dairy product"
+      },
+      {
+        text: "De bezorger komt over dertig ____.",
+        answer: "minuten",
+        options: ["minuten", "uren", "dagen", "weken"],
+        hint: "Time unit"
+      },
+      {
+        text: "Ik betaal bij de ____.",
+        answer: "deur",
+        options: ["deur", "raam", "tafel", "stoel"],
+        hint: "Door"
+      }
+    ]
+  },
+
+  'ziek_thuis': {
+    level: "A1",
+    theme: "Gezondheid & Thuis",
+    title: "Ziek Thuis",
+    sentences: [
+      {
+        text: "Ik ben ziek en blijf ____ vandaag.",
+        answer: "thuis",
+        options: ["thuis", "weg", "buiten", "daar"],
+        hint: "At home"
+      },
+      {
+        text: "Ik heb ____ en koorts.",
+        answer: "hoofdpijn",
+        options: ["hoofdpijn", "honger", "dorst", "slaap"],
+        hint: "Headache"
+      },
+      {
+        text: "Ik lig de hele dag in ____.",
+        answer: "bed",
+        options: ["bed", "bad", "tuin", "auto"],
+        hint: "Where you sleep"
+      },
+      {
+        text: "Mijn moeder maakt warme ____.",
+        answer: "soep",
+        options: ["soep", "pizza", "taart", "chips"],
+        hint: "Hot liquid food"
+      },
+      {
+        text: "Ik neem mijn ____ drie keer per dag.",
+        answer: "medicijnen",
+        options: ["medicijnen", "schoenen", "boeken", "sleutels"],
+        hint: "Medicine"
+      }
+    ]
+  },
+
+  'wasautomaat_wassen': {
+    level: "A2",
+    theme: "Huishouden & Dagelijks",
+    title: "Kleren Wassen",
+    sentences: [
+      {
+        text: "Ik doe de vuile kleren in de ____.",
+        answer: "wasmachine",
+        options: ["wasmachine", "koelkast", "oven", "kast"],
+        hint: "Washing machine"
+      },
+      {
+        text: "Ik voeg ____ toe.",
+        answer: "wasmiddel",
+        options: ["wasmiddel", "suiker", "zout", "peper"],
+        hint: "Detergent"
+      },
+      {
+        text: "De machine wast op dertig ____.",
+        answer: "graden",
+        options: ["graden", "euro", "kilo", "liter"],
+        hint: "Degrees (temperature)"
+      },
+      {
+        text: "Na een uur zijn de kleren ____.",
+        answer: "schoon",
+        options: ["schoon", "vuil", "kapot", "oud"],
+        hint: "Clean"
+      },
+      {
+        text: "Ik hang ze te ____ in de tuin.",
+        answer: "drogen",
+        options: ["drogen", "wassen", "koken", "bakken"],
+        hint: "To dry"
+      }
+    ]
+  },
+
+  'krant_nieuws': {
+    level: "A2",
+    theme: "Media & Communicatie",
+    title: "De Krant Lezen",
+    sentences: [
+      {
+        text: "Elke ochtend lees ik de ____.",
+        answer: "krant",
+        options: ["krant", "brief", "menukaart", "rekening"],
+        hint: "Newspaper"
+      },
+      {
+        text: "Het belangrijkste nieuws staat op de ____.",
+        answer: "voorpagina",
+        options: ["voorpagina", "achterkant", "vloer", "muur"],
+        hint: "Front page"
+      },
+      {
+        text: "Ik lees graag over ____.",
+        answer: "sport",
+        options: ["sport", "muziek", "kunst", "mode"],
+        hint: "Physical activities/games"
+      },
+      {
+        text: "Er is een interessant ____ over het weer.",
+        answer: "artikel",
+        options: ["artikel", "boek", "film", "lied"],
+        hint: "Article"
+      },
+      {
+        text: "Aan het einde doe ik de ____.",
+        answer: "puzzel",
+        options: ["puzzel", "afwas", "was", "boodschappen"],
+        hint: "Crossword/puzzle"
+      }
+    ]
+  },
+
+  'boodschappen_lijst': {
+    level: "A1",
+    theme: "Winkelen & Organisatie",
+    title: "Boodschappenlijst",
+    sentences: [
+      {
+        text: "Voor ik naar de winkel ga, maak ik een ____.",
+        answer: "lijst",
+        options: ["lijst", "boek", "film", "lied"],
+        hint: "List"
+      },
+      {
+        text: "Ik schrijf alles op een stuk ____.",
+        answer: "papier",
+        options: ["papier", "hout", "metaal", "glas"],
+        hint: "Paper"
+      },
+      {
+        text: "Ik moet melk, brood en ____ kopen.",
+        answer: "eieren",
+        options: ["eieren", "boeken", "bloemen", "kleren"],
+        hint: "Eggs"
+      },
+      {
+        text: "In de winkel vink ik alles ____.",
+        answer: "af",
+        options: ["af", "aan", "uit", "op"],
+        hint: "To check off"
+      },
+      {
+        text: "Zo vergeet ik niets te ____.",
+        answer: "kopen",
+        options: ["kopen", "eten", "drinken", "lezen"],
+        hint: "To buy"
+      }
+    ]
   }
 
 };
