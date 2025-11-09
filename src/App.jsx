@@ -35,6 +35,8 @@ export default function DutchLearningGame() {
   'naveennimmala50@gmail.com' 
 ];
 
+  const [fillBlankFilter, setFillBlankFilter] = useState('all'); // 'all', 'A1', 'A2', 'theme'
+  const [fillBlankThemeFilter, setFillBlankThemeFilter] = useState('all');
   const [selectedCategories, setSelectedCategories] = useState(['all']); // Change from single to array
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   const [selectedStoryKey, setSelectedStoryKey] = useState(null);
@@ -3453,13 +3455,24 @@ if (showHistory) {
   );
 }
 
-// FILL-IN-THE-BLANK STORIES LIST
+// In the stories list screen, add this BEFORE the stories grid:
 if (showFillBlankStories && !selectedStoryKey) {
+  // Get unique themes
+  const themes = [...new Set(Object.values(dutchStories).map(s => s.theme))];
+  const levels = [...new Set(Object.values(dutchStories).map(s => s.level))];
+  
+  // Filter stories
+  const filteredStories = Object.entries(dutchStories).filter(([key, story]) => {
+    const levelMatch = fillBlankFilter === 'all' || story.level === fillBlankFilter;
+    const themeMatch = fillBlankThemeFilter === 'all' || story.theme === fillBlankThemeFilter;
+    return levelMatch && themeMatch;
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center p-3 sm:p-4">
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-xl w-full">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-          <h2 className="text-2xl sm:text-3xl font-bold text-emerald-700">✍️ Fill-in-the-Blank Stories</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-emerald-700">✏️ Fill-in-the-Blank Stories</h2>
           <button
             onClick={handleLogout}
             className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
@@ -3468,36 +3481,86 @@ if (showFillBlankStories && !selectedStoryKey) {
             Logout
           </button>
         </div>
-        <p className="text-gray-600 mb-6 text-center text-sm sm:text-base">
-          Practice Dutch by completing sentences with the correct words!
-        </p>
-        <div className="space-y-3 sm:space-y-4">
-          {Object.entries(dutchStories).map(([key, story]) => (
-            <button
-              key={key}
-              onClick={() => setSelectedStoryKey(key)}
-              className="w-full bg-gradient-to-r from-emerald-400 to-teal-600 text-white p-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all text-left"
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="text-base sm:text-lg font-bold">{story.title}</h3>
-                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                  story.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {story.level}
-                </span>
-              </div>
-              <div className="flex items-center gap-3 text-sm text-emerald-100">
-                <span>📝 {story.theme}</span>
-                <span>•</span>
-                <span>🎯 {story.sentences.length} questions</span>
-              </div>
-            </button>
-          ))}
+
+        {/* ADD FILTERS HERE */}
+        <div className="mb-6 space-y-3">
+          {/* Level Filter */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Filter by Level:</label>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => setFillBlankFilter('all')}
+                className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                  fillBlankFilter === 'all'
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All Levels ({Object.keys(dutchStories).length})
+              </button>
+              {levels.map(level => {
+                const count = Object.values(dutchStories).filter(s => s.level === level).length;
+                return (
+                  <button
+                    key={level}
+                    onClick={() => setFillBlankFilter(level)}
+                    className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                      fillBlankFilter === level
+                        ? level === 'A1' ? 'bg-green-500 text-white' : 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {level} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Results count */}
+          <div className="text-center text-sm text-gray-600 bg-gray-50 rounded-lg py-2">
+            Showing {filteredStories.length} {filteredStories.length === 1 ? 'story' : 'stories'}
+          </div>
         </div>
+
+        {/* Stories list - now using filteredStories */}
+        <div className="space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
+          {filteredStories.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg">No stories found</p>
+              <p className="text-sm mt-2">Try a different filter combination</p>
+            </div>
+          ) : (
+            filteredStories.map(([key, story]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedStoryKey(key)}
+                className="w-full bg-gradient-to-r from-emerald-400 to-teal-600 text-white p-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all text-left"
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-base sm:text-lg font-bold">{story.title}</h3>
+                  <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                    story.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                  }`}>
+                    {story.level}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-emerald-100">
+                  <span>📚 {story.theme}</span>
+                  <span>•</span>
+                  <span>🎯 {story.sentences.length} questions</span>
+                </div>
+              </button>
+            ))
+          )}
+        </div>
+
         <button
           onClick={() => {
             setShowFillBlankStories(false);
             setSelectedStoryKey(null);
+            setFillBlankFilter('all');
+            setFillBlankThemeFilter('all');
           }}
           className="mt-6 sm:mt-8 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
         >
@@ -4161,12 +4224,6 @@ if (showFillBlankStories && selectedStoryKey) {
                   className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
                   <span className="text-sm sm:text-xl">📖 Stories</span>
-                </button>
-                <button
-                  onClick={() => openQuestionSelector('fillblank')}
-                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📝 Fill Blank</span>
                 </button>
                 <button
                   onClick={() => setShowHistory(true)}
