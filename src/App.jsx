@@ -928,6 +928,53 @@ const checkAndUpdateProgress = (categories, mode, score, totalQuestions) => {
     };
   };
 
+  // ADD THIS - Admin function to mark category as completed
+const adminCompleteCategory = (category) => {
+  if (!isAdmin || !user) return;
+  
+  if (confirm(`Mark "${category.replace(/_/g, ' ').toUpperCase()}" as completed?\n\nThis will mark both Multiple Choice and Spelling as passed with 100%.`)) {
+    const updatedProgress = { ...userProgress };
+    
+    if (!updatedProgress[category]) {
+      updatedProgress[category] = {
+        multipleChoice: { score: 0, wordsAttempted: 0, passed: false },
+        spelling: { score: 0, wordsAttempted: 0, passed: false },
+        spellingDifficulty: { score: 0, wordsAttempted: 0, passed: false },
+        completed: false
+      };
+    }
+    
+    // Mark both modes as completed with 100%
+    const wordCount = dutchWordBank[category]?.length || 0;
+    updatedProgress[category].multipleChoice = {
+      score: 100,
+      wordsAttempted: wordCount,
+      passed: true
+    };
+    updatedProgress[category].spelling = {
+      score: 100,
+      wordsAttempted: wordCount,
+      passed: true
+    };
+    updatedProgress[category].completed = true;
+    
+    saveUserProgress(updatedProgress);
+    alert(`✅ "${category.replace(/_/g, ' ').toUpperCase()}" marked as completed!`);
+  }
+};
+
+// ADD THIS - Admin function to reset category progress
+const adminResetCategory = (category) => {
+  if (!isAdmin || !user) return;
+  
+  if (confirm(`Reset progress for "${category.replace(/_/g, ' ').toUpperCase()}"?\n\nThis will remove all progress for this category.`)) {
+    const updatedProgress = { ...userProgress };
+    delete updatedProgress[category];
+    
+    saveUserProgress(updatedProgress);
+    alert(`🔄 "${category.replace(/_/g, ' ').toUpperCase()}" progress reset!`);
+  }
+};
 // Check if all A1 categories have both Multiple Choice and Spelling passed
 const areAllA1CategoriesCompleted = () => {
   if (!user) return false;
@@ -963,6 +1010,8 @@ const areAllA2CategoriesCompleted = () => {
 
 // Check if a category is locked (A2 locked until all A1 done; B1/B2 until all A1 & A2 done)
 const isCategoryLocked = (category) => {
+  if (isAdmin) return false;
+
   if (!user || category === 'all') return false;
   
   const words = dutchWordBank[category];
@@ -3702,190 +3751,231 @@ if (showFillBlankStories && selectedStoryKey) {
             )}
               </div>
               
-            {/* Category Selection - MOBILE OPTIMIZED WITH MULTI-SELECT */}
-            <div className="mb-4 sm:mb-6">
-              <div className="flex justify-between items-center mb-3">
-                <label className="block text-gray-700 font-semibold text-sm sm:text-base">
-                  Choose Thema category:
-                </label>
-                <button
-                  onClick={() => setShowMultiSelect(!showMultiSelect)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                    showMultiSelect 
-                      ? 'bg-purple-500 text-white' 
-                      : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
-                  }`}
-                >
-                  {showMultiSelect ? '✓ Multi-Select ON' : 'Multi-Select OFF'}
-                </button>
-              </div>
-              
-              {/* Selected Categories Display */}
-              <div className="mb-2 sm:mb-3">
-                <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 bg-orange-50 rounded-lg border-2 border-orange-200">
-                  <span className="text-xs sm:text-sm text-gray-600 font-semibold">Selected:</span>
-                  {selectedCategories.map(cat => (
-                    <div key={cat} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500 text-white text-xs font-bold">
-                      <span>{cat === 'all' ? 'All Lessons' : cat.replace(/_/g, ' ').toUpperCase()}</span>
-                      {showMultiSelect && selectedCategories.length > 1 && (
-                        <button
-                          onClick={() => {
-                            setSelectedCategories(prev => prev.filter(c => c !== cat));
-                          }}
-                          className="ml-1 hover:bg-orange-600 rounded-full p-0.5"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  {showMultiSelect && selectedCategories.length > 1 && (
-                    <button
-                      onClick={() => setSelectedCategories(['all'])}
-                      className="text-xs text-red-600 hover:text-red-700 font-semibold ml-2"
-                    >
-                      Clear All
-                    </button>
-                  )}
-                </div>
-              </div>
+{/* Category Selection - MOBILE OPTIMIZED WITH MULTI-SELECT & ADMIN CONTROLS */}
+<div className="mb-4 sm:mb-6">
+  <div className="flex justify-between items-center mb-3">
+    <label className="block text-gray-700 font-semibold text-sm sm:text-base">
+      Choose Thema category:
+    </label>
+    <div className="flex gap-2">
+      {isAdmin && (
+        <span className="px-2 py-1 rounded-lg text-xs font-bold bg-purple-100 text-purple-700">
+          👑 ADMIN MODE
+        </span>
+      )}
+      <button
+        onClick={() => setShowMultiSelect(!showMultiSelect)}
+        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+          showMultiSelect 
+            ? 'bg-purple-500 text-white' 
+            : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+        }`}
+      >
+        {showMultiSelect ? '✓ Multi-Select ON' : 'Multi-Select OFF'}
+      </button>
+    </div>
+  </div>
+  
+  {/* Selected Categories Display */}
+  <div className="mb-2 sm:mb-3">
+    <div className="flex flex-wrap gap-2 items-center min-h-[40px] p-2 bg-orange-50 rounded-lg border-2 border-orange-200">
+      <span className="text-xs sm:text-sm text-gray-600 font-semibold">Selected:</span>
+      {selectedCategories.map(cat => (
+        <div key={cat} className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-orange-500 text-white text-xs font-bold">
+          <span>{cat === 'all' ? 'All Lessons' : cat.replace(/_/g, ' ').toUpperCase()}</span>
+          {showMultiSelect && selectedCategories.length > 1 && (
+            <button
+              onClick={() => {
+                setSelectedCategories(prev => prev.filter(c => c !== cat));
+              }}
+              className="ml-1 hover:bg-orange-600 rounded-full p-0.5"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+      ))}
+      {showMultiSelect && selectedCategories.length > 1 && (
+        <button
+          onClick={() => setSelectedCategories(['all'])}
+          className="text-xs text-red-600 hover:text-red-700 font-semibold ml-2"
+        >
+          Clear All
+        </button>
+      )}
+    </div>
+  </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
-                {categories.map(cat => {
-                  const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
-                  const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
-                  const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
+  {/* 🆕 NEW: Admin Controls */}
+  {isAdmin && selectedCategories.length === 1 && !selectedCategories.includes('all') && (
+    <div className="mb-3 p-3 bg-purple-50 rounded-lg border-2 border-purple-200">
+      <div className="flex flex-wrap gap-2 justify-center">
+        <button
+          onClick={() => adminCompleteCategory(selectedCategories[0])}
+          className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-2"
+        >
+          <Trophy className="w-4 h-4" />
+          Mark as Completed
+        </button>
+        <button
+          onClick={() => adminResetCategory(selectedCategories[0])}
+          className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center gap-2"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Reset Progress
+        </button>
+      </div>
+      <p className="text-center text-purple-700 text-xs mt-2">
+        👑 Admin: Quick complete or reset this category
+      </p>
+    </div>
+  )}
 
-                  const isCompleted = isCategoryCompleted(cat);
-                  const progress = getCategoryProgress(cat);
-                  const hasPartialProgress = ((progress.multipleChoice || progress.spelling) && !isCompleted);
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+    {categories.map(cat => {
+      const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
+      const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
+      const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
 
-                  const isLocked = isCategoryLocked(cat);
-                  const isSelected = selectedCategories.includes(cat);
+      const isCompleted = isCategoryCompleted(cat);
+      const progress = getCategoryProgress(cat);
+      const hasPartialProgress = ((progress.multipleChoice || progress.spelling) && !isCompleted);
+
+      const isLocked = isCategoryLocked(cat);
+      const isSelected = selectedCategories.includes(cat);
+      
+      return (
+        <button
+          key={cat}
+          onClick={() => {
+            if (isLocked) {
+              const words = dutchWordBank[cat] || [];
+              const hasA2 = words.some(w => w.level === 'A2');
+              const hasB = words.some(w => w.level === 'B1' || w.level === 'B2');
+              const reason = hasB
+                ? '🔒 Complete ALL A1 and A2 categories (Multiple Choice AND Spelling, 80%+) to unlock B1/B2.'
+                : '🔒 Complete ALL A1 categories (Multiple Choice AND Spelling, 80%+) to unlock A2.';
+              alert(reason);
+              return;
+            }
+            
+            if (showMultiSelect) {
+              if (cat === 'all') {
+                setSelectedCategories(['all']);
+              } else {
+                setSelectedCategories(prev => {
+                  const withoutAll = prev.filter(c => c !== 'all');
                   
-                  return (
-                    <button
-                      key={cat}
-                      onClick={() => {
-                        if (isLocked) {
-                          const words = dutchWordBank[cat] || [];
-                          const hasA2 = words.some(w => w.level === 'A2');
-                          const hasB = words.some(w => w.level === 'B1' || w.level === 'B2');
-                          const reason = hasB
-                            ? '🔒 Complete ALL A1 and A2 categories (Multiple Choice AND Spelling, 80%+) to unlock B1/B2.'
-                            : '🔒 Complete ALL A1 categories (Multiple Choice AND Spelling, 80%+) to unlock A2.';
-                          alert(reason);
-                          return;
-                        }
-                        
-                        if (showMultiSelect) {
-                          // Multi-select mode
-                          if (cat === 'all') {
-                            // If clicking 'all', select only 'all'
-                            setSelectedCategories(['all']);
-                          } else {
-                            setSelectedCategories(prev => {
-                              // Remove 'all' if present
-                              const withoutAll = prev.filter(c => c !== 'all');
-                              
-                              if (prev.includes(cat)) {
-                                // Deselect this category
-                                const updated = withoutAll.filter(c => c !== cat);
-                                // If nothing left, select 'all'
-                                return updated.length === 0 ? ['all'] : updated;
-                              } else {
-                                // Select this category
-                                return [...withoutAll, cat];
-                              }
-                            });
-                          }
-                        } else {
-                          // Single-select mode (original behavior)
-                          setSelectedCategories([cat]);
-                        }
-                      }}
-                      disabled={isLocked}
-                      style={{
-                        WebkitTapHighlightColor: 'transparent',
-                        touchAction: 'manipulation',
-                        backgroundColor: isLocked
-                          ? '#d1d5db'
-                          : isSelected
-                          ? (isCompleted ? '#16a34a' : hasPartialProgress ? '#eab308' : '#f97316')
-                          : (isCompleted ? '#22c55e' : hasPartialProgress ? '#facc15' : '#ffffff'),
-                        color: isLocked
-                          ? '#6b7280'
-                          : (isSelected || isCompleted || hasPartialProgress)
-                          ? '#ffffff'
-                          : '#374151',
-                        border: isLocked
-                          ? 'none'
-                          : isSelected
-                          ? (isCompleted ? '2px solid #fbbf24' : '3px solid #dc2626')
-                          : isCompleted
-                          ? '2px solid #16a34a'
-                          : hasPartialProgress
-                          ? '2px solid #eab308'
-                          : '1px solid #e5e7eb',
-                        transform: isSelected ? 'scale(1.05)' : 'scale(1)',
-                        boxShadow: isSelected ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none',
-                        transition: 'all 0.2s ease',
-                        opacity: isLocked ? 0.6 : 1,
-                        cursor: isLocked ? 'not-allowed' : 'pointer'
-                      }}
-                      className="p-2 sm:p-3 rounded-xl font-medium text-xs relative"
-                    >
-                      {isSelected && (
-                        <div className="absolute -top-1 -left-1 bg-red-500 rounded-full px-1.5 py-0.5 shadow z-10">
-                          <span className="text-white text-[10px] font-bold">✓</span>
-                        </div>
-                      )}
-                      {isLocked && (
-                        <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
-                          <span className="text-white text-xs">🔒</span>
-                        </div>
-                      )}
-                      {isCompleted && (
-                        <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
-                          <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                        </div>
-                      )}
-                      {!isCompleted && hasPartialProgress && (
-                        <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1 sm:px-1.5 py-0.5">
-                          <span className="text-white text-xs font-bold">
-                            {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✓' : ''}
-                          </span>
-                        </div>
-                      )}
-                      <div className="font-bold text-xs sm:text-sm">{cat === 'all' ? 'All' : cat.replace(/_/g, ' ').replace(/lesson /g, 'L').toUpperCase()}</div>
-                      <div className="opacity-75 mt-1 text-xs">
-                        {wordCount} words
-                        {(hasA1 || hasA2) && (
-                          <span className="block sm:inline sm:ml-1">
-                            {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'} 
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-              
-              {showMultiSelect && selectedCategories.length > 1 && !selectedCategories.includes('all') && (
-                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-blue-700 text-xs sm:text-sm text-center font-semibold">
-                    📚 Testing {selectedCategories.length} categories: {
-                      (() => {
-                        const totalWords = selectedCategories.reduce((sum, cat) => {
-                          return sum + (dutchWordBank[cat]?.length || 0);
-                        }, 0);
-                        return `${totalWords} total words available`;
-                      })()
-                    }
-                  </p>
-                </div>
-              )}
+                  if (prev.includes(cat)) {
+                    const updated = withoutAll.filter(c => c !== cat);
+                    return updated.length === 0 ? ['all'] : updated;
+                  } else {
+                    return [...withoutAll, cat];
+                  }
+                });
+              }
+            } else {
+              setSelectedCategories([cat]);
+            }
+          }}
+          disabled={isLocked}
+          style={{
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation',
+            backgroundColor: isLocked
+              ? '#d1d5db'
+              : isSelected
+              ? (isCompleted ? '#16a34a' : hasPartialProgress ? '#eab308' : '#f97316')
+              : (isCompleted ? '#22c55e' : hasPartialProgress ? '#facc15' : '#ffffff'),
+            color: isLocked
+              ? '#6b7280'
+              : (isSelected || isCompleted || hasPartialProgress)
+              ? '#ffffff'
+              : '#374151',
+            border: isLocked
+              ? 'none'
+              : isSelected
+              ? (isCompleted ? '2px solid #fbbf24' : '3px solid #dc2626')
+              : isCompleted
+              ? '2px solid #16a34a'
+              : hasPartialProgress
+              ? '2px solid #eab308'
+              : '1px solid #e5e7eb',
+            transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+            boxShadow: isSelected ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none',
+            transition: 'all 0.2s ease',
+            opacity: isLocked ? 0.6 : 1,
+            cursor: isLocked ? 'not-allowed' : 'pointer'
+          }}
+          className="p-2 sm:p-3 rounded-xl font-medium text-xs relative"
+        >
+          {isSelected && (
+            <div className="absolute -top-1 -left-1 bg-red-500 rounded-full px-1.5 py-0.5 shadow z-10">
+              <span className="text-white text-[10px] font-bold">✓</span>
             </div>
+          )}
+          {isLocked && !isAdmin && (
+            <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
+              <span className="text-white text-xs">🔒</span>
+            </div>
+          )}
+          {/* 🆕 NEW: Show crown for locked categories if admin */}
+          {isAdmin && isLocked && (
+            <div className="absolute -top-1 -right-1 bg-purple-500 rounded-full p-1">
+              <span className="text-white text-xs">👑</span>
+            </div>
+          )}
+          {isCompleted && (
+            <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
+              <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+            </div>
+          )}
+          {!isCompleted && hasPartialProgress && (
+            <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1 sm:px-1.5 py-0.5">
+              <span className="text-white text-xs font-bold">
+                {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✓' : ''}
+              </span>
+            </div>
+          )}
+          <div className="font-bold text-xs sm:text-sm">{cat === 'all' ? 'All' : cat.replace(/_/g, ' ').replace(/lesson /g, 'L').toUpperCase()}</div>
+          <div className="opacity-75 mt-1 text-xs">
+            {wordCount} words
+            {(hasA1 || hasA2) && (
+              <span className="block sm:inline sm:ml-1">
+                {hasA1 && 'A1🟢'} {hasA2 && 'A2🔵'} 
+              </span>
+            )}
+          </div>
+        </button>
+      );
+    })}
+  </div>
+  
+  {showMultiSelect && selectedCategories.length > 1 && !selectedCategories.includes('all') && (
+    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+      <p className="text-blue-700 text-xs sm:text-sm text-center font-semibold">
+        📚 Testing {selectedCategories.length} categories: {
+          (() => {
+            const totalWords = selectedCategories.reduce((sum, cat) => {
+              return sum + (dutchWordBank[cat]?.length || 0);
+            }, 0);
+            return `${totalWords} total words available`;
+          })()
+        }
+      </p>
+    </div>
+  )}
+  
+  {/* 🆕 NEW: Admin info message */}
+  {isAdmin && (
+    <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+      <p className="text-purple-700 text-xs sm:text-sm text-center font-semibold">
+        👑 Admin Mode: All categories unlocked. Select a single category to see quick complete/reset buttons.
+      </p>
+    </div>
+  )}
+</div>
+
             {/* A1 Progress Indicator */}
             {!areAllA1CategoriesCompleted() && (
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
