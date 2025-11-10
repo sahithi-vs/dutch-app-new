@@ -1488,7 +1488,7 @@ export const dutchWordBankA1 = {
 { dutch: 'woning', english: 'the house', level: 'A1', example: 'Onze woning is klein maar gezellig. (Our house is small but cozy.)' },
 { dutch: 'kruk', english: 'the stool', level: 'A1', example: 'Ik zit op een kruk in de keuken. (I sit on a stool in the kitchen.)' },
 { dutch: 'fornuis', english: 'the cooker', level: 'A1', example: 'Het fornuis staat in de keuken. (The cooker is in the kitchen.)' },
-{ dutch: 'koelkast', english: 'the fridge', level: 'A1', example: 'De melk staat in de koelkast. (The milk is in the fridge.)' },
+{ dutch: 'koelkast', english: 'the fridge', level: 'A1', example: 'De melk staat in de koelkast. (The milk is in the fridge.)' },         
 { dutch: 'bijkeuken', english: 'the scullery', level: 'A2', example: 'De wasmachine staat in de bijkeuken. (The washing machine is in the scullery.)' },
 { dutch: 'lijf', english: 'the body', level: 'A1', example: 'Je moet goed voor je lijf zorgen. (You must take good care of your body.)' },
 { dutch: 'kop', english: 'the head', level: 'A1', example: 'De hond heeft een grote kop. (The dog has a big head.)' },

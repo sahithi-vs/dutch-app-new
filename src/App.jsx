@@ -1827,6 +1827,8 @@ const stopRecording = () => {
 
 // Replace your handleSearch function with this fixed version:
 
+
+
 const handleSearch = (query) => {
   setSearchQuery(query);
   
@@ -2092,6 +2094,7 @@ const getUserLevel = (points) => {
   if (points < 5000) return { level: 7, title: '🌟 Master', nextLevel: 5000 };
   return { level: 8, title: '👑 Legend', nextLevel: null };
 };
+
 
 
 // Admin Panel Component
@@ -4178,7 +4181,15 @@ if (showFillBlankStories && selectedStoryKey) {
                 </button>
 
                 
-                {/* ADD THIS CONJUGATION BUTTON RIGHT HERE */}
+
+
+                <button
+                  onClick={() => { setShowStories(true); setGameMode('stories'); }}
+                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">📖 Stories</span>
+                </button>
+                                {/* ADD THIS CONJUGATION BUTTON RIGHT HERE */}
                 <button
                   onClick={() => setShowConjugationOptions(!showConjugationOptions)}
                   className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
@@ -4218,13 +4229,6 @@ if (showFillBlankStories && selectedStoryKey) {
                     </button>
                   </div>
                 )}
-
-                <button
-                  onClick={() => { setShowStories(true); setGameMode('stories'); }}
-                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📖 Stories</span>
-                </button>
                 <button
                   onClick={() => setShowHistory(true)}
                   className="w-full bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"

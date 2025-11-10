@@ -1,5 +1,157 @@
 export const stories = [
   {
+    id: 7,
+    title: "Een Dag bij de Kapper",
+    text: `Anna heeft al drie maanden haar haar niet laten knippen. Ze vindt dat het te lang is geworden. Op maandag belt ze naar de kapper om een afspraak te maken. "Kan ik donderdagmiddag om drie uur komen?" vraagt ze.  
+"Ja hoor," zegt de kapster. "Wat wilt u laten doen?"  
+"Alleen knippen, alstublieft."  
+
+Op donderdag gaat Anna op tijd naar de kapper. Ze wacht even in de stoel en pakt een tijdschrift. De kapster knipt tien centimeter van haar haar. "Zo, wat vind je?" vraagt ze.  
+"Mooi, dank je wel!" zegt Anna. Ze betaalt 25 euro en maakt meteen een nieuwe afspraak over zes weken.`,
+    questions: [
+      { question: "Waarom gaat Anna naar de kapper?", options: ["Ze wil haar haar verven", "Haar haar is te lang", "Ze wil een nieuwe baan", "Ze gaat naar een feest"], correct: "Haar haar is te lang" },
+      { question: "Hoeveel betaalt Anna?", options: ["15 euro", "20 euro", "25 euro", "30 euro"], correct: "25 euro" },
+      { question: "Wanneer maakt Anna een nieuwe afspraak?", options: ["Over zes weken", "Volgende week", "Over drie maanden", "Over zes maanden"], correct: "Over zes weken" }
+    ]
+  },
+  {
+    id: 8,
+    title: "Een Nieuwe Fiets",
+    text: `Ali woont in Utrecht en gaat elke dag met de fiets naar zijn werk. Gisteren brak zijn ketting en hij kon niet verder fietsen. Daarom ging hij naar de fietsenwinkel.  
+
+"Kan ik de fiets vandaag laten repareren?" vroeg Ali.  
+"Dat lukt niet meer vandaag," zei de monteur. "Maar morgen om elf uur is hij klaar."  
+
+De volgende dag haalt Ali zijn fiets op. De monteur heeft de ketting vervangen en de banden opgepompt. "Dat is dan 35 euro," zegt de monteur. Ali betaalt met zijn pinpas en fietst blij naar huis.`,
+    questions: [
+      { question: "Waarom gaat Ali naar de fietsenwinkel?", options: ["Hij wil een nieuwe fiets kopen", "Zijn ketting is kapot", "Hij wil de banden oppompen", "Hij zoekt werk"], correct: "Zijn ketting is kapot" },
+      { question: "Wanneer is de fiets klaar?", options: ["Vandaag", "Morgen", "Volgende week", "Vanavond"], correct: "Morgen" },
+      { question: "Hoe betaalt Ali?", options: ["Met contant geld", "Met pinpas", "Met creditcard", "Met een cadeaubon"], correct: "Met pinpas" }
+    ]
+  },
+  {
+    id: 9,
+    title: "De Verjaardag van Noor",
+    text: `Noor is op 12 mei jarig. Ze wordt dertig jaar. Ze nodigt haar vrienden uit voor een klein feestje in haar tuin.  
+Ze koopt taart, bloemen en ballonnen. Haar moeder helpt met de koffie en thee.  
+
+Om drie uur komen de gasten. Iedereen feliciteert haar. "Gefeliciteerd, Noor!"  
+Ze krijgt cadeaus: een boek, een sjaal en een plant. ’s Avonds eten ze pizza en luisteren naar muziek.  
+
+Noor vindt het een gezellige dag en bedankt iedereen voor het komen.`,
+    questions: [
+      { question: "Hoe oud wordt Noor?", options: ["25", "28", "30", "35"], correct: "30" },
+      { question: "Wat krijgt Noor cadeau?", options: ["Een fiets", "Een boek, een sjaal en een plant", "Een taart", "Een ring"], correct: "Een boek, een sjaal en een plant" },
+      { question: "Waar viert Noor haar verjaardag?", options: ["In het park", "In haar tuin", "In een restaurant", "Bij haar moeder"], correct: "In haar tuin" }
+    ]
+  },
+  {
+    id: 10,
+    title: "De Nieuwe Werkdag",
+    text: `Milan begint vandaag bij zijn nieuwe baan in een kantoor in Den Haag. Hij is een beetje zenuwachtig.  
+Hij neemt de trein om 8:00 en komt op tijd aan. Zijn nieuwe collega’s zijn vriendelijk.  
+
+"Welkom bij het team!" zegt zijn baas. "Vandaag krijg je uitleg over het werk."  
+Milan krijgt een laptop en een badge. In de middag eet hij in de kantine met andere collega's.  
+
+Aan het eind van de dag zegt hij: "Het was een goede eerste dag!"`,
+    questions: [
+      { question: "Waar werkt Milan?", options: ["In Rotterdam", "In Amsterdam", "In Den Haag", "In Utrecht"], correct: "In Den Haag" },
+      { question: "Hoe reist Milan naar zijn werk?", options: ["Met de auto", "Met de trein", "Met de bus", "Met de fiets"], correct: "Met de trein" },
+      { question: "Wat krijgt Milan op zijn eerste dag?", options: ["Een telefoon en pen", "Een laptop en badge", "Een jas", "Een kop koffie"], correct: "Een laptop en badge" }
+    ]
+  },
+  {
+    id: 11,
+    title: "Een Bezoek aan de Bibliotheek",
+    text: `Sara leest graag boeken, maar ze wil geen nieuwe kopen. Daarom gaat ze op zaterdag naar de bibliotheek.  
+Ze maakt een lidmaatschapspas. Dat kost 10 euro per jaar.  
+
+Ze mag drie boeken tegelijk lenen en moet ze binnen vier weken terugbrengen.  
+Ze kiest twee romans en één kookboek.  
+
+Thuis begint ze meteen met lezen. Ze is blij met haar nieuwe boeken.`,
+    questions: [
+      { question: "Waarom gaat Sara naar de bibliotheek?", options: ["Ze wil werken", "Ze wil boeken lenen", "Ze wil koffie drinken", "Ze zoekt een baan"], correct: "Ze wil boeken lenen" },
+      { question: "Hoeveel boeken mag Sara lenen?", options: ["Eén", "Twee", "Drie", "Vier"], correct: "Drie" },
+      { question: "Hoeveel kost de pas per jaar?", options: ["Gratis", "5 euro", "10 euro", "15 euro"], correct: "10 euro" }
+    ]
+  },
+  {
+    id: 12,
+    title: "De Markt op Zaterdag",
+    text: `Elke zaterdag gaat Pieter naar de markt in het centrum. Hij koopt altijd groente, fruit en kaas.  
+Vandaag koopt hij appels, aardappels en jonge kaas.  
+
+"Hoeveel kost dit?" vraagt hij.  
+"Dat is acht euro in totaal," zegt de verkoper. Pieter betaalt contant en krijgt een tasje cadeau.  
+
+Daarna drinkt hij koffie bij een kraampje. Hij vindt de sfeer op de markt gezellig.`,
+    questions: [
+      { question: "Wat koopt Pieter op de markt?", options: ["Vis en brood", "Groente, fruit en kaas", "Bloemen en vlees", "Snoep"], correct: "Groente, fruit en kaas" },
+      { question: "Hoeveel betaalt Pieter?", options: ["6 euro", "8 euro", "10 euro", "12 euro"], correct: "8 euro" },
+      { question: "Wat doet Pieter na het winkelen?", options: ["Hij gaat naar huis", "Hij drinkt koffie", "Hij gaat naar de supermarkt", "Hij koopt bloemen"], correct: "Hij drinkt koffie" }
+    ]
+  },
+  {
+    id: 13,
+    title: "Een Ongeluk met de Bus",
+    text: `Op weg naar zijn werk zit Tom in de bus. Plotseling remt de bus hard. Iedereen schrikt, maar niemand is gewond.  
+Een auto reed te snel en de chauffeur moest stoppen.  
+
+De politie komt om de situatie te controleren. Na twintig minuten mogen ze verder rijden.  
+Tom komt een beetje te laat op zijn werk, maar zijn baas begrijpt het.`,
+    questions: [
+      { question: "Waarom remt de bus plotseling?", options: ["De chauffeur had pauze", "Een auto reed te snel", "Er was file", "Er was een stoplicht"], correct: "Een auto reed te snel" },
+      { question: "Wat doet de politie?", options: ["Ze helpt de chauffeur", "Ze controleert de situatie", "Ze schrijft een boete", "Ze rijdt weg"], correct: "Ze controleert de situatie" },
+      { question: "Wat vindt de baas van Tom?", options: ["Hij is boos", "Hij begrijpt het", "Hij zegt niets", "Hij geeft straf"], correct: "Hij begrijpt het" }
+    ]
+  },
+  {
+    id: 14,
+    title: "De Doktersafspraak",
+    text: `Fatima voelt zich al twee dagen niet goed. Ze heeft keelpijn en een beetje koorts.  
+Ze belt de huisarts en krijgt een afspraak om 10:00 uur.  
+
+In de praktijk onderzoekt de dokter haar keel. "Het is een kleine infectie," zegt hij.  
+Ze krijgt medicijnen en moet veel water drinken. Na drie dagen voelt Fatima zich beter.`,
+    questions: [
+      { question: "Waarom gaat Fatima naar de dokter?", options: ["Ze heeft buikpijn", "Ze heeft keelpijn", "Ze heeft hoofdpijn", "Ze wil medicijnen"], correct: "Ze heeft keelpijn" },
+      { question: "Wat zegt de dokter?", options: ["Ze moet naar het ziekenhuis", "Het is een kleine infectie", "Ze is gezond", "Ze heeft griep"], correct: "Het is een kleine infectie" },
+      { question: "Wat moet Fatima doen?", options: ["Veel water drinken", "Sporten", "Rust nemen", "Werken"], correct: "Veel water drinken" }
+    ]
+  },
+  {
+    id: 15,
+    title: "Een Weekend aan Zee",
+    text: `Bas en zijn vriendin Emma gaan in het weekend naar Scheveningen. Ze slapen in een klein hotel dicht bij het strand.  
+Zaterdag maken ze een lange wandeling en eten ze vis in een restaurant.  
+
+’s Avonds kijken ze de zonsondergang. Op zondag regent het een beetje, maar ze drinken koffie in een café.  
+Ze vinden het een leuk en ontspannen weekend.`,
+    questions: [
+      { question: "Waar gaan Bas en Emma naartoe?", options: ["Naar Amsterdam", "Naar Scheveningen", "Naar Utrecht", "Naar Rotterdam"], correct: "Naar Scheveningen" },
+      { question: "Wat doen ze op zaterdagavond?", options: ["Ze kijken televisie", "Ze wandelen", "Ze kijken de zonsondergang", "Ze gaan winkelen"], correct: "Ze kijken de zonsondergang" },
+      { question: "Wat doen ze op zondag?", options: ["Ze zwemmen", "Ze drinken koffie", "Ze gaan winkelen", "Ze rijden naar huis"], correct: "Ze drinken koffie" }
+    ]
+  },
+  {
+    id: 16,
+    title: "De Eerste Nederlandse Les",
+    text: `Maria is nieuw in Nederland en wil Nederlands leren. Ze schrijft zich in voor een taalcursus bij het buurthuis.  
+De lessen zijn elke dinsdag en donderdag van 19:00 tot 21:00.  
+
+De docent heet meneer de Vries. Hij legt de woorden rustig uit.  
+Maria vindt het leuk om nieuwe mensen te ontmoeten en ze oefent elke dag thuis.  
+Na vier weken kan ze al kleine gesprekken voeren in het Nederlands.`,
+    questions: [
+      { question: "Waarom schrijft Maria zich in voor een cursus?", options: ["Ze wil Engels leren", "Ze wil Nederlands leren", "Ze zoekt werk", "Ze wil vrienden maken"], correct: "Ze wil Nederlands leren" },
+      { question: "Wanneer zijn de lessen?", options: ["Elke dag", "Elke dinsdag en donderdag", "Alleen op zaterdag", "Op maandag en woensdag"], correct: "Elke dinsdag en donderdag" },
+      { question: "Wie geeft de lessen?", options: ["Meneer de Jong", "Meneer de Vries", "Mevrouw Jansen", "Mevrouw Pieters"], correct: "Meneer de Vries" }
+    ]
+  },
+  
+  {
     id: 1,
     title: 'De Nieuwe Buurman',
     text: `Jan woont in een klein huis in Amsterdam. Hij heeft een tuin vol bloemen en een kleine schuur. Op maandag krijgt hij een nieuwe buurman. De buurman heet Piet. Hij is jong en vriendelijk.
