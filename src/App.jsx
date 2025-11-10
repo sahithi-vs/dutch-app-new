@@ -13,6 +13,7 @@ import { ref, set, get, child, onValue, update } from 'firebase/database';
 import { dutchStories } from './data/dutchStories';
 import DutchFillBlanks from './components/DutchFillBlanks';
 
+
 const getAllWords = () => {
   const allWords = [];
   Object.entries(dutchWordBank).forEach(([category, words]) => {
