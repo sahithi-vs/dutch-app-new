@@ -13,6 +13,7 @@ import { ref, set, get, child, onValue, update } from 'firebase/database';
 import { dutchStories } from './data/dutchStories';
 import DutchFillBlanks from './components/DutchFillBlanks';
 import { grammarLessons } from './data/grammarLessons';
+import SentenceBuilder from './components/SentenceBuilder';
 
 const getAllWords = () => {
   const allWords = [];
@@ -35,6 +36,9 @@ export default function DutchLearningGame() {
   'naveennimmala77@gmail.com',
   'naveennimmala50@gmail.com' 
 ];
+
+  const [showSentenceBuilder, setShowSentenceBuilder] = useState(false);
+  const [sentenceBuilderCategories, setSentenceBuilderCategories] = useState(['all']);
   const [showAdaptiveStats, setShowAdaptiveStats] = useState(false);
   const [fillBlankFilter, setFillBlankFilter] = useState('all'); // 'all', 'A1', 'A2', 'theme'
   const [fillBlankThemeFilter, setFillBlankThemeFilter] = useState('all');
@@ -1837,6 +1841,8 @@ const stopRecording = () => {
     setGrammarScore(0);
     setGrammarQuestionIndex(0);
     setGrammarFeedback(null);
+    setShowSentenceBuilder(false);
+setSentenceBuilderCategories(['all']);
   };
 
 
@@ -3095,7 +3101,54 @@ if (showGrammarLessons && selectedGrammarTopic && grammarQuizMode) {
 }
 // ==================== GRAMMAR LESSONS END ====================
 
-
+// SENTENCE BUILDER MODE
+if (showSentenceBuilder) {
+  // Get sentences from selected categories
+  let sentences = [];
+  
+  if (sentenceBuilderCategories.includes('all')) {
+    sentences = getAllWords().filter(w => w.example && w.example.length > 0);
+  } else {
+    sentenceBuilderCategories.forEach(cat => {
+      const categoryWords = (dutchWordBank[cat] || [])
+        .filter(w => w.example && w.example.length > 0)
+        .map(w => ({ ...w, category: cat }));
+      sentences = [...sentences, ...categoryWords];
+    });
+  }
+  
+  // Shuffle and limit sentences
+  const shuffledSentences = sentences.sort(() => Math.random() - 0.5).slice(0, numQuestions);
+  
+  if (shuffledSentences.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-600 flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full text-center">
+          <p className="text-gray-700 text-lg mb-4">No sentences available in selected categories.</p>
+          <button
+            onClick={() => setShowSentenceBuilder(false)}
+            className="w-full bg-gray-200 text-gray-700 text-lg font-bold py-3 rounded-xl hover:bg-gray-300 transition-all"
+          >
+            Back to Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <SentenceBuilder
+      sentences={shuffledSentences}
+      onBack={() => setShowSentenceBuilder(false)}
+      onMenu={() => {
+        setShowSentenceBuilder(false);
+        goToMenu();
+      }}
+      speakDutch={speakDutch}
+      numQuestions={Math.min(numQuestions, shuffledSentences.length)}
+    />
+  );
+}
   // Login screen - MOBILE OPTIMIZED
   if (!user) {
     return (
@@ -5062,6 +5115,12 @@ if (showAdaptiveStats) {
                   <span className="text-sm sm:text-xl">📚 Grammar Lessons</span>
                 </button>
                 <button
+                onClick={() => setShowSentenceBuilder(true)}
+                className="w-full bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+              >
+                <span className="text-sm sm:text-xl">🧩 Sentence Builder</span>
+              </button>
+                <button
                   onClick={() => {
                     const allWords = getAllWords();
                     const prioritized = getSRSPrioritizedWords(allWords);
@@ -5827,384 +5886,7 @@ if (gameMode === 'results') {
 }
 
 
-// // GRAMMAR LESSONS SCREENS
-// if (showGrammarLessons && !selectedGrammarTopic) {
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center p-3 sm:p-4">
-//       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-4xl w-full">
-//         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-//           <h2 className="text-2xl sm:text-3xl font-bold text-emerald-700">📚 Grammar Lessons</h2>
-//           <button
-//             onClick={handleLogout}
-//             className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
-//           >
-//             <LogOut className="w-4 h-4" />
-//             Logout
-//           </button>
-//         </div>
 
-//         <p className="text-center text-gray-600 mb-6 text-sm sm:text-base">
-//           Master essential Dutch grammar rules with interactive lessons and quizzes
-//         </p>
-
-//         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-//           {Object.values(grammarLessons).map(lesson => (
-//             <button
-//               key={lesson.id}
-//               onClick={() => {
-//                 setSelectedGrammarTopic(lesson);
-//                 setGrammarQuizMode(false);
-//                 setGrammarScore(0);
-//                 setGrammarQuestionIndex(0);
-//                 setGrammarFeedback(null);
-//               }}
-//               className="bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl p-6 hover:shadow-lg active:shadow-lg transition-all text-left"
-//             >
-//               <div className="text-5xl mb-3 text-center">{lesson.icon}</div>
-//               <h3 className="text-xl font-bold text-emerald-700 mb-2 text-center">{lesson.title}</h3>
-//               <p className="text-sm text-gray-600 mb-3 text-center">{lesson.description}</p>
-//               <div className="flex justify-center">
-//                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-//                   lesson.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-//                 }`}>
-//                   {lesson.level} Level
-//                 </span>
-//               </div>
-//             </button>
-//           ))}
-//         </div>
-
-//         <button
-//           onClick={() => setShowGrammarLessons(false)}
-//           className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
-//         >
-//           <ChevronLeft className="w-5 h-5" />
-//           Back to Menu
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // GRAMMAR LESSON CONTENT
-// if (showGrammarLessons && selectedGrammarTopic && !grammarQuizMode) {
-//   const lesson = selectedGrammarTopic;
-  
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 p-3 sm:p-4">
-//       <div className="max-w-4xl mx-auto">
-//         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8">
-//           <div className="flex justify-between items-center mb-6">
-//             <button
-//               onClick={() => setSelectedGrammarTopic(null)}
-//               className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-2"
-//             >
-//               <ChevronLeft className="w-5 h-5 text-gray-700" />
-//               <span className="font-semibold text-sm sm:text-base">Back</span>
-//             </button>
-//             <button
-//               onClick={handleLogout}
-//               className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 py-2 rounded-lg transition-all text-sm"
-//             >
-//               <LogOut className="w-4 h-4" />
-//               Logout
-//             </button>
-//           </div>
-
-//           <div className="text-center mb-6">
-//             <div className="text-6xl mb-3">{lesson.icon}</div>
-//             <h1 className="text-3xl sm:text-4xl font-bold text-emerald-700 mb-2">{lesson.title}</h1>
-//             <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-//               lesson.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-//             }`}>
-//               {lesson.level} Level
-//             </span>
-//           </div>
-
-//           {/* Explanation */}
-//           <div className="mb-8 bg-emerald-50 rounded-xl p-6 border-2 border-emerald-200">
-//             <h2 className="text-2xl font-bold text-emerald-700 mb-4">📖 Explanation</h2>
-//             <div className="prose prose-sm sm:prose max-w-none text-gray-700 whitespace-pre-line">
-//               {lesson.content.explanation}
-//             </div>
-//           </div>
-
-//           {/* Examples */}
-//           <div className="mb-8">
-//             <h2 className="text-2xl font-bold text-teal-700 mb-4">💡 Examples</h2>
-//             <div className="space-y-3">
-//               {lesson.content.examples.map((example, idx) => (
-//                 <div key={idx} className="bg-teal-50 rounded-xl p-4 border-2 border-teal-200">
-//                   {example.wrong ? (
-//                     <>
-//                       <div className="flex items-start gap-2 mb-2">
-//                         <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-1" />
-//                         <div className="flex-1">
-//                           <span className="font-bold text-red-600 line-through">{example.wrong}</span>
-//                         </div>
-//                       </div>
-//                       <div className="flex items-start gap-2 mb-2">
-//                         <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-1" />
-//                         <div className="flex-1">
-//                           <span className="font-bold text-green-600">{example.correct}</span>
-//                           <button
-//                             onClick={() => speakDutch(example.correct)}
-//                             className="ml-2 bg-teal-100 hover:bg-teal-200 active:bg-teal-200 p-1 rounded-full inline-flex"
-//                           >
-//                             <Volume2 className="w-4 h-4 text-teal-600" />
-//                           </button>
-//                         </div>
-//                       </div>
-//                       <p className="text-sm text-gray-600 ml-7">{example.explanation}</p>
-//                     </>
-//                   ) : (
-//                     <>
-//                       <div className="flex items-start justify-between mb-2">
-//                         <div className="flex-1">
-//                           <div className="flex items-center gap-2 mb-1">
-//                             <span className="font-bold text-teal-700 text-lg">{example.dutch}</span>
-//                             <button
-//                               onClick={() => speakDutch(example.dutch)}
-//                               className="bg-teal-100 hover:bg-teal-200 active:bg-teal-200 p-1 rounded-full"
-//                             >
-//                               <Volume2 className="w-4 h-4 text-teal-600" />
-//                             </button>
-//                           </div>
-//                           <p className="text-gray-700 mb-1">{example.english}</p>
-//                           <p className="text-sm text-gray-500 italic">{example.rule}</p>
-//                         </div>
-//                       </div>
-//                     </>
-//                   )}
-//                 </div>
-//               ))}
-//             </div>
-//           </div>
-
-//           {/* Start Quiz Button */}
-//           <button
-//             onClick={() => {
-//               setGrammarQuizMode(true);
-//               setGrammarScore(0);
-//               setGrammarQuestionIndex(0);
-//               setGrammarFeedback(null);
-//             }}
-//             className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-lg sm:text-xl font-bold py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2 mb-4"
-//           >
-//             <GraduationCap className="w-6 h-6" />
-//             Take Quiz ({lesson.content.quiz.length} questions)
-//           </button>
-
-//           <button
-//             onClick={() => setSelectedGrammarTopic(null)}
-//             className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
-//           >
-//             <ChevronLeft className="w-5 h-5" />
-//             Back to Grammar Topics
-//           </button>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // GRAMMAR QUIZ MODE
-// if (showGrammarLessons && selectedGrammarTopic && grammarQuizMode) {
-//   const lesson = selectedGrammarTopic;
-//   const quiz = lesson.content.quiz;
-  
-//   // Quiz completed
-//   if (grammarQuestionIndex >= quiz.length) {
-//     const percentage = Math.round((grammarScore / quiz.length) * 100);
-    
-//     return (
-//       <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center p-3 sm:p-4">
-//         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full text-center">
-//           <Trophy className="w-16 h-16 sm:w-24 sm:h-24 text-yellow-500 mx-auto mb-4" />
-//           <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-4">
-//             {percentage >= 80 ? 'Uitstekend! You mastered it!' :
-//              percentage >= 60 ? 'Goed gedaan! Good effort!' :
-//              'Keep learning!'}
-//           </h2>
-//           <div className="mb-6">
-//             <div className="text-4xl sm:text-6xl font-bold text-emerald-600 mb-2">{grammarScore}/{quiz.length}</div>
-//             <div className="text-xl sm:text-2xl text-gray-600">{percentage}% Correct</div>
-//           </div>
-
-//           <div className="space-y-3">
-//             <button
-//               onClick={() => {
-//                 setGrammarQuizMode(true);
-//                 setGrammarScore(0);
-//                 setGrammarQuestionIndex(0);
-//                 setGrammarFeedback(null);
-//               }}
-//               className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-//             >
-//               <RefreshCw className="w-5 h-5" />
-//               Try Again
-//             </button>
-            
-//             <button
-//               onClick={() => {
-//                 setGrammarQuizMode(false);
-//                 setGrammarScore(0);
-//                 setGrammarQuestionIndex(0);
-//                 setGrammarFeedback(null);
-//               }}
-//               className="w-full bg-teal-100 text-teal-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-teal-200 active:bg-teal-200 transition-all flex items-center justify-center gap-2"
-//             >
-//               <BookOpen className="w-5 h-5" />
-//               Review Lesson
-//             </button>
-
-//             <button
-//               onClick={() => setSelectedGrammarTopic(null)}
-//               className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
-//             >
-//               <ChevronLeft className="w-5 h-5" />
-//               Back to Topics
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   // Current question
-//   const currentQuestion = quiz[grammarQuestionIndex];
-  
-//   return (
-//     <div className="min-h-screen bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 p-3 sm:p-4">
-//       <div className="max-w-2xl mx-auto">
-//         {/* Progress Header */}
-//         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4">
-//           <div className="flex flex-wrap justify-between items-center mb-3 sm:mb-4 gap-2">
-//             <div className="flex gap-2 sm:gap-4 items-center">
-//               <button
-//                 onClick={() => {
-//                   if (confirm('Return to lesson? Quiz progress will be lost.')) {
-//                     setGrammarQuizMode(false);
-//                     setGrammarScore(0);
-//                     setGrammarQuestionIndex(0);
-//                     setGrammarFeedback(null);
-//                   }
-//                 }}
-//                 className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-1 sm:gap-2"
-//               >
-//                 <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
-//                 <span className="font-semibold text-xs sm:text-sm">Back</span>
-//               </button>
-//               <div className="bg-green-100 px-2 sm:px-4 py-1 sm:py-2 rounded-lg">
-//                 <span className="text-green-700 font-bold text-xs sm:text-base">Score: {grammarScore}</span>
-//               </div>
-//             </div>
-//             <div className="text-gray-600 font-semibold text-xs sm:text-base">
-//               {grammarQuestionIndex + 1}/{quiz.length}
-//             </div>
-//           </div>
-          
-//           <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-//             <div 
-//               className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300"
-//               style={{ width: `${((grammarQuestionIndex) / quiz.length) * 100}%` }}
-//             />
-//           </div>
-//         </div>
-
-//         {/* Question Card */}
-//         <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8">
-//           <div className="text-center mb-6 sm:mb-8">
-//             <div className="mb-3">
-//               <span className="px-3 py-1 rounded-full text-xs sm:text-sm font-bold bg-emerald-100 text-emerald-700">
-//                 {lesson.title}
-//               </span>
-//             </div>
-//             <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
-//               {currentQuestion.question}
-//             </h2>
-//           </div>
-
-//           <div className="grid grid-cols-1 gap-2 sm:gap-3 mb-6">
-//             {currentQuestion.options.map((option, idx) => (
-//               <button
-//                 key={idx}
-//                 onClick={() => {
-//                   const isCorrect = option === currentQuestion.correct;
-//                   playSound(isCorrect);
-                  
-//                   if (isCorrect) {
-//                     setGrammarScore(grammarScore + 1);
-//                     setGrammarFeedback({ correct: true, message: 'Perfect! ' + currentQuestion.explanation });
-//                   } else {
-//                     setGrammarFeedback({ 
-//                       correct: false, 
-//                       message: currentQuestion.explanation,
-//                       correctAnswer: currentQuestion.correct
-//                     });
-//                   }
-//                 }}
-//                 disabled={grammarFeedback !== null}
-//                 className={`p-3 sm:p-4 text-sm sm:text-lg font-semibold rounded-xl transition-all ${
-//                   grammarFeedback === null
-//                     ? `bg-gray-100 text-gray-800 ${!isTouchDevice ? 'hover:bg-emerald-100 hover:text-emerald-600' : 'active:bg-emerald-100'}`
-//                     : grammarFeedback.correct && option === currentQuestion.correct
-//                     ? 'bg-green-500 text-white'
-//                     : !grammarFeedback.correct && option === currentQuestion.correct
-//                     ? 'bg-green-500 text-white'
-//                     : 'bg-gray-100 text-gray-400'
-//                 }`}
-//               >
-//                 {option}
-//               </button>
-//             ))}
-//           </div>
-
-//           {grammarFeedback && (
-//             <div className={`p-3 sm:p-4 rounded-xl ${
-//               grammarFeedback.correct ? 'bg-green-100' : 'bg-red-100'
-//             }`}>
-//               <div className="flex items-start gap-2 sm:gap-3 mb-3">
-//                 {grammarFeedback.correct ? (
-//                   <Check className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-1" />
-//                 ) : (
-//                   <X className="w-5 h-5 sm:w-6 sm:h-6 text-red-600 flex-shrink-0 mt-1" />
-//                 )}
-//                 <div className="flex-1">
-//                   <p className={`font-semibold text-sm sm:text-base mb-2 ${
-//                     grammarFeedback.correct ? 'text-green-700' : 'text-red-700'
-//                   }`}>
-//                     {grammarFeedback.correct ? '✅ Correct!' : '❌ Not quite!'}
-//                   </p>
-//                   <p className="text-gray-700 text-sm sm:text-base">
-//                     {grammarFeedback.message}
-//                   </p>
-//                   {!grammarFeedback.correct && grammarFeedback.correctAnswer && (
-//                     <div className="mt-3 p-3 bg-white rounded-lg">
-//                       <p className="text-xs text-gray-600 mb-1">Correct answer:</p>
-//                       <p className="text-green-600 font-bold text-sm sm:text-base">{grammarFeedback.correctAnswer}</p>
-//                     </div>
-//                   )}
-//                 </div>
-//               </div>
-              
-//               <button
-//                 onClick={() => {
-//                   setGrammarFeedback(null);
-//                   setGrammarQuestionIndex(grammarQuestionIndex + 1);
-//                 }}
-//                 className="w-full mt-3 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
-//               >
-//                 {grammarQuestionIndex + 1 >= quiz.length ? 'See Results' : 'Next Question'}
-//                 <ChevronRight className="w-5 h-5" />
-//               </button>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
   // QUIZ SCREENS - MOBILE OPTIMIZED
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 p-3 sm:p-4 pb-24">
