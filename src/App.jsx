@@ -34,7 +34,7 @@ export default function DutchLearningGame() {
   'naveennimmala77@gmail.com',
   'naveennimmala50@gmail.com' 
 ];
-
+  const [showAdaptiveStats, setShowAdaptiveStats] = useState(false);
   const [fillBlankFilter, setFillBlankFilter] = useState('all'); // 'all', 'A1', 'A2', 'theme'
   const [fillBlankThemeFilter, setFillBlankThemeFilter] = useState('all');
   const [selectedCategories, setSelectedCategories] = useState(['all']); // Change from single to array
@@ -1821,10 +1821,188 @@ const stopRecording = () => {
     setShowMultiSelect(false); // ADD THIS
     setSelectedCategories(['all']); // ADD THIS
     setReviewMode(null); //
+    setShowAdaptiveStats(false);
     stopConversation();
 
   };
 
+
+  // ADD THESE FUNCTIONS AFTER YOUR EXISTING HELPER FUNCTIONS (around line 800)
+
+// Get user's weakest words based on all history
+const getWeakestWords = () => {
+  if (!user || attemptHistory.length === 0) return [];
+  
+  // Track all wrong answers across all attempts
+  const wordFailures = new Map();
+  const wordAttempts = new Map();
+  
+  attemptHistory.forEach(attempt => {
+    if (attempt.wrongAnswers) {
+      attempt.wrongAnswers.forEach(wrong => {
+        const key = `${wrong.dutch}_${wrong.english}`;
+        wordFailures.set(key, (wordFailures.get(key) || 0) + 1);
+        wordAttempts.set(key, (wordAttempts.get(key) || 0) + 1);
+      });
+    }
+    
+    // Also count correct answers
+    const correctCount = attempt.score;
+    // This is approximate - we don't have exact correct words, but we can estimate
+  });
+  
+  // Convert to array with failure rate
+  const weakWords = Array.from(wordFailures.entries()).map(([key, failures]) => {
+    const [dutch, english] = key.split('_');
+    const attempts = wordAttempts.get(key) || failures;
+    const failureRate = (failures / attempts) * 100;
+    
+    return {
+      dutch,
+      english,
+      failures,
+      attempts,
+      failureRate
+    };
+  });
+  
+  // Sort by failure rate, then by total failures
+  return weakWords.sort((a, b) => {
+    if (b.failureRate === a.failureRate) {
+      return b.failures - a.failures;
+    }
+    return b.failureRate - a.failureRate;
+  });
+};
+
+// Get words that need more practice based on SRS and history
+const getWordsThatNeedPractice = () => {
+  const allWords = getAllWords();
+  const weakestWords = getWeakestWords();
+  const weakWordKeys = new Set(weakestWords.map(w => `${w.dutch}_${w.english}`));
+  
+  // Combine weak words with SRS due words
+  const prioritized = getSRSPrioritizedWords(allWords);
+  
+  // Score each word based on multiple factors
+  const scoredWords = allWords.map(word => {
+    const wordKey = `${word.dutch}_${word.english}`;
+    const srsInfo = srsData[wordKey];
+    const weakWord = weakestWords.find(w => `${w.dutch}_${w.english}` === wordKey);
+    
+    let score = 0;
+    
+    // Factor 1: Historical failures (highest priority)
+    if (weakWord) {
+      score += weakWord.failureRate * 2; // 0-200 points
+      score += weakWord.failures * 10; // 10 points per failure
+    }
+    
+    // Factor 2: SRS level (lower = needs more practice)
+    if (srsInfo) {
+      score += (5 - srsInfo.level) * 15; // 0-75 points
+      
+      // Factor 3: Recent performance
+      const accuracy = srsInfo.totalAttempts > 0 
+        ? (srsInfo.correctAttempts / srsInfo.totalAttempts) * 100 
+        : 0;
+      score += (100 - accuracy) * 0.5; // 0-50 points for poor accuracy
+    } else {
+      // Never practiced = high priority
+      score += 50;
+    }
+    
+    return {
+      ...word,
+      practiceScore: score,
+      srsInfo,
+      weakWordInfo: weakWord
+    };
+  });
+  
+  // Sort by practice score (highest = needs most practice)
+  return scoredWords.sort((a, b) => b.practiceScore - a.practiceScore);
+};
+
+// Get adaptive learning stats for display
+const getAdaptiveLearningStats = () => {
+  if (!user) return null;
+  
+  const weakestWords = getWeakestWords();
+  const top5Weakest = weakestWords.slice(0, 5);
+  
+  const totalWordsAttempted = new Set(
+    attemptHistory.flatMap(a => 
+      (a.wrongAnswers || []).map(w => `${w.dutch}_${w.english}`)
+    )
+  ).size;
+  
+  const wordsThatNeedWork = getWordsThatNeedPractice()
+    .filter(w => w.practiceScore > 30)
+    .length;
+  
+  const dueForReview = getSRSPrioritizedWords(getAllWords())
+    .filter(w => w.isDue)
+    .length;
+  
+  return {
+    top5Weakest,
+    totalWordsAttempted,
+    wordsThatNeedWork,
+    dueForReview,
+    totalAttempts: attemptHistory.length,
+    avgScore: attemptHistory.length > 0
+      ? Math.round(attemptHistory.reduce((sum, a) => sum + a.percentage, 0) / attemptHistory.length)
+      : 0
+  };
+};
+
+// Start adaptive practice mode
+const startAdaptivePractice = (mode = 'spelling', numQuestions = 20) => {
+  const wordsToPractice = getWordsThatNeedPractice();
+  
+  if (wordsToPractice.length === 0) {
+    alert('🎉 Amazing! You have no weak words to practice!\n\nKeep up the great work!');
+    return;
+  }
+  
+  // Take top N words that need practice
+  const practiceWords = wordsToPractice.slice(0, Math.min(numQuestions, wordsToPractice.length));
+  
+  if (practiceWords.length < 5) {
+    alert(`Only ${practiceWords.length} words need practice. Let's focus on those!`);
+  }
+  
+  // Set up the game
+  setWordBank(practiceWords);
+  setUsedWords([]);
+  setGameMode(mode);
+  setCurrentGameMode(mode);
+  setGameStartCategory('adaptive_practice');
+  setScore(0);
+  setStreak(0);
+  setQuestionsAnswered(0);
+  setFeedback(null);
+  setWrongAnswers([]);
+  setSpellingAnswer('');
+  setFillBlankAnswer('');
+  setNumQuestions(practiceWords.length);
+  setShowQuestionSelector(false);
+  setTranscript('');
+  setIsRecording(false);
+  setReviewMode('adaptive');
+  
+  // Generate first question
+  if (mode === 'spelling') {
+    generateSpellingQuestion(practiceWords, []);
+  } else if (mode === 'fillblank') {
+    generateFillBlankQuestion(practiceWords, []);
+  } else if (mode === 'speaking') {
+    generateSpeakingQuestion(practiceWords, []);
+  } else {
+    generateQuestion(practiceWords, []);
+  }
+};
 // Replace your handleSearch function with this fixed version:
 
 
@@ -3593,6 +3771,229 @@ if (showFillBlankStories && selectedStoryKey) {
   );
 }
 
+// ADD THIS COMPONENT BEFORE YOUR MENU SCREEN (around line 2500)
+
+// ADAPTIVE LEARNING STATS SCREEN
+if (showAdaptiveStats) {
+  const stats = getAdaptiveLearningStats();
+  
+  if (!stats) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full text-center">
+          <p className="text-gray-600 text-lg">No learning data available yet.</p>
+          <p className="text-gray-500 text-sm mt-2">Complete some quizzes to see your adaptive learning insights!</p>
+          <button
+            onClick={() => setShowAdaptiveStats(false)}
+            className="mt-6 w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all"
+          >
+            Back to Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-4xl w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-purple-700">🧠 Adaptive Learning</h2>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+
+        {/* Overall Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white text-center">
+            <div className="text-3xl font-bold">{stats.totalAttempts}</div>
+            <div className="text-xs opacity-90">Total Quizzes</div>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl text-white text-center">
+            <div className="text-3xl font-bold">{stats.avgScore}%</div>
+            <div className="text-xs opacity-90">Avg Score</div>
+          </div>
+          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 p-4 rounded-xl text-white text-center">
+            <div className="text-3xl font-bold">{stats.wordsThatNeedWork}</div>
+            <div className="text-xs opacity-90">Need Practice</div>
+          </div>
+          <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-xl text-white text-center">
+            <div className="text-3xl font-bold">{stats.dueForReview}</div>
+            <div className="text-xs opacity-90">Due Today</div>
+          </div>
+        </div>
+
+        {/* Top 5 Weakest Words */}
+        {stats.top5Weakest.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <span>📉</span>
+              Your Most Challenging Words
+            </h3>
+            <div className="space-y-3">
+              {stats.top5Weakest.map((word, idx) => (
+                <div key={idx} className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-2xl font-bold text-red-600">#{idx + 1}</span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl font-bold text-gray-800">{word.dutch}</span>
+                            <button
+                              onClick={() => speakDutch(word.dutch)}
+                              className="bg-red-100 hover:bg-red-200 active:bg-red-200 p-1 rounded-full transition-all"
+                            >
+                              <Volume2 className="w-4 h-4 text-red-600" />
+                            </button>
+                          </div>
+                          <p className="text-gray-700 font-semibold">{word.english}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                          ❌ {word.failures} {word.failures === 1 ? 'mistake' : 'mistakes'}
+                        </span>
+                        <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">
+                          📊 {Math.round(word.failureRate)}% error rate
+                        </span>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                          🎯 {word.attempts} {word.attempts === 1 ? 'attempt' : 'attempts'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Practice Buttons */}
+        <div className="space-y-3 mb-6">
+          <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+            <h3 className="text-lg font-bold text-purple-700 mb-2 flex items-center gap-2">
+              <span>🎯</span>
+              Smart Practice
+            </h3>
+            <p className="text-gray-600 text-sm mb-4">
+              AI-powered quiz focusing on your weakest words and those due for review
+            </p>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  setShowAdaptiveStats(false);
+                  startAdaptivePractice('play', 20);
+                }}
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                <GraduationCap className="w-5 h-5" />
+                Multiple Choice
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowAdaptiveStats(false);
+                  startAdaptivePractice('spelling', 20);
+                }}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                ✏️ Spelling Mode
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowAdaptiveStats(false);
+                  startAdaptivePractice('speaking', 15);
+                }}
+                className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                🎤 Speaking Test
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowAdaptiveStats(false);
+                  startAdaptivePractice('fillblank', 15);
+                }}
+                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                📝 Fill Blanks
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Practice Top 5 */}
+          {stats.top5Weakest.length > 0 && (
+            <div className="bg-red-50 rounded-xl p-4 border-2 border-red-200">
+              <h3 className="text-lg font-bold text-red-700 mb-2">⚡ Quick Practice Top 5</h3>
+              <p className="text-gray-600 text-sm mb-3">
+                Focus on your 5 most challenging words
+              </p>
+              <button
+                onClick={() => {
+                  const top5Words = getWordsThatNeedPractice().slice(0, 5);
+                  setShowAdaptiveStats(false);
+                  
+                  // Start spelling mode with top 5
+                  setWordBank(top5Words);
+                  setUsedWords([]);
+                  setGameMode('spelling');
+                  setCurrentGameMode('spelling');
+                  setGameStartCategory('adaptive_top5');
+                  setScore(0);
+                  setStreak(0);
+                  setQuestionsAnswered(0);
+                  setFeedback(null);
+                  setWrongAnswers([]);
+                  setSpellingAnswer('');
+                  setNumQuestions(5);
+                  setReviewMode('adaptive_top5');
+                  
+                  generateSpellingQuestion(top5Words, []);
+                }}
+                className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+              >
+                🔥 Practice Top 5 Now
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Info Box */}
+        <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200 mb-4">
+          <h3 className="text-sm font-bold text-blue-700 mb-2 flex items-center gap-2">
+            <span>💡</span>
+            How It Works
+          </h3>
+          <ul className="text-xs text-gray-700 space-y-1">
+            <li>• Our AI analyzes your mistake patterns</li>
+            <li>• Words are prioritized by error rate and frequency</li>
+            <li>• SRS (Spaced Repetition) ensures optimal review timing</li>
+            <li>• Practice builds on your actual weak points</li>
+          </ul>
+        </div>
+
+        {/* Back Button */}
+        <button
+          onClick={() => setShowAdaptiveStats(false)}
+          className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          Back to Menu
+        </button>
+      </div>
+    </div>
+  );
+}
+
   // MENU SCREEN - MOBILE OPTIMIZED
   if (gameMode === 'menu') {
     return (
@@ -4229,6 +4630,21 @@ if (showFillBlankStories && selectedStoryKey) {
                     </button>
                   </div>
                 )}
+                {/* ADD THIS BUTTON IN THE MENU SCREEN - after SRS Review button */}
+                <button
+                  onClick={() => {
+                    const stats = getAdaptiveLearningStats();
+                    if (!stats || stats.totalAttempts === 0) {
+                      alert('📚 Take some quizzes first!\n\nComplete a few quizzes so we can analyze your learning patterns and suggest personalized practice.');
+                      return;
+                    }
+                    setShowAdaptiveStats(true);
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">🧠 Smart Practice (AI)</span>
+                </button>
+                
                 <button
                   onClick={() => setShowHistory(true)}
                   className="w-full bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
@@ -4901,6 +5317,21 @@ if (gameMode === 'results') {
               </p>
             </div>
           )}
+          {/* ADD THIS in results screen after reviewMode check */}
+            {(reviewMode === 'adaptive' || reviewMode === 'adaptive_top5') && (
+              <div className="mb-4 p-3 sm:p-4 bg-purple-50 border-2 border-purple-200 rounded-xl">
+                <p className="text-purple-700 font-bold text-sm sm:text-base text-center">
+                  {reviewMode === 'adaptive_top5' 
+                    ? '🔥 Top 5 Weakest Words Practice'
+                    : '🧠 Adaptive Learning Mode - Focused on your weak areas!'}
+                </p>
+                {percentage >= 80 && (
+                  <p className="text-green-600 font-semibold text-xs sm:text-sm text-center mt-2">
+                    🎉 Great improvement! Keep practicing to master these words!
+                  </p>
+                )}
+              </div>
+            )}
         {/* Wrong Answers Review Section */}
         {wrongAnswers.length > 0 && (
           <div className="mb-6 max-h-96 overflow-y-auto">
