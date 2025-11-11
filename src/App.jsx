@@ -189,6 +189,9 @@ useEffect(() => {
         
         // Update the login timestamp to extend the session
         localStorage.setItem('dutch_app_login_time', Date.now().toString());
+        
+        // ✅ UPDATE: Track user login in Firebase whenever app opens
+        trackUserLogin(parsedUser);
       } else {
         // Session expired - clear everything
         localStorage.removeItem('dutch_app_user');

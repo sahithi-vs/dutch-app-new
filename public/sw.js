@@ -1,10 +1,10 @@
 // IMPORTANT: Update this VERSION each time you deploy
-const VERSION = '1.0.10'; // Change this on every deployment!
+const VERSION = '1.0.11'; // Change this on every deployment!
 const CACHE_NAME = `dutch-learning-${VERSION}`;
 
 // Assets to cache immediately on install
 const CRITICAL_ASSETS = [
-  '/',
+  '/',  
   '/index.html'
 ];
 
