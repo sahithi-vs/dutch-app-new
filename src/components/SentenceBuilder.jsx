@@ -303,8 +303,23 @@ const SentenceBuilder = ({
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mt-4 mb-3">
               Build this sentence in Dutch:
             </h2>
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
-              <p className="text-lg sm:text-xl font-bold text-blue-700">{currentEnglishTranslation}</p>
+            <div className="mb-4">
+              <button
+                onClick={() => {
+                  const hintBox = document.getElementById('english-hint-box');
+                  if (hintBox) {
+                    hintBox.classList.toggle('hidden');
+                  }
+                }}
+                className="w-full bg-blue-100 hover:bg-blue-200 active:bg-blue-200 px-4 py-2 rounded-lg transition-all inline-flex items-center justify-center gap-2 text-sm sm:text-base mb-2"
+              >
+                <span className="text-2xl">💡</span>
+                <span className="text-blue-600 font-semibold">Show/Hide English Translation</span>
+              </button>
+              
+              <div id="english-hint-box" className="hidden bg-blue-50 border-2 border-blue-200 rounded-xl p-4 animate-fadeIn">
+                <p className="text-lg sm:text-xl font-bold text-blue-700">{currentEnglishTranslation}</p>
+              </div>
             </div>
             <button
               onClick={() => speakDutch(currentDutchSentence)}

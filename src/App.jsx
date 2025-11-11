@@ -1239,13 +1239,14 @@ const getAllFailedWordsFromHistory = (categories, mode = 'spelling') => {
   };
 
 const startGameWithQuestions = () => {
-    if (reviewFailedWords) {
+  if (reviewFailedWords) {
     // For failed words review, use the failed words count
-      const failedWords = getFailedWords(selectedCategory, pendingGameMode);
-      if (failedWords.length > 0) {
-        setNumQuestions(failedWords.length);
-      }
+    const failedWords = getFailedWords(selectedCategory, pendingGameMode);
+    if (failedWords.length > 0) {
+      setNumQuestions(failedWords.length);
     }
+  }
+  
   const availableWords = selectedCategory === 'all' 
     ? getTotalWordCount() 
     : (dutchWordBank[selectedCategory]?.length || 0);
@@ -1267,8 +1268,14 @@ const startGameWithQuestions = () => {
     alert(`Please select between 10 and ${maxQuestions} questions.`);
     return;
   }
+  
   if (pendingGameMode === 'learn') {
     startLearnMode();
+  } else if (pendingGameMode === 'sentencebuilder') {
+    // Handle Sentence Builder
+    setSentenceBuilderCategories(selectedCategories);
+    setShowSentenceBuilder(true);
+    setShowQuestionSelector(false);
   } else {
     startGame(pendingGameMode);
   }
@@ -5024,6 +5031,18 @@ if (showAdaptiveStats) {
                 >
                   <span className="text-sm sm:text-xl">🧠 Smart Practice (AI)</span>
                 </button>
+                 <button
+                  onClick={() => setShowGrammarLessons(true)}
+                  className="w-full bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">📚 Grammar Lessons</span>
+                </button>
+                <button
+                  onClick={() => openQuestionSelector('sentencebuilder')}
+                  className="w-full bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">🧩 Sentence Builder</span>
+                </button>
                 <button
                   onClick={() => openQuestionSelector('speaking')}
                   className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
@@ -5108,18 +5127,7 @@ if (showAdaptiveStats) {
                 >
                   <span className="text-sm sm:text-xl">🏆 Achievements & Points</span>
                 </button>
-                <button
-                  onClick={() => setShowGrammarLessons(true)}
-                  className="w-full bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📚 Grammar Lessons</span>
-                </button>
-                <button
-                onClick={() => setShowSentenceBuilder(true)}
-                className="w-full bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-              >
-                <span className="text-sm sm:text-xl">🧩 Sentence Builder</span>
-              </button>
+
                 <button
                   onClick={() => {
                     const allWords = getAllWords();
@@ -5224,7 +5232,9 @@ if (showAdaptiveStats) {
                   {pendingGameMode === 'play' ? '🎯 Multiple Choice' : 
                   pendingGameMode === 'spelling' ? '✏️ Spelling' : 
                  pendingGameMode === 'speaking' ? '🎤 Speaking Test' :
-                  '📚 Learn Mode'}
+                 pendingGameMode === 'sentencebuilder' ? '🧩 Sentence Builder' :
+                   '📚 Learn Mode'}
+
                 </h2>
                 <p className="text-gray-600 text-sm sm:text-lg">How many words?</p>
               </div>
@@ -5342,7 +5352,9 @@ if (showAdaptiveStats) {
                   onClick={startGameWithQuestions}
                   className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
-                  {pendingGameMode === 'learn' ? 'Start Learning' : 'Start Quiz'} ({numQuestions})
+                  {pendingGameMode === 'learn' ? 'Start Learning' : 
+                  pendingGameMode === 'sentencebuilder' ? 'Start Building' : 
+                  'Start Quiz'} ({numQuestions})
                   <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
                 
