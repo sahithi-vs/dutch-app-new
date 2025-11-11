@@ -17,20 +17,33 @@ const SentenceBuilder = ({
   const [showResults, setShowResults] = useState(false);
   const [wrongAnswers, setWrongAnswers] = useState([]);
   const [correctOrder, setCorrectOrder] = useState([]);
+  const [isQuestionSetup, setIsQuestionSetup] = useState(false);
+  const [currentDutchSentence, setCurrentDutchSentence] = useState('');
+  const [currentEnglishTranslation, setCurrentEnglishTranslation] = useState('');
 
   useEffect(() => {
-    if (currentIndex < sentences.length && currentIndex < numQuestions) {
+    if (sentences && sentences.length > 0 && currentIndex < sentences.length && currentIndex < numQuestions) {
       setupQuestion();
-    } else {
+    } else if (currentIndex >= numQuestions || (sentences && currentIndex >= sentences.length)) {
       setShowResults(true);
     }
-  }, [currentIndex]);
+  }, [currentIndex, sentences, numQuestions]);
 
   const setupQuestion = () => {
+    if (!sentences || !sentences[currentIndex]) return;
+    
+    // Only setup if we haven't set up this question yet
+    if (isQuestionSetup) return;
+    
     const sentence = sentences[currentIndex];
-    // Remove parenthetical translations
-    const cleanSentence = sentence.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
-    const words = cleanSentence.split(/\s+/);
+    // Extract the Dutch sentence from example (before the parentheses)
+    const dutchSentence = sentence.example.split('(')[0].trim();
+    const englishTranslation = sentence.example.match(/\(([^)]+)\)/)?.[1] || sentence.english;
+    const words = dutchSentence.split(/\s+/);
+    
+    // Store the current sentence and translation in state
+    setCurrentDutchSentence(dutchSentence);
+    setCurrentEnglishTranslation(englishTranslation);
     
     // Store correct order for checking
     setCorrectOrder(words);
@@ -41,6 +54,7 @@ const SentenceBuilder = ({
     setAvailableWords(shuffled.map((word, idx) => ({ id: `word-${idx}`, text: word, originalIndex: words.indexOf(word) })));
     setUserSentence([]);
     setFeedback(null);
+    setIsQuestionSetup(true);
   };
 
   const handleDragStart = (e, word, fromUser = false) => {
@@ -155,25 +169,22 @@ const SentenceBuilder = ({
       setScore(score + 1);
       setFeedback({ correct: true, message: 'Perfect! Goed gedaan!' });
     } else {
-      const sentence = sentences[currentIndex];
-      const correctSentence = correctOrder.join(' ');
-      
       setFeedback({ 
         correct: false, 
-        message: 'Not quite! Check the correct order below.',
-        correctSentence: correctSentence
+        message: 'Not quite! Check the correct answer below.'
       });
       
       setWrongAnswers([...wrongAnswers, {
-        dutch: sentence.dutch,
-        english: sentence.english,
-        correctSentence: correctSentence,
-        userSentence: userWords.join(' ')
+        dutch: currentDutchSentence,
+        english: currentEnglishTranslation,
+        userSentence: userWords.join(' '),
+        correctSentence: currentDutchSentence
       }]);
     }
   };
 
   const handleNext = () => {
+    setIsQuestionSetup(false);
     setCurrentIndex(currentIndex + 1);
   };
 
@@ -219,6 +230,7 @@ const SentenceBuilder = ({
                 setScore(0);
                 setWrongAnswers([]);
                 setShowResults(false);
+                setIsQuestionSetup(false);
               }}
               className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
             >
@@ -245,7 +257,11 @@ const SentenceBuilder = ({
   }
 
   const currentSentence = sentences[currentIndex];
-  const correctSentence = correctOrder.join(' ');
+  
+  // Safety check - if no current sentence, don't render
+  if (!currentSentence) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-600 p-3 sm:p-4 pb-24">
@@ -288,14 +304,10 @@ const SentenceBuilder = ({
               Build this sentence in Dutch:
             </h2>
             <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 mb-4">
-              <p className="text-lg sm:text-xl font-bold text-blue-700">{currentSentence.english}</p>
-                          <div className="mb-4 bg-yellow-50 border-2 border-yellow-200 rounded-xl p-3">
-                <p className="text-xs text-yellow-800 text-center">
-                 <strong></strong> "{currentSentence.dutch}"
-                </p></div>
+              <p className="text-lg sm:text-xl font-bold text-blue-700">{currentEnglishTranslation}</p>
             </div>
             <button
-              onClick={() => speakDutch(correctSentence)}
+              onClick={() => speakDutch(currentDutchSentence)}
               className="bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 px-4 py-2 rounded-lg transition-all inline-flex items-center gap-2"
             >
               <Volume2 className="w-4 h-4 text-indigo-600" />
@@ -418,10 +430,16 @@ const SentenceBuilder = ({
                   </p>
                   {!feedback.correct && (
                     <div className="bg-white rounded-lg p-3 mt-2">
-                      <p className="text-sm text-gray-600 mb-1">Correct order:</p>
-                      <p className="text-green-600 font-bold text-lg mb-2">{feedback.correctSentence}</p>
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-1">English:</p>
+                        <p className="text-gray-800 font-semibold text-base mb-2">{currentEnglishTranslation}</p>
+                      </div>
+                      <div className="mb-3">
+                        <p className="text-sm text-gray-600 mb-1">Correct Dutch sentence:</p>
+                        <p className="text-green-600 font-bold text-lg mb-2">{currentDutchSentence}</p>
+                      </div>
                       <button
-                        onClick={() => speakDutch(feedback.correctSentence)}
+                        onClick={() => speakDutch(currentDutchSentence)}
                         className="bg-green-100 hover:bg-green-200 px-3 py-1 rounded-lg text-sm flex items-center gap-2"
                       >
                         <Volume2 className="w-4 h-4 text-green-600" />
