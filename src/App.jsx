@@ -82,6 +82,8 @@ export default function DutchLearningGame() {
   const [difficulty, setDifficulty] = useState('normal'); // 'normal' or 'spelling'
   const [hasCompletedLearn, setHasCompletedLearn] = useState(false);
   const [conjugationLearnVerbs, setConjugationLearnVerbs] = useState([]);
+  const [practiceInput, setPracticeInput] = useState('');
+  const [showPracticeBox, setShowPracticeBox] = useState(false);
   const [conjugationLearnIndex, setConjugationLearnIndex] = useState(0);
   const [hasCompletedConjugationLearn, setHasCompletedConjugationLearn] = useState(false);
   const [showConjugationOptions, setShowConjugationOptions] = useState(false);
@@ -5031,7 +5033,7 @@ if (showAdaptiveStats) {
                 >
                   <span className="text-sm sm:text-xl">🧠 Smart Practice (AI)</span>
                 </button>
-                 <button
+                                <button
                   onClick={() => setShowGrammarLessons(true)}
                   className="w-full bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
@@ -5373,9 +5375,10 @@ if (showAdaptiveStats) {
     );
   }
 
-  // LEARN MODE - MOBILE OPTIMIZED
+// LEARN MODE - MOBILE OPTIMIZED
   if (gameMode === 'learn') {
     const currentLearnWord = learnWords[learnIndex];
+
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 p-3 sm:p-4">
@@ -5424,7 +5427,6 @@ if (showAdaptiveStats) {
                       >
                         <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
                       </button>
-
                     </div>
                   </div>
                   
@@ -5434,7 +5436,6 @@ if (showAdaptiveStats) {
                   
                   <div className="text-sm sm:text-lg text-gray-500 mt-4">
                     <div className="flex flex-col items-center mb-3">
-                    {/* <span className="font-semibold">Example:</span> */}
                       <button
                         onClick={() => {
                           const dutchSentence = currentLearnWord.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
@@ -5445,79 +5446,142 @@ if (showAdaptiveStats) {
                         <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                         <span className="text-xs sm:text-sm font-semibold text-blue-600">Example</span>
                       </button>
-                    <p className="mt-2">{currentLearnWord.example}</p>
-                  </div>
+                      <p className="mt-2">{currentLearnWord.example}</p>
+                    </div>
                   </div>
                 </div>
 
+                {/* PRACTICE TYPING BOX - OPTIONAL */}
+                <div className="mb-6">
+                  <button
+                    onClick={() => {
+                      setShowPracticeBox(!showPracticeBox);
+                      setPracticeInput('');
+                    }}
+                    className="bg-purple-100 hover:bg-purple-200 active:bg-purple-200 px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all inline-flex items-center gap-2 text-sm sm:text-base font-semibold text-purple-700"
+                  >
+                    ✍️ {showPracticeBox ? 'Hide' : 'Practice Typing'}
+                  </button>
+                  
+                  {showPracticeBox && (
+                    <div className="mt-4 p-4 sm:p-6 bg-purple-50 rounded-xl border-2 border-purple-200 animate-fadeIn">
+                      <p className="text-gray-600 mb-3 text-sm sm:text-base">
+                        💡 Practice spelling: <span className="font-bold text-purple-700">{currentLearnWord.english}</span>
+                      </p>
+                      <input
+                        type="text"
+                        value={practiceInput}
+                        onChange={(e) => setPracticeInput(e.target.value)}
+                        placeholder="Type the Dutch word here..."
+                        className="w-full p-3 sm:p-4 text-lg sm:text-xl text-center font-semibold border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                      />
+                      
+                      {practiceInput.trim() && (
+                        <div className="mt-3">
+                          {practiceInput.toLowerCase().trim() === currentLearnWord.dutch.toLowerCase() ? (
+                            <div className="bg-green-100 p-3 rounded-lg">
+                              <p className="text-green-700 font-bold flex items-center justify-center gap-2">
+                                <Check className="w-5 h-5" />
+                                Perfect! You got it right!
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="bg-yellow-50 p-3 rounded-lg">
+                              <p className="text-gray-600 text-sm mb-1">Keep practicing!</p>
+                              <p className="text-xs text-gray-500">
+                                {practiceInput.length > 0 && 
+                                  `You wrote: ${practiceInput.length} letter${practiceInput.length > 1 ? 's' : ''} • 
+                                  Correct: ${currentLearnWord.dutch.length} letter${currentLearnWord.dutch.length > 1 ? 's' : ''}`
+                                }
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <p className="text-xs text-gray-500 mt-3 text-center italic">
+                        ℹ️ This is just for practice - no scoring, take your time!
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-3 sm:gap-4 justify-center mt-8">
-  <button
-    onClick={() => setLearnIndex(Math.max(0, learnIndex - 1))}
-    disabled={learnIndex === 0}
-    className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
-    style={{
-      WebkitTapHighlightColor: 'transparent',
-      touchAction: 'manipulation'
-    }}
-  >
-    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-    Prev
-  </button>
-  
-  {learnIndex < learnWords.length - 1 ? (
-    <button
-      onClick={() => setLearnIndex(learnIndex + 1)}
-      className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
-      style={{
-        WebkitTapHighlightColor: 'transparent',
-        touchAction: 'manipulation',
-        backgroundColor: '#6366f1'
-      }}
-    >
-      Next
-      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-    </button>
-  ) : (
-    <button
-      onClick={() => {
-        if (confirm('Ready to test yourself?')) {
-          setHasCompletedLearn(true);
-          startGame();
-        }
-      }}
-      className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
-      style={{
-        WebkitTapHighlightColor: 'transparent',
-        touchAction: 'manipulation',
-        backgroundColor: '#22c55e'
-      }}
-    >
-      Start Test
-      <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
-    </button>
-  )}
-</div>
+                  <button
+                    onClick={() => {
+                      setLearnIndex(Math.max(0, learnIndex - 1));
+                      setPracticeInput('');
+                      setShowPracticeBox(false);
+                    }}
+                    disabled={learnIndex === 0}
+                    className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                    style={{
+                      WebkitTapHighlightColor: 'transparent',
+                      touchAction: 'manipulation'
+                    }}
+                  >
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                    Prev
+                  </button>
+                  
+                  {learnIndex < learnWords.length - 1 ? (
+                    <button
+                      onClick={() => {
+                        setLearnIndex(learnIndex + 1);
+                        setPracticeInput('');
+                        setShowPracticeBox(false);
+                      }}
+                      className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+                      style={{
+                        WebkitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        backgroundColor: '#6366f1'
+                      }}
+                    >
+                      Next
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        if (confirm('Ready to test yourself?')) {
+                          setHasCompletedLearn(true);
+                          startGame();
+                        }
+                      }}
+                      className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+                      style={{
+                        WebkitTapHighlightColor: 'transparent',
+                        touchAction: 'manipulation',
+                        backgroundColor: '#22c55e'
+                      }}
+                    >
+                      Start Test
+                      <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  )}
+                </div>
               </div>
             )}
-            
           </div>
         </div>
-          {/* ADD THIS BOTTOM BAR - BEFORE THE CLOSING </div> OF min-h-screen */}
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-3 shadow-lg z-50">
-      <div className="max-w-2xl mx-auto">
-        <button
-          onClick={() => {
-            if (confirm('Return to menu? Progress will be lost.')) {
-              goToMenu();
-            }
-          }}
-          className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 px-4 py-3 rounded-xl transition-all"
-        >
-          <Home className="w-5 h-5 text-gray-700" />
-          <span className="font-semibold">Back to Menu</span>
-        </button>
-      </div>
-    </div>
+        
+        {/* Bottom bar */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-3 shadow-lg z-50">
+          <div className="max-w-2xl mx-auto">
+            <button
+              onClick={() => {
+                if (confirm('Return to menu? Progress will be lost.')) {
+                  goToMenu();
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 px-4 py-3 rounded-xl transition-all"
+            >
+              <Home className="w-5 h-5 text-gray-700" />
+              <span className="font-semibold">Back to Menu</span>
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
