@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import { conversations } from './data/conversations';
 import { dutchWordBank } from './data/dutchWordBank';
 import { stories } from './data/stories';
-import { verbConjugations } from './data/verbConjugations';
+// import { verbConjugations } from './data/verbConjugations';
 import { achievements as achievementsData } from './data/achievements';
 // import { ref, set, get, child, onValue } from 'firebase/database';
 import { database } from './firebase'; 
@@ -14,6 +14,7 @@ import { dutchStories } from './data/dutchStories';
 import DutchFillBlanks from './components/DutchFillBlanks';
 import { grammarLessons } from './data/grammarLessons';
 import SentenceBuilder from './components/SentenceBuilder';
+import { verbConjugations, getVerbsByCategory, getAllVerbCategories } from './data/verbConjugations';
 
 const getAllWords = () => {
   const allWords = [];
@@ -37,6 +38,8 @@ export default function DutchLearningGame() {
   'naveennimmala50@gmail.com' 
 ];
 
+  const [selectedVerbCategory, setSelectedVerbCategory] = useState('all');
+  const [showVerbCategorySelector, setShowVerbCategorySelector] = useState(false);
   const [showSentenceBuilder, setShowSentenceBuilder] = useState(false);
   const [sentenceBuilderCategories, setSentenceBuilderCategories] = useState(['all']);
   const [showAdaptiveStats, setShowAdaptiveStats] = useState(false);
@@ -713,8 +716,18 @@ const calculateNextReview = (currentLevel, isCorrect) => {
 
 // Generate conjugation question
 const generateConjugationQuestion = () => {
-  const verbs = Object.keys(verbConjugations);
-  const randomVerb = verbs[Math.floor(Math.random() * verbs.length)];
+  // Get verbs from selected category if available
+  let availableVerbs = Object.keys(verbConjugations);
+  
+  if (selectedVerbCategory && selectedVerbCategory !== 'all') {
+    availableVerbs = getVerbsByCategory(selectedVerbCategory);
+  }
+  
+  if (availableVerbs.length === 0) {
+    availableVerbs = Object.keys(verbConjugations);
+  }
+  
+  const randomVerb = availableVerbs[Math.floor(Math.random() * availableVerbs.length)];
   const tenses = ['present', 'past'];
   const randomTense = tenses[Math.floor(Math.random() * tenses.length)];
   const pronouns = Object.keys(verbConjugations[randomVerb][randomTense]);
@@ -729,7 +742,6 @@ const generateConjugationQuestion = () => {
   setConjugationAnswer('');
   setFeedback(null);
 };
-
 // Handle conjugation submit
 const handleConjugationSubmit = (e) => {
   if (e) e.preventDefault();
@@ -1287,16 +1299,19 @@ const startGameWithQuestions = () => {
 };
 
 const startConjugationLearn = () => {
-  const verbs = Object.keys(verbConjugations);
+  const verbs = getVerbsByCategory(selectedVerbCategory);
   if (verbs.length === 0) {
-    alert('No verb conjugations available.');
+    alert('No verb conjugations available in this category.');
     return;
   }
   const count = Math.min(numQuestions || 10, verbs.length);
-  setConjugationLearnVerbs(verbs.slice(0, count));
+  // Shuffle verbs and then take the specified count
+  const shuffledVerbs = verbs.sort(() => Math.random() - 0.5);
+  setConjugationLearnVerbs(shuffledVerbs.slice(0, count));
   setConjugationLearnIndex(0);
   setGameMode('conjugation_learn');
   setShowQuestionSelector(false);
+  setShowVerbCategorySelector(false);
 };
 
 const generateQuestion = (words = wordBank, used = usedWords) => {
@@ -4458,7 +4473,139 @@ if (showAdaptiveStats) {
 }
 
   // MENU SCREEN - MOBILE OPTIMIZED
-  if (gameMode === 'menu') {
+// MENU SCREEN - MOBILE OPTIMIZED
+if (gameMode === 'menu') {
+  // VERB CATEGORY SELECTOR
+// VERB CATEGORY SELECTOR
+if (showVerbCategorySelector) {
+  const categories = getAllVerbCategories();
+  const isTestMode = pendingGameMode === 'conjugation_test';
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 flex items-center justify-center p-3 sm:p-4">
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-4xl w-full">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+          <h2 className="text-2xl sm:text-3xl font-bold text-cyan-700">
+            {isTestMode ? '🧪 Select Category for Test' : '🔄 Select Category to Learn'}
+          </h2>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+
+        <div className="mb-6">
+          <label className="block text-gray-700 font-semibold mb-3 text-center text-sm sm:text-base">
+            Choose verb category to {isTestMode ? 'test' : 'practice'}:
+          </label>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
+            {categories.map(cat => {
+              const verbCount = cat === 'all' 
+                ? Object.keys(verbConjugations).length 
+                : getVerbsByCategory(cat).length;
+              const isSelected = selectedVerbCategory === cat;
+              
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedVerbCategory(cat)}
+                  className={`p-4 rounded-xl font-semibold transition-all text-left ${
+                    isSelected
+                      ? 'bg-cyan-500 text-white shadow-lg scale-105'
+                      : 'bg-white text-gray-700 hover:bg-cyan-50 border border-gray-200'
+                  }`}
+                >
+                  <div className="font-bold text-base mb-1">
+                    {cat === 'all' ? '🌐 All Verbs' : cat}
+                  </div>
+                  <div className="text-sm opacity-90">
+                    {verbCount} verb{verbCount !== 1 ? 's' : ''}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Number of Questions Selector */}
+        <div className="mb-6 bg-gray-50 p-4 sm:p-6 rounded-xl">
+          <label className="block text-gray-700 font-semibold mb-3 text-center text-sm sm:text-base">
+            Number of {isTestMode ? 'Questions' : 'Verbs to Learn'}
+          </label>
+          <input
+            type="range"
+            min={5}
+            max={Math.min(50, getVerbsByCategory(selectedVerbCategory).length)}
+            value={numQuestions}
+            onChange={(e) => setNumQuestions(parseInt(e.target.value))}
+            className="w-full h-3 bg-cyan-200 rounded-lg appearance-none cursor-pointer"
+          />
+          <div className="text-center mt-4">
+            <span className="text-3xl sm:text-5xl font-bold text-cyan-600">{numQuestions}</span>
+            <span className="text-xl sm:text-3xl text-gray-600 ml-2">{isTestMode ? 'Questions' : 'Verbs'}</span>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <button
+            onClick={() => {
+              if (isTestMode) {
+                // Start conjugation test
+                const verbs = getVerbsByCategory(selectedVerbCategory);
+                if (verbs.length === 0) {
+                  alert('No verbs available in this category.');
+                  return;
+                }
+                setGameMode('conjugation');
+                setScore(0);
+                setStreak(0);
+                setQuestionsAnswered(0);
+                setWrongAnswers([]);
+                setCurrentGameMode('conjugation');
+                setGameStartCategory(`verbs_${selectedVerbCategory}`);
+                setShowVerbCategorySelector(false);
+                generateConjugationQuestion();
+              } else {
+                // Start learn mode
+                startConjugationLearn();
+              }
+            }}
+            className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+          >
+            {isTestMode ? (
+              <>
+                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
+                Start Test ({numQuestions} questions)
+              </>
+            ) : (
+              <>
+                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
+                Start Learning ({numQuestions} verbs)
+              </>
+            )}
+          </button>
+          
+          <button
+            onClick={() => {
+              setShowVerbCategorySelector(false);
+              setSelectedVerbCategory('all');
+              setPendingGameMode(null);
+            }}
+            className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Back to Menu
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 max-w-4xl w-full">
@@ -5048,6 +5195,14 @@ if (showAdaptiveStats) {
                 >
                   <span className="text-sm sm:text-xl">🧩 Sentence Builder</span>
                 </button>
+                
+                <button
+                  onClick={() => { setShowStories(true); setGameMode('stories'); }}
+                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                >
+                  <span className="text-sm sm:text-xl">📖 Reading Test</span>
+                </button>
+                
                 <button
                   onClick={() => openQuestionSelector('speaking')}
                   className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
@@ -5073,53 +5228,35 @@ if (showAdaptiveStats) {
                 
 
 
-                <button
-                  onClick={() => { setShowStories(true); setGameMode('stories'); }}
-                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📖 Stories</span>
-                </button>
                                 {/* ADD THIS CONJUGATION BUTTON RIGHT HERE */}
                 <button
                   onClick={() => setShowConjugationOptions(!showConjugationOptions)}
                   className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <span className="text-sm sm:text-xl">🔄 Verb Conjugation</span>
+                  <span className="text-sm sm:text-xl">🔄 Verbs Practice</span>
                 </button>
-                {showConjugationOptions && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => {
-                        startConjugationLearn();
-                      }}
-                      className="w-full bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-sm sm:text-base font-bold py-2 sm:py-3 rounded-xl hover:shadow-lg active:shadow-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      <span>📚 Learn</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (!hasCompletedConjugationLearn) {
-                          alert('📚 Please complete Verb Conjugation Learn first before attempting the Conjugation Test.');
-                          startConjugationLearn();
-                          return;
-                        }
-                        setGameMode('conjugation');
-                        setNumQuestions(10);
-                        setScore(0);
-                        setStreak(0);
-                        setQuestionsAnswered(0);
-                        setWrongAnswers([]);
-                        setCurrentGameMode('conjugation');
-                        setGameStartCategory('verbs');
-                        generateConjugationQuestion();
-                      }}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm sm:text-base font-bold py-2 sm:py-3 rounded-xl hover:shadow-lg active:shadow-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      <span>🧪 Test</span>
-                    </button>
-                  </div>
-                )}
-    
+{showConjugationOptions && (
+  <div className="grid grid-cols-2 gap-2">
+    <button
+      onClick={() => {
+        setShowVerbCategorySelector(true);
+        setPendingGameMode('conjugation_learn');
+      }}
+      className="w-full bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-sm sm:text-base font-bold py-2 sm:py-3 rounded-xl hover:shadow-lg active:shadow-lg transition-all flex items-center justify-center gap-2"
+    >
+      <span>📚 Learn</span>
+    </button>
+    <button
+      onClick={() => {
+        setShowVerbCategorySelector(true);
+        setPendingGameMode('conjugation_test');
+      }}
+      className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm sm:text-base font-bold py-2 sm:py-3 rounded-xl hover:shadow-lg active:shadow-lg transition-all flex items-center justify-center gap-2"
+    >
+      <span>🧪 Test</span>
+    </button>
+  </div>
+)}
                 <button
                   onClick={() => setShowHistory(true)}
                   className="w-full bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
@@ -5379,216 +5516,214 @@ if (showAdaptiveStats) {
   }
 
 // LEARN MODE - MOBILE OPTIMIZED
-  if (gameMode === 'learn') {
-    const currentLearnWord = learnWords[learnIndex];
+if (gameMode === 'learn') {
+  const currentLearnWord = learnWords[learnIndex];
 
-    
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 p-3 sm:p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4">
-            <div className="flex justify-between items-center">
-              <button
-                onClick={goToMenu}
-                className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-2"
-              >
-                <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
-                <span className="font-semibold text-sm sm:text-base">Menu</span>
-              </button>
-              <div className="text-gray-600 font-semibold text-sm sm:text-base">
-                {learnIndex + 1} / {learnWords.length}
-              </div>
-            </div>
-            
-            <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300"
-                style={{ width: `${((learnIndex + 1) / learnWords.length) * 100}%` }}
-              />
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-400 via-indigo-500 to-purple-500 p-3 sm:p-4 pb-24">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4">
+          <div className="flex justify-between items-center">
+            <button
+              onClick={goToMenu}
+              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-2"
+            >
+              <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+              <span className="font-semibold text-sm sm:text-base">Menu</span>
+            </button>
+            <div className="text-gray-600 font-semibold text-sm sm:text-base">
+              {learnIndex + 1} / {learnWords.length}
             </div>
           </div>
+          
+          <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300"
+              style={{ width: `${((learnIndex + 1) / learnWords.length) * 100}%` }}
+            />
+          </div>
+        </div>
 
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8">
-            {currentLearnWord && (
-              <div className="text-center">
-                <div className="mb-4">
-                  <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold ${
-                    currentLearnWord.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                  }`}>
-                    {currentLearnWord.level} • {currentLearnWord.category.replace(/_/g, ' ')}
-                  </span>
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8">
+          {currentLearnWord && (
+            <div className="text-center">
+              <div className="mb-4">
+                <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold ${
+                  currentLearnWord.level === 'A1' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {currentLearnWord.level} • {currentLearnWord.category.replace(/_/g, ' ')}
+                </span>
+              </div>
+              
+              <div className="mb-6">
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <h2 className="text-4xl sm:text-6xl font-bold text-indigo-600">{currentLearnWord.dutch}</h2>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => speakDutch(currentLearnWord.dutch)}
+                      className="bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 p-3 sm:p-4 rounded-full transition-all"
+                      title="Pronounce word"
+                    >
+                      <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
+                    </button>
+                  </div>
                 </div>
                 
-                <div className="mb-6">
-                  <div className="flex items-center justify-center gap-3 mb-4">
-                    <h2 className="text-4xl sm:text-6xl font-bold text-indigo-600">{currentLearnWord.dutch}</h2>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => speakDutch(currentLearnWord.dutch)}
-                        className="bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 p-3 sm:p-4 rounded-full transition-all"
-                        title="Pronounce word"
-                      >
-                        <Volume2 className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600" />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="text-2xl sm:text-4xl font-semibold text-gray-700 mb-2">
-                    {currentLearnWord.english}
-                  </div>
-                  
-                  <div className="text-sm sm:text-lg text-gray-500 mt-4">
-                    <div className="flex flex-col items-center mb-3">
-                      <button
-                        onClick={() => {
-                          const dutchSentence = currentLearnWord.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
-                          speakDutch(dutchSentence);
-                        }}
-                        className="bg-blue-100 hover:bg-blue-200 active:bg-blue-200 px-4 py-2 sm:px-5 sm:py-3 rounded-xl transition-all flex items-center gap-2"
-                      >
-                        <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-                        <span className="text-xs sm:text-sm font-semibold text-blue-600">Example</span>
-                      </button>
-                      <p className="mt-2">{currentLearnWord.example}</p>
-                    </div>
+                <div className="text-2xl sm:text-4xl font-semibold text-gray-700 mb-2">
+                  {currentLearnWord.english}
+                </div>
+                
+                <div className="text-sm sm:text-lg text-gray-500 mt-4">
+                  <div className="flex flex-col items-center mb-3">
+                    <button
+                      onClick={() => {
+                        const dutchSentence = currentLearnWord.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
+                        speakDutch(dutchSentence);
+                      }}
+                      className="bg-blue-100 hover:bg-blue-200 active:bg-blue-200 px-4 py-2 sm:px-5 sm:py-3 rounded-xl transition-all flex items-center gap-2"
+                    >
+                      <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                      <span className="text-xs sm:text-sm font-semibold text-blue-600">Example</span>
+                    </button>
+                    <p className="mt-2">{currentLearnWord.example}</p>
                   </div>
                 </div>
+              </div>
 
-                {/* PRACTICE TYPING BOX - OPTIONAL */}
-                <div className="mb-6">
+              {/* PRACTICE TYPING BOX - OPTIONAL */}
+              <div className="mb-6">
+                <button
+                  onClick={() => {
+                    setShowPracticeBox(!showPracticeBox);
+                    setPracticeInput('');
+                  }}
+                  className="bg-purple-100 hover:bg-purple-200 active:bg-purple-200 px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all inline-flex items-center justify-center gap-2 text-sm sm:text-base font-semibold text-purple-700"
+                >
+                  ✏️ {showPracticeBox ? 'Hide' : 'Practice Typing'}
+                </button>
+                
+                {showPracticeBox && (
+                  <div className="mt-4 p-4 sm:p-6 bg-purple-50 rounded-xl border-2 border-purple-200 animate-fadeIn">
+                    <p className="text-gray-600 mb-3 text-sm sm:text-base">
+                      💡 Practice spelling: <span className="font-bold text-purple-700">{currentLearnWord.english}</span>
+                    </p>
+                    <input
+                      type="text"
+                      value={practiceInput}
+                      onChange={(e) => setPracticeInput(e.target.value)}
+                      placeholder="Type the Dutch word here..."
+                      className="w-full p-3 sm:p-4 text-lg sm:text-xl text-center font-semibold border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                    />
+                    
+                    {practiceInput.trim() && (
+                      <div className="mt-3">
+                        {practiceInput.toLowerCase().trim() === currentLearnWord.dutch.toLowerCase() ? (
+                          <div className="bg-green-100 p-3 rounded-lg">
+                            <p className="text-green-700 font-bold flex items-center justify-center gap-2">
+                              <Check className="w-5 h-5" />
+                              Perfect! You got it right!
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="bg-yellow-50 p-3 rounded-lg">
+                            <p className="text-gray-600 text-sm mb-1">Keep practicing!</p>
+                            <p className="text-xs text-gray-500">
+                              {practiceInput.length > 0 && 
+                                `You wrote: ${practiceInput.length} letter${practiceInput.length > 1 ? 's' : ''} • 
+                                Correct: ${currentLearnWord.dutch.length} letter${currentLearnWord.dutch.length > 1 ? 's' : ''}`
+                              }
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <p className="text-xs text-gray-500 mt-3 text-center italic">
+                      ℹ️ This is just for practice - no scoring, take your time!
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 sm:gap-4 justify-center mt-8 mb-20">
+                <button
+                  onClick={() => {
+                    setLearnIndex(Math.max(0, learnIndex - 1));
+                    setPracticeInput('');
+                    setShowPracticeBox(false);
+                  }}
+                  disabled={learnIndex === 0}
+                  className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                  style={{
+                    WebkitTapHighlightColor: 'transparent',
+                    touchAction: 'manipulation'
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Prev
+                </button>
+                
+                {learnIndex < learnWords.length - 1 ? (
                   <button
                     onClick={() => {
-                      setShowPracticeBox(!showPracticeBox);
-                      setPracticeInput('');
-                    }}
-                    className="bg-purple-100 hover:bg-purple-200 active:bg-purple-200 px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all inline-flex items-center gap-2 text-sm sm:text-base font-semibold text-purple-700"
-                  >
-                    ✍️ {showPracticeBox ? 'Hide' : 'Practice Typing'}
-                  </button>
-                  
-                  {showPracticeBox && (
-                    <div className="mt-4 p-4 sm:p-6 bg-purple-50 rounded-xl border-2 border-purple-200 animate-fadeIn">
-                      <p className="text-gray-600 mb-3 text-sm sm:text-base">
-                        💡 Practice spelling: <span className="font-bold text-purple-700">{currentLearnWord.english}</span>
-                      </p>
-                      <input
-                        type="text"
-                        value={practiceInput}
-                        onChange={(e) => setPracticeInput(e.target.value)}
-                        placeholder="Type the Dutch word here..."
-                        className="w-full p-3 sm:p-4 text-lg sm:text-xl text-center font-semibold border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
-                      />
-                      
-                      {practiceInput.trim() && (
-                        <div className="mt-3">
-                          {practiceInput.toLowerCase().trim() === currentLearnWord.dutch.toLowerCase() ? (
-                            <div className="bg-green-100 p-3 rounded-lg">
-                              <p className="text-green-700 font-bold flex items-center justify-center gap-2">
-                                <Check className="w-5 h-5" />
-                                Perfect! You got it right!
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="bg-yellow-50 p-3 rounded-lg">
-                              <p className="text-gray-600 text-sm mb-1">Keep practicing!</p>
-                              <p className="text-xs text-gray-500">
-                                {practiceInput.length > 0 && 
-                                  `You wrote: ${practiceInput.length} letter${practiceInput.length > 1 ? 's' : ''} • 
-                                  Correct: ${currentLearnWord.dutch.length} letter${currentLearnWord.dutch.length > 1 ? 's' : ''}`
-                                }
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      
-                      <p className="text-xs text-gray-500 mt-3 text-center italic">
-                        ℹ️ This is just for practice - no scoring, take your time!
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex gap-3 sm:gap-4 justify-center mt-8">
-                  <button
-                    onClick={() => {
-                      setLearnIndex(Math.max(0, learnIndex - 1));
+                      setLearnIndex(learnIndex + 1);
                       setPracticeInput('');
                       setShowPracticeBox(false);
                     }}
-                    disabled={learnIndex === 0}
-                    className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                    className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
                     style={{
                       WebkitTapHighlightColor: 'transparent',
-                      touchAction: 'manipulation'
+                      touchAction: 'manipulation',
+                      backgroundColor: '#6366f1'
                     }}
                   >
-                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                    Prev
+                    Next
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
-                  
-                  {learnIndex < learnWords.length - 1 ? (
-                    <button
-                      onClick={() => {
-                        setLearnIndex(learnIndex + 1);
-                        setPracticeInput('');
-                        setShowPracticeBox(false);
-                      }}
-                      className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
-                      style={{
-                        WebkitTapHighlightColor: 'transparent',
-                        touchAction: 'manipulation',
-                        backgroundColor: '#6366f1'
-                      }}
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (confirm('Ready to test yourself?')) {
-                          setHasCompletedLearn(true);
-                          startGame();
-                        }
-                      }}
-                      className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
-                      style={{
-                        WebkitTapHighlightColor: 'transparent',
-                        touchAction: 'manipulation',
-                        backgroundColor: '#22c55e'
-                      }}
-                    >
-                      Start Test
-                      <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  )}
-                </div>
+                ) : (
+                  <button
+                    onClick={() => {
+                      if (confirm('Ready to test yourself?')) {
+                        setHasCompletedLearn(true);
+                        startGame();
+                      }
+                    }}
+                    className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+                    style={{
+                      WebkitTapHighlightColor: 'transparent',
+                      touchAction: 'manipulation',
+                      backgroundColor: '#22c55e'
+                    }}
+                  >
+                    Start Test
+                    <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-        
-        {/* Bottom bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-3 shadow-lg z-50">
-          <div className="max-w-2xl mx-auto">
-            <button
-              onClick={() => {
-                if (confirm('Return to menu? Progress will be lost.')) {
-                  goToMenu();
-                }
-              }}
-              className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 px-4 py-3 rounded-xl transition-all"
-            >
-              <Home className="w-5 h-5 text-gray-700" />
-              <span className="font-semibold">Back to Menu</span>
-            </button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
-
+      
+      {/* Bottom bar */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 p-3 shadow-lg z-50">
+        <div className="max-w-2xl mx-auto">
+          <button
+            onClick={() => {
+              if (confirm('Return to menu? Progress will be lost.')) {
+                goToMenu();
+              }
+            }}
+            className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 active:bg-gray-200 px-4 py-3 rounded-xl transition-all"
+          >
+            <Home className="w-5 h-5 text-gray-700" />
+            <span className="font-semibold">Back to Menu</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
   // ACHIEVEMENTS SCREEN
 if (gameMode === 'achievements') {
   const userLevel = getUserLevel(userPoints);
@@ -5697,141 +5832,376 @@ if (gameMode === 'achievements') {
     </div>
   );
 }
-  // CONJUGATION LEARN MODE
-  if (gameMode === 'conjugation_learn') {
-    const currentVerb = conjugationLearnVerbs[conjugationLearnIndex];
-    const forms = currentVerb ? verbConjugations[currentVerb] : null;
-    const present = forms?.present || {};
-    const past = forms?.past || {};
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 p-3 sm:p-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4">
-            <div className="flex justify-between items-center">
-              <button
-                onClick={goToMenu}
-                className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-2"
-              >
-                <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
-                <span className="font-semibold text-sm sm:text-base">Menu</span>
-              </button>
-              <div className="text-gray-600 font-semibold text-sm sm:text-base">
-                {conjugationLearnIndex + 1} / {conjugationLearnVerbs.length}
-              </div>
-            </div>
+// CONJUGATION LEARN MODE
+if (gameMode === 'conjugation_learn') {
+  const currentVerb = conjugationLearnVerbs[conjugationLearnIndex];
+  const forms = currentVerb ? verbConjugations[currentVerb] : null;
+  const present = forms?.present || {};
+  const past = forms?.past || {};
 
-            <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-300"
-                style={{ width: `${((conjugationLearnIndex + 1) / conjugationLearnVerbs.length) * 100}%` }}
-              />
+  // Helper function to get English meaning of verb
+  const getVerbMeaning = (verb) => {
+    const verbMeanings = {
+      // Essential verbs
+      "zijn": "to be",
+      "hebben": "to have",
+      "worden": "to become",
+      "kunnen": "can/to be able to",
+      "moeten": "must/to have to",
+      "willen": "to want",
+      "zullen": "will/shall",
+      "mogen": "may/to be allowed to",
+      
+      // Movement verbs
+      "gaan": "to go",
+      "komen": "to come",
+      "lopen": "to walk",
+      "rijden": "to drive/ride",
+      "vliegen": "to fly",
+      "rennen": "to run",
+      "zwemmen": "to swim",
+      "vallen": "to fall",
+      "springen": "to jump",
+      "staan": "to stand",
+      "zitten": "to sit",
+      "liggen": "to lie",
+      
+      // Communication verbs
+      "zeggen": "to say",
+      "spreken": "to speak",
+      "praten": "to talk",
+      "vragen": "to ask",
+      "antwoorden": "to answer",
+      "vertellen": "to tell",
+      "roepen": "to call/shout",
+      "luisteren": "to listen",
+      "bellen": "to call/ring",
+      
+      // Perception verbs
+      "zien": "to see",
+      "kijken": "to look/watch",
+      "horen": "to hear",
+      "voelen": "to feel",
+      "ruiken": "to smell",
+      "proeven": "to taste",
+      
+      // Cognitive verbs
+      "denken": "to think",
+      "weten": "to know (facts)",
+      "kennen": "to know (person/place)",
+      "begrijpen": "to understand",
+      "geloven": "to believe",
+      "vergeten": "to forget",
+      "herinneren": "to remember",
+      "leren": "to learn/teach",
+      "studeren": "to study",
+      
+      // Action verbs
+      "doen": "to do",
+      "maken": "to make",
+      "geven": "to give",
+      "nemen": "to take",
+      "krijgen": "to get/receive",
+      "brengen": "to bring",
+      "houden": "to hold/keep",
+      "leggen": "to lay/put",
+      "zetten": "to set/put",
+      "pakken": "to grab/take",
+      "werken": "to work",
+      "gebruiken": "to use",
+      "spelen": "to play",
+      
+      // Daily life verbs
+      "eten": "to eat",
+      "drinken": "to drink",
+      "slapen": "to sleep",
+      "wonen": "to live/reside",
+      "leven": "to live",
+      "koken": "to cook",
+      "wassen": "to wash",
+      "schoonmaken": "to clean",
+      "douchen": "to shower",
+      "kopen": "to buy",
+      "verkopen": "to sell",
+      "betalen": "to pay",
+      
+      // Opening/Closing verbs
+      "openen": "to open",
+      "sluiten": "to close",
+      "beginnen": "to begin",
+      "eindigen": "to end",
+      "stoppen": "to stop",
+      
+      // Writing/Reading verbs
+      "schrijven": "to write",
+      "lezen": "to read",
+      "tekenen": "to draw",
+      
+      // Emotion verbs
+      "houden van": "to love",
+      "lachen": "to laugh",
+      "huilen": "to cry",
+      "hopen": "to hope",
+      "vrezen": "to fear",
+      
+      // Search verbs
+      "vinden": "to find",
+      "zoeken": "to search/look for",
+      "verliezen": "to lose",
+      "winnen": "to win",
+      
+      // Help & Try verbs
+      "helpen": "to help",
+      "proberen": "to try",
+      "veranderen": "to change",
+      "blijven": "to stay/remain",
+      "gebeuren": "to happen",
+      "schijnen": "to seem/shine",
+      
+      // Weather verbs
+      "regenen": "to rain",
+      "sneeuwen": "to snow",
+      "groeien": "to grow",
+      "bloeien": "to bloom",
+      
+      // Interaction verbs
+      "ontmoeten": "to meet",
+      "bezoeken": "to visit",
+      "uitnodigen": "to invite",
+      "feliciteren": "to congratulate",
+      "groeten": "to greet",
+      "bedanken": "to thank",
+      
+      // Creation verbs
+      "bouwen": "to build",
+      "breken": "to break",
+      "vernietigen": "to destroy",
+      "repareren": "to repair",
+      
+      // Clothing verbs
+      "dragen": "to wear/carry",
+      "aandoen": "to put on",
+      "uitdoen": "to take off",
+      
+      // Technology verbs
+      "versturen": "to send",
+      "ontvangen": "to receive",
+      "downloaden": "to download",
+      "uploaden": "to upload",
+      "printen": "to print",
+      
+      // Teaching verbs
+      "onderwijzen": "to teach",
+      "uitleggen": "to explain",
+      "oefenen": "to practice",
+      "herhalen": "to repeat",
+      
+      // Permission verbs
+      "toestaan": "to allow",
+      "verbieden": "to forbid",
+      
+      // Possession verbs
+      "bezitten": "to own/possess",
+      "behoren": "to belong",
+      
+      // Comparison verbs
+      "lijken": "to seem/look like",
+      "vergelijken": "to compare",
+      
+      // Time verbs
+      "duren": "to last/take time",
+      "wachten": "to wait",
+      "haasten": "to hurry",
+      
+      // Health verbs
+      "ademen": "to breathe",
+      "sterven": "to die",
+      "genezen": "to heal",
+      "pijn doen": "to hurt",
+      
+      // Measurement verbs
+      "tellen": "to count",
+      "meten": "to measure",
+      "wegen": "to weigh",
+      
+      // Planning verbs
+      "voorbereiden": "to prepare",
+      "plannen": "to plan",
+      "organiseren": "to organize",
+      
+      // Decision verbs
+      "kiezen": "to choose",
+      "beslissen": "to decide",
+      "verkiezen": "to prefer",
+      
+      // Contact verbs
+      "raken": "to touch",
+      "drukken": "to press/push",
+      "trekken": "to pull",
+      "duwen": "to push",
+      
+      // Sound & Light verbs
+      "branden": "to burn",
+      "zingen": "to sing",
+      "fluiten": "to whistle",
+      
+      // Conflict verbs
+      "vechten": "to fight",
+      "slaan": "to hit",
+      "beschermen": "to protect",
+      
+      // Visibility verbs
+      "verschijnen": "to appear",
+      "verdwijnen": "to disappear",
+      "tonen": "to show",
+      "verbergen": "to hide",
+      
+      // Achievement verbs
+      "bereiken": "to reach/achieve",
+      "slagen": "to succeed",
+      "falen": "to fail",
+      
+      // Cleaning verbs
+      "poetsen": "to polish/clean",
+      "vegen": "to sweep",
+      "strijken": "to iron",
+      "verzorgen": "to care for"
+    };
+    
+    return verbMeanings[verb] || "";
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600 p-3 sm:p-4 pb-24">
+      <div className="max-w-2xl mx-auto">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 mb-4">
+          <div className="flex justify-between items-center">
+            <button
+              onClick={goToMenu}
+              className="bg-gray-100 hover:bg-gray-200 active:bg-gray-200 p-2 rounded-lg transition-all flex items-center gap-2"
+            >
+              <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+              <span className="font-semibold text-sm sm:text-base">Menu</span>
+            </button>
+            <div className="text-gray-600 font-semibold text-sm sm:text-base">
+              {conjugationLearnIndex + 1} / {conjugationLearnVerbs.length}
             </div>
           </div>
 
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8">
-            {currentVerb && (
-              <div>
-                <div className="text-center mb-6">
-                  <h2 className="text-3xl sm:text-5xl font-bold text-indigo-600">{currentVerb}</h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl border-2 border-cyan-200 bg-cyan-50">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg sm:text-xl font-bold text-cyan-700">Present (Tegenwoordige tijd)</h3>
-                    </div>
-                    <div className="space-y-2">
-                      {Object.entries(present).map(([pronoun, form]) => (
-                        <div key={pronoun} className="flex items-center justify-between bg-white rounded-lg p-2">
-                          <div className="font-semibold text-gray-700 text-sm sm:text-base">{pronoun}</div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-gray-900 font-bold text-sm sm:text-base">{form}</div>
-                            <button
-                              onClick={() => speakDutch(form)}
-                              className="bg-cyan-100 hover:bg-cyan-200 active:bg-cyan-200 p-2 rounded-lg"
-                              title="Pronounce"
-                            >
-                              <Volume2 className="w-4 h-4 text-cyan-700" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="p-4 rounded-xl border-2 border-indigo-200 bg-indigo-50">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-lg sm:text-xl font-bold text-indigo-700">Past (Verleden tijd)</h3>
-                    </div>
-                    <div className="space-y-2">
-                      {Object.entries(past).map(([pronoun, form]) => (
-                        <div key={pronoun} className="flex items-center justify-between bg-white rounded-lg p-2">
-                          <div className="font-semibold text-gray-700 text-sm sm:text-base">{pronoun}</div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-gray-900 font-bold text-sm sm:text-base">{form}</div>
-                            <button
-                              onClick={() => speakDutch(form)}
-                              className="bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 p-2 rounded-lg"
-                              title="Pronounce"
-                            >
-                              <Volume2 className="w-4 h-4 text-indigo-700" />
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-3 sm:gap-4 justify-center mt-8">
-                  <button
-                    onClick={() => setConjugationLearnIndex(Math.max(0, conjugationLearnIndex - 1))}
-                    disabled={conjugationLearnIndex === 0}
-                    className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
-                  >
-                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-                    Prev
-                  </button>
-
-                  {conjugationLearnIndex < conjugationLearnVerbs.length - 1 ? (
-                    <button
-                      onClick={() => setConjugationLearnIndex(conjugationLearnIndex + 1)}
-                      className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
-                      style={{ backgroundColor: '#6366f1' }}
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (confirm('Ready to take the Verb Conjugation Test?')) {
-                          setHasCompletedConjugationLearn(true);
-                          setGameMode('conjugation');
-                          setNumQuestions(10);
-                          setScore(0);
-                          setStreak(0);
-                          setQuestionsAnswered(0);
-                          setWrongAnswers([]);
-                          setCurrentGameMode('conjugation');
-                          setGameStartCategory('verbs');
-                          generateConjugationQuestion();
-                        }
-                      }}
-                      className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
-                      style={{ backgroundColor: '#22c55e' }}
-                    >
-                      Start Conjugation Test
-                      <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
+          <div className="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-cyan-500 to-indigo-500 transition-all duration-300"
+              style={{ width: `${((conjugationLearnIndex + 1) / conjugationLearnVerbs.length) * 100}%` }}
+            />
           </div>
         </div>
+
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-6 sm:p-8">
+          {currentVerb && (
+            <div>
+              <div className="text-center mb-6">
+                <h2 className="text-3xl sm:text-5xl font-bold text-indigo-600 mb-2">{currentVerb}</h2>
+                <p className="text-xl sm:text-2xl text-gray-600 italic">({getVerbMeaning(currentVerb)})</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl border-2 border-cyan-200 bg-cyan-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-cyan-700">Present (Tegenwoordige tijd)</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {Object.entries(present).map(([pronoun, form]) => (
+                      <div key={pronoun} className="flex items-center justify-between bg-white rounded-lg p-2">
+                        <div className="font-semibold text-gray-700 text-sm sm:text-base">{pronoun}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-gray-900 font-bold text-sm sm:text-base">{form}</div>
+                          <button
+                            onClick={() => speakDutch(form)}
+                            className="bg-cyan-100 hover:bg-cyan-200 active:bg-cyan-200 p-2 rounded-lg"
+                            title="Pronounce"
+                          >
+                            <Volume2 className="w-4 h-4 text-cyan-700" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl border-2 border-indigo-200 bg-indigo-50">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg sm:text-xl font-bold text-indigo-700">Past (Verleden tijd)</h3>
+                  </div>
+                  <div className="space-y-2">
+                    {Object.entries(past).map(([pronoun, form]) => (
+                      <div key={pronoun} className="flex items-center justify-between bg-white rounded-lg p-2">
+                        <div className="font-semibold text-gray-700 text-sm sm:text-base">{pronoun}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-gray-900 font-bold text-sm sm:text-base">{form}</div>
+                          <button
+                            onClick={() => speakDutch(form)}
+                            className="bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 p-2 rounded-lg"
+                            title="Pronounce"
+                          >
+                            <Volume2 className="w-4 h-4 text-indigo-700" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3 sm:gap-4 justify-center mt-8">
+                <button
+                  onClick={() => setConjugationLearnIndex(Math.max(0, conjugationLearnIndex - 1))}
+                  disabled={conjugationLearnIndex === 0}
+                  className="px-4 sm:px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-300 active:bg-gray-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm sm:text-base"
+                >
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                  Prev
+                </button>
+
+                {conjugationLearnIndex < conjugationLearnVerbs.length - 1 ? (
+                  <button
+                    onClick={() => setConjugationLearnIndex(conjugationLearnIndex + 1)}
+                    className="px-4 sm:px-6 py-3 bg-indigo-500 text-white rounded-xl font-bold hover:bg-indigo-600 active:bg-indigo-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+                    style={{ backgroundColor: '#6366f1' }}
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                ) : (
+                <button
+                  onClick={() => {
+                    if (confirm(`Ready to test ${selectedVerbCategory === 'all' ? 'all verbs' : selectedVerbCategory}?`)) {
+                      setHasCompletedConjugationLearn(true);
+                      setGameMode('conjugation');
+                      setNumQuestions(Math.min(10, getVerbsByCategory(selectedVerbCategory).length));
+                      setScore(0);
+                      setStreak(0);
+                      setQuestionsAnswered(0);
+                      setWrongAnswers([]);
+                      setCurrentGameMode('conjugation');
+                      setGameStartCategory(`verbs_${selectedVerbCategory}`);
+                      // Keep the selectedVerbCategory so generateConjugationQuestion uses it
+                      generateConjugationQuestion();
+                    }
+                  }}
+                  className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
+                  style={{ backgroundColor: '#22c55e' }}
+                >
+                  Start Conjugation Test
+                  <GraduationCap className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   // RESULTS SCREEN - MOBILE OPTIMIZED
 if (gameMode === 'results') {
