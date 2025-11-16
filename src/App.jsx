@@ -3299,17 +3299,17 @@ if (showSentenceBuilder) {
       
       return (
         <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-3 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 max-w-2xl w-full">
-            {/* Story Text Section - MOBILE OPTIMIZED */}
-            <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-yellow-50 rounded-xl border-2 border-yellow-200">
-              <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                <span className="text-xl sm:text-2xl">📖</span>
-                <h3 className="text-base sm:text-xl font-bold text-yellow-700">{selectedStory.title}</h3>
-              </div>
-              <div className="prose prose-sm max-w-none text-gray-700 max-h-40 sm:max-h-60 overflow-y-auto p-3 sm:p-4 bg-white rounded-lg text-sm sm:text-base" style={{ whiteSpace: 'pre-line' }}>
-                {selectedStory.text}
-              </div>
-            </div>
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-8 max-w-2xl w-full">
+        {/* Story Text Section - MOBILE OPTIMIZED WITH LARGER FONT */}
+        <div className="mb-4 sm:mb-6 p-4 sm:p-6 bg-yellow-50 rounded-xl border-2 border-yellow-200">
+          <div className="flex items-center gap-2 mb-2 sm:mb-3">
+            <span className="text-xl sm:text-2xl">📖</span>
+            <h3 className="text-lg sm:text-xl font-bold text-yellow-700">{selectedStory.title}</h3>
+          </div>
+          <div className="max-w-none text-gray-700 max-h-48 sm:max-h-72 overflow-y-auto p-3 sm:p-4 bg-white rounded-lg text-base sm:text-lg leading-relaxed" style={{ whiteSpace: 'pre-line', lineHeight: '1.7' }}>
+            {selectedStory.text}
+          </div>
+        </div>
             
             {/* Quiz controls - MOBILE OPTIMIZED */}
             <div className="mb-4 sm:mb-6">
@@ -3431,14 +3431,19 @@ if (showSentenceBuilder) {
       );
     }
     
-    // Show story text - MOBILE OPTIMIZED
+// Show story text - MOBILE OPTIMIZED WITH LARGER FONT
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-3 sm:p-4">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-2xl w-full">
           <h2 className="text-2xl sm:text-3xl font-bold text-yellow-700 mb-4 sm:mb-6 text-center">{selectedStory.title}</h2>
-          <div className="prose prose-sm sm:prose-lg max-w-none text-gray-800 mb-6 sm:mb-8 text-sm sm:text-base" style={{ whiteSpace: 'pre-line' }}>
-            {selectedStory.text}
+          
+          {/* Story text with better mobile readability */}
+          <div className="bg-yellow-50 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 border-2 border-yellow-200">
+            <div className="max-w-none text-gray-800 leading-relaxed text-lg sm:text-xl" style={{ whiteSpace: 'pre-line', lineHeight: '1.75' }}>
+              {selectedStory.text}
+            </div>
           </div>
+          
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             {selectedStory.questions && selectedStory.questions.length > 0 && (
               <button
