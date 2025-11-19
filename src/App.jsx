@@ -1206,17 +1206,18 @@ const startGame = (mode = 'play') => {
   }
 };
 
-// NEW FUNCTION - Get ALL failed words from history (not just latest attempt)
+// NEW FUNCTION - Get ONLY the most recent failed words from latest attempt
 const getAllFailedWordsFromHistory = (categories, mode = 'spelling') => {
   if (!user) return [];
   
   // Convert to array if needed
   const categoryArray = Array.isArray(categories) ? categories : [categories];
   
-  // Collect ALL failed words from ALL attempts in history
-  const allFailedWords = new Map(); // Use Map to track unique words with their fail count
+  // Collect ONLY the most recent failed words per category
+  const latestFailedWords = new Map();
   
   categoryArray.forEach(category => {
+    // Get only the most recent attempt for this category and mode
     const relevantAttempts = attemptHistory.filter(
       a => a.category === category && 
            a.mode === mode && 
@@ -1224,30 +1225,28 @@ const getAllFailedWordsFromHistory = (categories, mode = 'spelling') => {
            a.wrongAnswers.length > 0
     );
     
-    relevantAttempts.forEach(attempt => {
-      attempt.wrongAnswers.forEach(word => {
+    if (relevantAttempts.length > 0) {
+      // Take ONLY the first (most recent) attempt
+      const latestAttempt = relevantAttempts[0];
+      
+      latestAttempt.wrongAnswers.forEach(word => {
         const wordKey = `${word.dutch}_${word.english}`;
         
-        if (allFailedWords.has(wordKey)) {
-          // Increment fail count if word already exists
-          const existing = allFailedWords.get(wordKey);
-          allFailedWords.set(wordKey, {
-            ...existing,
-            failCount: existing.failCount + 1
-          });
-        } else {
-          // Add new failed word
-          allFailedWords.set(wordKey, {
+        // Only add if not already added (from another category)
+        if (!latestFailedWords.has(wordKey)) {
+          latestFailedWords.set(wordKey, {
             ...word,
-            failCount: 1
+            failCount: 1 // Since we're only looking at latest attempt
           });
         }
       });
-    });
+    }
   });
   
-  // Convert Map to array and sort by fail count (most failed first)
-  return Array.from(allFailedWords.values()).sort((a, b) => b.failCount - a.failCount);
+  // Convert Map to array and sort by dutch word alphabetically
+  return Array.from(latestFailedWords.values()).sort((a, b) => 
+    a.dutch.localeCompare(b.dutch)
+  );
 };
 
   const openQuestionSelector = (mode) => {
@@ -4254,11 +4253,17 @@ if (showFillBlankStories && selectedStoryKey) {
   );
 }
 
-// ADD THIS COMPONENT BEFORE YOUR MENU SCREEN (around line 2500)
-
 // ADAPTIVE LEARNING STATS SCREEN
 if (showAdaptiveStats) {
   const stats = getAdaptiveLearningStats();
+  const allWeakWords = getWeakestWords(); // Get ALL weak words, not just top 5
+  const wordsThatNeedPractice = getWordsThatNeedPractice();
+  
+  // Group words by difficulty level
+  const criticalWords = allWeakWords.filter(w => w.failureRate >= 70);
+  const highPriorityWords = allWeakWords.filter(w => w.failureRate >= 40 && w.failureRate < 70);
+  const mediumPriorityWords = allWeakWords.filter(w => w.failureRate >= 20 && w.failureRate < 40);
+  const lowPriorityWords = allWeakWords.filter(w => w.failureRate < 20);
   
   if (!stats) {
     return (
@@ -4278,200 +4283,585 @@ if (showAdaptiveStats) {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-4xl w-full">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-          <h2 className="text-2xl sm:text-3xl font-bold text-purple-700">🧠 Adaptive Learning</h2>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 p-3 sm:p-4">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+            <h2 className="text-2xl sm:text-3xl font-bold text-purple-700">🧠 Adaptive Learning</h2>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
 
-        {/* Overall Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white text-center">
-            <div className="text-3xl font-bold">{stats.totalAttempts}</div>
-            <div className="text-xs opacity-90">Total Quizzes</div>
+          {/* Overall Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white text-center">
+              <div className="text-3xl font-bold">{stats.totalAttempts}</div>
+              <div className="text-xs opacity-90">Total Quizzes</div>
+            </div>
+            <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl text-white text-center">
+              <div className="text-3xl font-bold">{stats.avgScore}%</div>
+              <div className="text-xs opacity-90">Avg Score</div>
+            </div>
+            <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 p-4 rounded-xl text-white text-center">
+              <div className="text-3xl font-bold">{stats.wordsThatNeedWork}</div>
+              <div className="text-xs opacity-90">Need Practice</div>
+            </div>
+            <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-xl text-white text-center">
+              <div className="text-3xl font-bold">{stats.dueForReview}</div>
+              <div className="text-xs opacity-90">Due Today</div>
+            </div>
           </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl text-white text-center">
-            <div className="text-3xl font-bold">{stats.avgScore}%</div>
-            <div className="text-xs opacity-90">Avg Score</div>
-          </div>
-          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 p-4 rounded-xl text-white text-center">
-            <div className="text-3xl font-bold">{stats.wordsThatNeedWork}</div>
-            <div className="text-xs opacity-90">Need Practice</div>
-          </div>
-          <div className="bg-gradient-to-br from-red-500 to-red-600 p-4 rounded-xl text-white text-center">
-            <div className="text-3xl font-bold">{stats.dueForReview}</div>
-            <div className="text-xs opacity-90">Due Today</div>
-          </div>
-        </div>
 
-        {/* Top 5 Weakest Words */}
-        {stats.top5Weakest.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <span>📉</span>
-              Your Most Challenging Words
-            </h3>
-            <div className="space-y-3">
-              {stats.top5Weakest.map((word, idx) => (
-                <div key={idx} className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-2xl font-bold text-red-600">#{idx + 1}</span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xl font-bold text-gray-800">{word.dutch}</span>
-                            <button
-                              onClick={() => speakDutch(word.dutch)}
-                              className="bg-red-100 hover:bg-red-200 active:bg-red-200 p-1 rounded-full transition-all"
-                            >
-                              <Volume2 className="w-4 h-4 text-red-600" />
-                            </button>
+          {/* Top 5 Weakest Words - Keep existing display */}
+          {stats.top5Weakest.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <span>📉</span>
+                Top 5 Most Challenging Words
+              </h3>
+              <div className="space-y-3">
+                {stats.top5Weakest.map((word, idx) => (
+                  <div key={idx} className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-2xl font-bold text-red-600">#{idx + 1}</span>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl font-bold text-gray-800">{word.dutch}</span>
+                              <button
+                                onClick={() => speakDutch(word.dutch)}
+                                className="bg-red-100 hover:bg-red-200 active:bg-red-200 p-1 rounded-full transition-all"
+                              >
+                                <Volume2 className="w-4 h-4 text-red-600" />
+                              </button>
+                            </div>
+                            <p className="text-gray-700 font-semibold">{word.english}</p>
                           </div>
-                          <p className="text-gray-700 font-semibold">{word.english}</p>
                         </div>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
-                          ❌ {word.failures} {word.failures === 1 ? 'mistake' : 'mistakes'}
-                        </span>
-                        <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">
-                          📊 {Math.round(word.failureRate)}% error rate
-                        </span>
-                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
-                          🎯 {word.attempts} {word.attempts === 1 ? 'attempt' : 'attempts'}
-                        </span>
+                        
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">
+                            ❌ {word.failures} {word.failures === 1 ? 'mistake' : 'mistakes'}
+                          </span>
+                          <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold">
+                            📊 {Math.round(word.failureRate)}% error rate
+                          </span>
+                          <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">
+                            🎯 {word.attempts} {word.attempts === 1 ? 'attempt' : 'attempts'}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Practice Buttons */}
-        <div className="space-y-3 mb-6">
-          <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
-            <h3 className="text-lg font-bold text-purple-700 mb-2 flex items-center gap-2">
-              <span>🎯</span>
-              Smart Practice
-            </h3>
-            <p className="text-gray-600 text-sm mb-4">
-              AI-powered quiz focusing on your weakest words and those due for review
-            </p>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                onClick={() => {
-                  setShowAdaptiveStats(false);
-                  startAdaptivePractice('play', 20);
-                }}
-                className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-              >
-                <GraduationCap className="w-5 h-5" />
-                Multiple Choice
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowAdaptiveStats(false);
-                  startAdaptivePractice('spelling', 20);
-                }}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-              >
-                ✏️ Spelling Mode
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowAdaptiveStats(false);
-                  startAdaptivePractice('speaking', 15);
-                }}
-                className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-              >
-                🎤 Speaking Test
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowAdaptiveStats(false);
-                  startAdaptivePractice('fillblank', 15);
-                }}
-                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-              >
-                📝 Fill Blanks
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Practice Top 5 */}
-          {stats.top5Weakest.length > 0 && (
-            <div className="bg-red-50 rounded-xl p-4 border-2 border-red-200">
-              <h3 className="text-lg font-bold text-red-700 mb-2">⚡ Quick Practice Top 5</h3>
-              <p className="text-gray-600 text-sm mb-3">
-                Focus on your 5 most challenging words
-              </p>
-              <button
-                onClick={() => {
-                  const top5Words = getWordsThatNeedPractice().slice(0, 5);
-                  setShowAdaptiveStats(false);
-                  
-                  // Start spelling mode with top 5
-                  setWordBank(top5Words);
-                  setUsedWords([]);
-                  setGameMode('spelling');
-                  setCurrentGameMode('spelling');
-                  setGameStartCategory('adaptive_top5');
-                  setScore(0);
-                  setStreak(0);
-                  setQuestionsAnswered(0);
-                  setFeedback(null);
-                  setWrongAnswers([]);
-                  setSpellingAnswer('');
-                  setNumQuestions(5);
-                  setReviewMode('adaptive_top5');
-                  
-                  generateSpellingQuestion(top5Words, []);
-                }}
-                className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
-              >
-                🔥 Practice Top 5 Now
-              </button>
+                ))}
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Info Box */}
-        <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200 mb-4">
-          <h3 className="text-sm font-bold text-blue-700 mb-2 flex items-center gap-2">
-            <span>💡</span>
-            How It Works
-          </h3>
-          <ul className="text-xs text-gray-700 space-y-1">
-            <li>• Our AI analyzes your mistake patterns</li>
-            <li>• Words are prioritized by error rate and frequency</li>
-            <li>• SRS (Spaced Repetition) ensures optimal review timing</li>
-            <li>• Practice builds on your actual weak points</li>
-          </ul>
-        </div>
+          {/* 🆕 NEW: Complete Words List by Difficulty */}
+          {allWeakWords.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <span>📋</span>
+                  Complete Words Analysis ({allWeakWords.length} words)
+                </h3>
+                <button
+                  onClick={() => {
+                    const listSection = document.getElementById('complete-words-list');
+                    if (listSection) {
+                      listSection.classList.toggle('hidden');
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-sm font-semibold transition-all"
+                >
+                  Show/Hide List
+                </button>
+              </div>
 
-        {/* Back Button */}
-        <button
-          onClick={() => setShowAdaptiveStats(false)}
-          className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          Back to Menu
-        </button>
+              <div id="complete-words-list" className="space-y-4">
+                {/* Critical Words - 70%+ failure rate */}
+                {criticalWords.length > 0 && (
+                  <details className="bg-red-50 border-2 border-red-300 rounded-xl overflow-hidden" open>
+                    <summary className="cursor-pointer p-4 font-bold text-red-700 hover:bg-red-100 transition-all flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">🔴</span>
+                        <span>CRITICAL ({criticalWords.length} words)</span>
+                        <span className="text-sm font-normal opacity-75">70%+ error rate</span>
+                      </div>
+                      <ChevronRight className="w-5 h-5" />
+                    </summary>
+                    <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
+                      {criticalWords.map((word, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-3 border border-red-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-1">
+                              <span className="font-bold text-gray-600 text-sm">#{idx + 1}</span>
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-lg font-bold text-gray-800">{word.dutch}</span>
+                                <button
+                                  onClick={() => speakDutch(word.dutch)}
+                                  className="bg-red-50 hover:bg-red-100 p-1 rounded transition-all"
+                                >
+                                  <Volume2 className="w-3 h-3 text-red-600" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-red-600">{Math.round(word.failureRate)}%</div>
+                              <div className="text-xs text-gray-500">{word.failures}/{word.attempts}</div>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{word.english}</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                const allWords = getAllWords();
+                                const fullWord = allWords.find(w => 
+                                  w.dutch.toLowerCase() === word.dutch.toLowerCase() && 
+                                  w.english.toLowerCase() === word.english.toLowerCase()
+                                );
+                                if (fullWord) {
+                                  setLearnWords([fullWord]);
+                                  setLearnIndex(0);
+                                  setGameMode('learn');
+                                  setShowAdaptiveStats(false);
+                                }
+                              }}
+                              className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs font-semibold transition-all"
+                            >
+                              📚 Study
+                            </button>
+                            <button
+                              onClick={() => {
+                                const allWords = getAllWords();
+                                const fullWord = allWords.find(w => 
+                                  w.dutch.toLowerCase() === word.dutch.toLowerCase() && 
+                                  w.english.toLowerCase() === word.english.toLowerCase()
+                                );
+                                if (fullWord) {
+                                  setWordBank([fullWord]);
+                                  setUsedWords([]);
+                                  setGameMode('spelling');
+                                  setCurrentGameMode('spelling');
+                                  setGameStartCategory('single_word_practice');
+                                  setScore(0);
+                                  setStreak(0);
+                                  setQuestionsAnswered(0);
+                                  setFeedback(null);
+                                  setWrongAnswers([]);
+                                  setSpellingAnswer('');
+                                  setNumQuestions(1);
+                                  setShowAdaptiveStats(false);
+                                  generateSpellingQuestion([fullWord], []);
+                                }
+                              }}
+                              className="px-2 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded text-xs font-semibold transition-all"
+                            >
+                              ✏️ Practice
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+
+                {/* High Priority Words - 40-69% failure rate */}
+                {highPriorityWords.length > 0 && (
+                  <details className="bg-orange-50 border-2 border-orange-300 rounded-xl overflow-hidden">
+                    <summary className="cursor-pointer p-4 font-bold text-orange-700 hover:bg-orange-100 transition-all flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">🟠</span>
+                        <span>HIGH PRIORITY ({highPriorityWords.length} words)</span>
+                        <span className="text-sm font-normal opacity-75">40-69% error rate</span>
+                      </div>
+                      <ChevronRight className="w-5 h-5" />
+                    </summary>
+                    <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
+                      {highPriorityWords.map((word, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-3 border border-orange-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-1">
+                              <span className="font-bold text-gray-600 text-sm">#{idx + 1}</span>
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-lg font-bold text-gray-800">{word.dutch}</span>
+                                <button
+                                  onClick={() => speakDutch(word.dutch)}
+                                  className="bg-orange-50 hover:bg-orange-100 p-1 rounded transition-all"
+                                >
+                                  <Volume2 className="w-3 h-3 text-orange-600" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-orange-600">{Math.round(word.failureRate)}%</div>
+                              <div className="text-xs text-gray-500">{word.failures}/{word.attempts}</div>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{word.english}</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                const allWords = getAllWords();
+                                const fullWord = allWords.find(w => 
+                                  w.dutch.toLowerCase() === word.dutch.toLowerCase() && 
+                                  w.english.toLowerCase() === word.english.toLowerCase()
+                                );
+                                if (fullWord) {
+                                  setLearnWords([fullWord]);
+                                  setLearnIndex(0);
+                                  setGameMode('learn');
+                                  setShowAdaptiveStats(false);
+                                }
+                              }}
+                              className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs font-semibold transition-all"
+                            >
+                              📚 Study
+                            </button>
+                            <button
+                              onClick={() => {
+                                const allWords = getAllWords();
+                                const fullWord = allWords.find(w => 
+                                  w.dutch.toLowerCase() === word.dutch.toLowerCase() && 
+                                  w.english.toLowerCase() === word.english.toLowerCase()
+                                );
+                                if (fullWord) {
+                                  setWordBank([fullWord]);
+                                  setUsedWords([]);
+                                  setGameMode('spelling');
+                                  setCurrentGameMode('spelling');
+                                  setGameStartCategory('single_word_practice');
+                                  setScore(0);
+                                  setStreak(0);
+                                  setQuestionsAnswered(0);
+                                  setFeedback(null);
+                                  setWrongAnswers([]);
+                                  setSpellingAnswer('');
+                                  setNumQuestions(1);
+                                  setShowAdaptiveStats(false);
+                                  generateSpellingQuestion([fullWord], []);
+                                }
+                              }}
+                              className="px-2 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded text-xs font-semibold transition-all"
+                            >
+                              ✏️ Practice
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+
+                {/* Medium Priority Words - 20-39% failure rate */}
+                {mediumPriorityWords.length > 0 && (
+                  <details className="bg-yellow-50 border-2 border-yellow-300 rounded-xl overflow-hidden">
+                    <summary className="cursor-pointer p-4 font-bold text-yellow-700 hover:bg-yellow-100 transition-all flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">🟡</span>
+                        <span>MEDIUM PRIORITY ({mediumPriorityWords.length} words)</span>
+                        <span className="text-sm font-normal opacity-75">20-39% error rate</span>
+                      </div>
+                      <ChevronRight className="w-5 h-5" />
+                    </summary>
+                    <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
+                      {mediumPriorityWords.map((word, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-3 border border-yellow-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-1">
+                              <span className="font-bold text-gray-600 text-sm">#{idx + 1}</span>
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-lg font-bold text-gray-800">{word.dutch}</span>
+                                <button
+                                  onClick={() => speakDutch(word.dutch)}
+                                  className="bg-yellow-50 hover:bg-yellow-100 p-1 rounded transition-all"
+                                >
+                                  <Volume2 className="w-3 h-3 text-yellow-600" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-yellow-600">{Math.round(word.failureRate)}%</div>
+                              <div className="text-xs text-gray-500">{word.failures}/{word.attempts}</div>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{word.english}</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                const allWords = getAllWords();
+                                const fullWord = allWords.find(w => 
+                                  w.dutch.toLowerCase() === word.dutch.toLowerCase() && 
+                                  w.english.toLowerCase() === word.english.toLowerCase()
+                                );
+                                if (fullWord) {
+                                  setLearnWords([fullWord]);
+                                  setLearnIndex(0);
+                                  setGameMode('learn');
+                                  setShowAdaptiveStats(false);
+                                }
+                              }}
+                              className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs font-semibold transition-all"
+                            >
+                              📚 Study
+                            </button>
+                            <button
+                              onClick={() => {
+                                const allWords = getAllWords();
+                                const fullWord = allWords.find(w => 
+                                  w.dutch.toLowerCase() === word.dutch.toLowerCase() && 
+                                  w.english.toLowerCase() === word.english.toLowerCase()
+                                );
+                                if (fullWord) {
+                                  setWordBank([fullWord]);
+                                  setUsedWords([]);
+                                  setGameMode('spelling');
+                                  setCurrentGameMode('spelling');
+                                  setGameStartCategory('single_word_practice');
+                                  setScore(0);
+                                  setStreak(0);
+                                  setQuestionsAnswered(0);
+                                  setFeedback(null);
+                                  setWrongAnswers([]);
+                                  setSpellingAnswer('');
+                                  setNumQuestions(1);
+                                  setShowAdaptiveStats(false);
+                                  generateSpellingQuestion([fullWord], []);
+                                }
+                              }}
+                              className="px-2 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded text-xs font-semibold transition-all"
+                            >
+                              ✏️ Practice
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+
+                {/* Low Priority Words - <20% failure rate */}
+                {lowPriorityWords.length > 0 && (
+                  <details className="bg-green-50 border-2 border-green-300 rounded-xl overflow-hidden">
+                    <summary className="cursor-pointer p-4 font-bold text-green-700 hover:bg-green-100 transition-all flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">🟢</span>
+                        <span>LOW PRIORITY ({lowPriorityWords.length} words)</span>
+                        <span className="text-sm font-normal opacity-75">&lt;20% error rate</span>
+                      </div>
+                      <ChevronRight className="w-5 h-5" />
+                    </summary>
+                    <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
+                      {lowPriorityWords.map((word, idx) => (
+                        <div key={idx} className="bg-white rounded-lg p-3 border border-green-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2 flex-1">
+                              <span className="font-bold text-gray-600 text-sm">#{idx + 1}</span>
+                              <div className="flex items-center gap-2 flex-1">
+                                <span className="text-lg font-bold text-gray-800">{word.dutch}</span>
+                                <button
+                                  onClick={() => speakDutch(word.dutch)}
+                                  className="bg-green-50 hover:bg-green-100 p-1 rounded transition-all"
+                                >
+                                  <Volume2 className="w-3 h-3 text-green-600" />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-green-600">{Math.round(word.failureRate)}%</div>
+                              <div className="text-xs text-gray-500">{word.failures}/{word.attempts}</div>
+                            </div>
+                          </div>
+                          <p className="text-sm text-gray-600 mb-2">{word.english}</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                const allWords = getAllWords();
+                                const fullWord = allWords.find(w => 
+                                  w.dutch.toLowerCase() === word.dutch.toLowerCase() && 
+                                  w.english.toLowerCase() === word.english.toLowerCase()
+                                );
+                                if (fullWord) {
+                                  setLearnWords([fullWord]);
+                                  setLearnIndex(0);
+                                  setGameMode('learn');
+                                  setShowAdaptiveStats(false);
+                                }
+                              }}
+                              className="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded text-xs font-semibold transition-all"
+                            >
+                              📚 Study
+                            </button>
+                            <button
+                              onClick={() => {
+                                const allWords = getAllWords();
+                                const fullWord = allWords.find(w => 
+                                  w.dutch.toLowerCase() === word.dutch.toLowerCase() && 
+                                  w.english.toLowerCase() === word.english.toLowerCase()
+                                );
+                                if (fullWord) {
+                                  setWordBank([fullWord]);
+                                  setUsedWords([]);
+                                  setGameMode('spelling');
+                                  setCurrentGameMode('spelling');
+                                  setGameStartCategory('single_word_practice');
+                                  setScore(0);
+                                  setStreak(0);
+                                  setQuestionsAnswered(0);
+                                  setFeedback(null);
+                                  setWrongAnswers([]);
+                                  setSpellingAnswer('');
+                                  setNumQuestions(1);
+                                  setShowAdaptiveStats(false);
+                                  generateSpellingQuestion([fullWord], []);
+                                }
+                              }}
+                              className="px-2 py-1 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded text-xs font-semibold transition-all"
+                            >
+                              ✏️ Practice
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+                )}
+
+                {/* No words tracked yet */}
+                {allWeakWords.length === 0 && (
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center">
+                    <p className="text-blue-700 font-semibold">📚 No failed words yet!</p>
+                    <p className="text-blue-600 text-sm mt-2">Complete some quizzes to build your practice list.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Practice Buttons - Keep existing */}
+          <div className="space-y-3 mb-6">
+            <div className="bg-purple-50 rounded-xl p-4 border-2 border-purple-200">
+              <h3 className="text-lg font-bold text-purple-700 mb-2 flex items-center gap-2">
+                <span>🎯</span>
+                Smart Practice
+              </h3>
+              <p className="text-gray-600 text-sm mb-4">
+                AI-powered quiz focusing on your weakest words and those due for review
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <button
+                  onClick={() => {
+                    setShowAdaptiveStats(false);
+                    startAdaptivePractice('play', 20);
+                  }}
+                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  <GraduationCap className="w-5 h-5" />
+                  Multiple Choice
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowAdaptiveStats(false);
+                    startAdaptivePractice('spelling', 20);
+                  }}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  ✏️ Spelling Mode
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowAdaptiveStats(false);
+                    startAdaptivePractice('speaking', 15);
+                  }}
+                  className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  🎤 Speaking Test
+                </button>
+                
+                <button
+                  onClick={() => {
+                    setShowAdaptiveStats(false);
+                    startAdaptivePractice('fillblank', 15);
+                  }}
+                  className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  📝 Fill Blanks
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Practice Top 5 */}
+            {stats.top5Weakest.length > 0 && (
+              <div className="bg-red-50 rounded-xl p-4 border-2 border-red-200">
+                <h3 className="text-lg font-bold text-red-700 mb-2">⚡ Quick Practice Top 5</h3>
+                <p className="text-gray-600 text-sm mb-3">
+                  Focus on your 5 most challenging words
+                </p>
+                <button
+                  onClick={() => {
+                    const top5Words = getWordsThatNeedPractice().slice(0, 5);
+                    setShowAdaptiveStats(false);
+                    
+                    // Start spelling mode with top 5
+                    setWordBank(top5Words);
+                    setUsedWords([]);
+                    setGameMode('spelling');
+                    setCurrentGameMode('spelling');
+                    setGameStartCategory('adaptive_top5');
+                    setScore(0);
+                    setStreak(0);
+                    setQuestionsAnswered(0);
+                    setFeedback(null);
+                    setWrongAnswers([]);
+                    setSpellingAnswer('');
+                    setNumQuestions(5);
+                    setReviewMode('adaptive_top5');
+                    
+                    generateSpellingQuestion(top5Words, []);
+                  }}
+                  className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white text-base font-bold py-3 rounded-xl hover:shadow-xl active:shadow-xl transition-all flex items-center justify-center gap-2"
+                >
+                  🔥 Practice Top 5 Now
+                </button>
+              </div>
+            )}
+
+            </div>
+
+          {/* Info Box */}
+          <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200 mb-4">
+            <h3 className="text-sm font-bold text-blue-700 mb-2 flex items-center gap-2">
+              <span>💡</span>
+              How It Works
+            </h3>
+            <ul className="text-xs text-gray-700 space-y-1">
+              <li>• Our AI analyzes your mistake patterns</li>
+              <li>• Words are prioritized by error rate and frequency</li>
+              <li>• SRS (Spaced Repetition) ensures optimal review timing</li>
+              <li>• Practice builds on your actual weak points</li>
+              <li>• Complete word list shows all failed words by difficulty</li>
+            </ul>
+          </div>
+
+          {/* Back Button */}
+          <button
+            onClick={() => setShowAdaptiveStats(false)}
+            className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            Back to Menu
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -5098,21 +5488,39 @@ if (showVerbCategorySelector) {
                 >
                   <span className="text-base sm:text-xl">✏️ Spelling</span>
                 </button>
-                {/* ADD THIS NEW BUTTON */}
-{/* NEW PRACTICE FAILED WORDS 2 - WORKING VERSION */}
+
 <button
   onClick={() => {
-    // Check if specific categories are selected
     if (selectedCategories.includes('all') || selectedCategories.length === 0) {
       alert('⚠️ Please select specific categories (not "All") to review failed words!');
       return;
     }
     
-    // Get ALL failed words from history
     const failedWordsData = getAllFailedWordsFromHistory(selectedCategories, 'spelling');
     
     if (failedWordsData.length === 0) {
       alert(`✅ No failed words found!\n\nYou haven't taken any spelling tests yet or got everything correct in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}`);
+      return;
+    }
+    
+    // NEW: Show updated count with unique variable names
+    const previousAttempts = attemptHistory.filter(
+      a => selectedCategories.includes(a.category) && a.mode === 'spelling'
+    );
+    
+    let reviewConfirmMsg = `📚 Found ${failedWordsData.length} failed words from your latest spelling test!\n\n`;
+    
+    if (previousAttempts.length > 1) {
+      const previousCount = previousAttempts[1]?.wrongAnswers?.length || 0;
+      if (previousCount > failedWordsData.length) {
+        reviewConfirmMsg += `🎉 Improvement! Previously: ${previousCount} failed words\n\n`;
+      }
+    }
+    
+    const topFailedWords = failedWordsData.slice(0, 3).map(w => w.dutch).join(', ');
+    reviewConfirmMsg += `Words to practice: ${topFailedWords}${failedWordsData.length > 3 ? '...' : ''}\n\nReady to practice?`;
+    
+    if (!confirm(reviewConfirmMsg)) {
       return;
     }
     
@@ -5129,7 +5537,7 @@ if (showVerbCategorySelector) {
       if (fullWord) {
         return {
           ...fullWord,
-          failCount: fw.failCount // Add fail count for tracking
+          failCount: fw.failCount
         };
       }
       return null;
@@ -5137,14 +5545,6 @@ if (showVerbCategorySelector) {
     
     if (failedWordObjects.length === 0) {
       alert('❌ Could not find the failed words in the selected categories. This might be a data issue.');
-      return;
-    }
-    
-    // Show confirmation with details
-    const mostFailed = failedWordObjects.slice(0, 3).map(w => `${w.dutch} (${w.failCount}x)`).join(', ');
-    const confirmMsg = `📚 Found ${failedWordObjects.length} failed words!\n\nMost failed: ${mostFailed}\n\nReady to practice?`;
-    
-    if (!confirm(confirmMsg)) {
       return;
     }
     
