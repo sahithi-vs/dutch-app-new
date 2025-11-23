@@ -1,0 +1,8 @@
+{
+    "name": "dutch-learning-app",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "download-images": "node scripts/downloadImages.js"
+    }
+}

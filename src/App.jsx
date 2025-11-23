@@ -17,6 +17,7 @@ import SentenceBuilder from './components/SentenceBuilder';
 import { verbConjugations, getVerbsByCategory, getAllVerbCategories } from './data/verbConjugations';
 import { triggerCelebration } from './utils/celebration';
 import confetti from 'canvas-confetti';
+import WordImage from './components/WordImage';
 
 const getAllWords = () => {
   const allWords = [];
@@ -5938,7 +5939,7 @@ export default function DutchLearningGame() {
                     {currentLearnWord.level} • {currentLearnWord.category.replace(/_/g, ' ')}
                   </span>
                 </div>
-
+                <WordImage word={currentLearnWord} size="large" isAdmin={isAdmin} />
                 <div className="mb-6">
                   <div className="flex items-center justify-center gap-3 mb-4">
                     <h2 className="text-4xl sm:text-6xl font-bold text-indigo-600">{currentLearnWord.dutch}</h2>
