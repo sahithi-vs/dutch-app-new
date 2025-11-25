@@ -148,7 +148,9 @@ const FlashcardMode = ({
                     </button>
 
                     <div className="text-center">
-                        <p className="text-sm text-gray-600">{category}</p>
+                        <p className="text-sm text-gray-600">
+                            {category === 'all' ? 'All Categories' : category.replace(/_/g, ' ').toUpperCase()}
+                        </p>
                         <p className="text-lg font-bold text-gray-800">
                             {currentIndex + 1} / {words.length}
                         </p>

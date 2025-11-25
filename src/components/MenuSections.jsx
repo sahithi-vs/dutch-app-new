@@ -96,6 +96,84 @@ const MenuSections = ({
                         >
                             <span className="text-sm sm:text-xl">📇 Flashcards</span>
                         </button>
+                        <button
+                            onClick={() => {
+                                if (selectedCategories.includes('all') || selectedCategories.length === 0) {
+                                    alert('⚠️ Please select specific categories (not "All") to review failed words!');
+                                    return;
+                                }
+
+                                const failedWordsData = getAllFailedWordsFromHistory(selectedCategories, 'spelling');
+
+                                if (failedWordsData.length === 0) {
+                                    alert(`✅ No failed words found!\n\nYou haven't taken any spelling tests yet or got everything correct in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}`);
+                                    return;
+                                }
+
+                                const previousAttempts = attemptHistory.filter(
+                                    a => selectedCategories.includes(a.category) && a.mode === 'spelling'
+                                );
+
+                                let reviewConfirmMsg = `📚 Found ${failedWordsData.length} failed words from your latest spelling test!\n\n`;
+
+                                if (previousAttempts.length > 1) {
+                                    const previousCount = previousAttempts[1]?.wrongAnswers?.length || 0;
+                                    if (previousCount > failedWordsData.length) {
+                                        reviewConfirmMsg += `🎉 Improvement! Previously: ${previousCount} failed words\n\n`;
+                                    }
+                                }
+
+                                const topFailedWords = failedWordsData.slice(0, 3).map(w => w.dutch).join(', ');
+                                reviewConfirmMsg += `Words to practice: ${topFailedWords}${failedWordsData.length > 3 ? '...' : ''}\n\nReady to practice?`;
+
+                                if (!confirm(reviewConfirmMsg)) {
+                                    return;
+                                }
+
+                                const allCategoryWords = loadWords(selectedCategories);
+                                const failedWordObjects = failedWordsData.map(fw => {
+                                    const fullWord = allCategoryWords.find(w =>
+                                        w.dutch.toLowerCase() === fw.dutch.toLowerCase() &&
+                                        w.english.toLowerCase() === fw.english.toLowerCase()
+                                    );
+
+                                    if (fullWord) {
+                                        return {
+                                            ...fullWord,
+                                            failCount: fw.failCount
+                                        };
+                                    }
+                                    return null;
+                                }).filter(w => w !== null);
+
+                                if (failedWordObjects.length === 0) {
+                                    alert('❌ Could not find the failed words in the selected categories. This might be a data issue.');
+                                    return;
+                                }
+
+                                setReviewMode('failed_words');
+                                setWordBank(failedWordObjects);
+                                setUsedWords([]);
+                                setGameMode('spelling');
+                                setCurrentGameMode('spelling');
+                                setGameStartCategory(selectedCategories.join(','));
+                                setScore(0);
+                                setStreak(0);
+                                setQuestionsAnswered(0);
+                                setFeedback(null);
+                                setWrongAnswers([]);
+                                setSpellingAnswer('');
+                                setNumQuestions(failedWordObjects.length);
+                                setShowQuestionSelector(false);
+                                setTranscript('');
+                                setIsRecording(false);
+                                generateSpellingQuestion(failedWordObjects, []);
+                            }}
+                            className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                        >
+                            <span className="text-sm sm:text-xl">🔄 Practice Failed Words</span>
+                        </button>
+
                     </div>
                 )}
             </div>
@@ -269,83 +347,6 @@ const MenuSections = ({
                             <span className="text-sm sm:text-xl">🧠 Smart Practice (AI)</span>
                         </button>
 
-                        <button
-                            onClick={() => {
-                                if (selectedCategories.includes('all') || selectedCategories.length === 0) {
-                                    alert('⚠️ Please select specific categories (not "All") to review failed words!');
-                                    return;
-                                }
-
-                                const failedWordsData = getAllFailedWordsFromHistory(selectedCategories, 'spelling');
-
-                                if (failedWordsData.length === 0) {
-                                    alert(`✅ No failed words found!\n\nYou haven't taken any spelling tests yet or got everything correct in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}`);
-                                    return;
-                                }
-
-                                const previousAttempts = attemptHistory.filter(
-                                    a => selectedCategories.includes(a.category) && a.mode === 'spelling'
-                                );
-
-                                let reviewConfirmMsg = `📚 Found ${failedWordsData.length} failed words from your latest spelling test!\n\n`;
-
-                                if (previousAttempts.length > 1) {
-                                    const previousCount = previousAttempts[1]?.wrongAnswers?.length || 0;
-                                    if (previousCount > failedWordsData.length) {
-                                        reviewConfirmMsg += `🎉 Improvement! Previously: ${previousCount} failed words\n\n`;
-                                    }
-                                }
-
-                                const topFailedWords = failedWordsData.slice(0, 3).map(w => w.dutch).join(', ');
-                                reviewConfirmMsg += `Words to practice: ${topFailedWords}${failedWordsData.length > 3 ? '...' : ''}\n\nReady to practice?`;
-
-                                if (!confirm(reviewConfirmMsg)) {
-                                    return;
-                                }
-
-                                const allCategoryWords = loadWords(selectedCategories);
-                                const failedWordObjects = failedWordsData.map(fw => {
-                                    const fullWord = allCategoryWords.find(w =>
-                                        w.dutch.toLowerCase() === fw.dutch.toLowerCase() &&
-                                        w.english.toLowerCase() === fw.english.toLowerCase()
-                                    );
-
-                                    if (fullWord) {
-                                        return {
-                                            ...fullWord,
-                                            failCount: fw.failCount
-                                        };
-                                    }
-                                    return null;
-                                }).filter(w => w !== null);
-
-                                if (failedWordObjects.length === 0) {
-                                    alert('❌ Could not find the failed words in the selected categories. This might be a data issue.');
-                                    return;
-                                }
-
-                                setReviewMode('failed_words');
-                                setWordBank(failedWordObjects);
-                                setUsedWords([]);
-                                setGameMode('spelling');
-                                setCurrentGameMode('spelling');
-                                setGameStartCategory(selectedCategories.join(','));
-                                setScore(0);
-                                setStreak(0);
-                                setQuestionsAnswered(0);
-                                setFeedback(null);
-                                setWrongAnswers([]);
-                                setSpellingAnswer('');
-                                setNumQuestions(failedWordObjects.length);
-                                setShowQuestionSelector(false);
-                                setTranscript('');
-                                setIsRecording(false);
-                                generateSpellingQuestion(failedWordObjects, []);
-                            }}
-                            className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                        >
-                            <span className="text-sm sm:text-xl">🔄 Practice Failed Words</span>
-                        </button>
 
                         <button
                             onClick={() => {
