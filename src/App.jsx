@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, Check, X, Trophy, RefreshCw, Home, BookOpen, GraduationCap, ChevronRight, ChevronLeft, LogOut, User, Menu } from 'lucide-react';
+import { Volume2, Check, X, Trophy, RefreshCw, Home, BookOpen, GraduationCap, ChevronRight, ChevronDown, ChevronUp, ChevronLeft, LogOut, User, Menu } from 'lucide-react';
 import { GoogleLogin, googleLogout } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
 import { conversations } from './data/conversations';
 import { dutchWordBank } from './data/dutchWordBank';
 import { stories } from './data/stories';
+import MenuSections from './components/MenuSections';
 // import { verbConjugations } from './data/verbConjugations';
 import { achievements as achievementsData } from './data/achievements';
 // import { ref, set, get, child, onValue } from 'firebase/database';
@@ -5683,249 +5684,45 @@ export default function DutchLearningGame() {
                   </p>
                 </div>
               )}
-              {/* Game Mode Buttons - MOBILE OPTIMIZED */}
-              <div className="space-y-2 sm:space-y-3">
-                <button
-                  onClick={() => openQuestionSelector('learn')}
-                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span className="text-sm sm:text-xl">Learn Mode</span>
-                </button>
-
-                <button
-                  onClick={() => openQuestionSelector('play')}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
-                  <span className="text-sm sm:text-xl">Multiple Choice</span>
-                </button>
-
-                <button
-                  onClick={() => openQuestionSelector('spelling')}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-base sm:text-xl">✏️ Spelling</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    if (selectedCategories.includes('all') || selectedCategories.length === 0) {
-                      alert('⚠️ Please select specific categories (not "All") to review failed words!');
-                      return;
-                    }
-
-                    const failedWordsData = getAllFailedWordsFromHistory(selectedCategories, 'spelling');
-
-                    if (failedWordsData.length === 0) {
-                      alert(`✅ No failed words found!\n\nYou haven't taken any spelling tests yet or got everything correct in:\n${selectedCategories.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ')}`);
-                      return;
-                    }
-
-                    // NEW: Show updated count with unique variable names
-                    const previousAttempts = attemptHistory.filter(
-                      a => selectedCategories.includes(a.category) && a.mode === 'spelling'
-                    );
-
-                    let reviewConfirmMsg = `📚 Found ${failedWordsData.length} failed words from your latest spelling test!\n\n`;
-
-                    if (previousAttempts.length > 1) {
-                      const previousCount = previousAttempts[1]?.wrongAnswers?.length || 0;
-                      if (previousCount > failedWordsData.length) {
-                        reviewConfirmMsg += `🎉 Improvement! Previously: ${previousCount} failed words\n\n`;
-                      }
-                    }
-
-                    const topFailedWords = failedWordsData.slice(0, 3).map(w => w.dutch).join(', ');
-                    reviewConfirmMsg += `Words to practice: ${topFailedWords}${failedWordsData.length > 3 ? '...' : ''}\n\nReady to practice?`;
-
-                    if (!confirm(reviewConfirmMsg)) {
-                      return;
-                    }
-
-                    // Load all words from selected categories
-                    const allCategoryWords = loadWords(selectedCategories);
-
-                    // Map failed words data to full word objects
-                    const failedWordObjects = failedWordsData.map(fw => {
-                      const fullWord = allCategoryWords.find(w =>
-                        w.dutch.toLowerCase() === fw.dutch.toLowerCase() &&
-                        w.english.toLowerCase() === fw.english.toLowerCase()
-                      );
-
-                      if (fullWord) {
-                        return {
-                          ...fullWord,
-                          failCount: fw.failCount
-                        };
-                      }
-                      return null;
-                    }).filter(w => w !== null);
-
-                    if (failedWordObjects.length === 0) {
-                      alert('❌ Could not find the failed words in the selected categories. This might be a data issue.');
-                      return;
-                    }
-
-                    // Set up the review mode
-                    setReviewMode('failed_words');
-                    setWordBank(failedWordObjects);
-                    setUsedWords([]);
-                    setGameMode('spelling');
-                    setCurrentGameMode('spelling');
-                    setGameStartCategory(selectedCategories.join(','));
-                    setScore(0);
-                    setStreak(0);
-                    setQuestionsAnswered(0);
-                    setFeedback(null);
-                    setWrongAnswers([]);
-                    setSpellingAnswer('');
-                    setNumQuestions(failedWordObjects.length);
-                    setShowQuestionSelector(false);
-                    setTranscript('');
-                    setIsRecording(false);
-
-                    // Generate first question
-                    generateSpellingQuestion(failedWordObjects, []);
-                  }}
-                  className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🔄 Practice Failed Words</span>
-                </button>
-
-                {/* ADD THIS BUTTON IN THE MENU SCREEN - after SRS Review button */}
-                <button
-                  onClick={() => {
-                    const stats = getAdaptiveLearningStats();
-                    if (!stats || stats.totalAttempts === 0) {
-                      alert('📚 Take some quizzes first!\n\nComplete a few quizzes so we can analyze your learning patterns and suggest personalized practice.');
-                      return;
-                    }
-                    setShowAdaptiveStats(true);
-                  }}
-                  className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🧠 Smart Practice (AI)</span>
-                </button>
-
-                <button
-                  onClick={() => setShowGrammarLessons(true)}
-                  className="w-full bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📚 Grammar Lessons</span>
-                </button>
-                <button
-                  onClick={() => openQuestionSelector('sentencebuilder')}
-                  className="w-full bg-gradient-to-r from-indigo-400 via-purple-500 to-pink-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🧩 Sentence Builder</span>
-                </button>
-                <button
-                  onClick={() => setShowFlashcards(true)}
-                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📇 Flashcards</span>
-                </button>
-                <button
-                  onClick={() => { setShowStories(true); setGameMode('stories'); }}
-                  className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📖 Reading Test</span>
-                </button>
-
-                <button
-                  onClick={() => openQuestionSelector('speaking')}
-                  className="w-full bg-gradient-to-r from-rose-500 to-pink-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🎤 Speaking Test</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setGameMode('conversations');
-                    setSelectedConversation(null);
-                  }}
-                  className="w-full bg-gradient-to-r from-purple-400 to-purple-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🎧 Listening Practice</span>
-                </button>
-                <button
-                  onClick={() => setShowFillBlankStories(true)}
-                  className="w-full bg-gradient-to-r from-emerald-400 to-teal-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">✍️ Fill-in-the-Blank Stories</span>
-                </button>
-
-                <button
-                  onClick={() => setShowTipsAndTricks(true)}
-                  className="w-full bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">💡 Tips & Tricks</span>
-                </button>
-
-                {/* ADD THIS CONJUGATION BUTTON RIGHT HERE */}
-                <button
-                  onClick={() => setShowConjugationOptions(!showConjugationOptions)}
-                  className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🔄 Verbs Practice</span>
-                </button>
-                {showConjugationOptions && (
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => {
-                        setShowVerbCategorySelector(true);
-                        setPendingGameMode('conjugation_learn');
-                      }}
-                      className="w-full bg-gradient-to-r from-sky-500 to-indigo-500 text-white text-sm sm:text-base font-bold py-2 sm:py-3 rounded-xl hover:shadow-lg active:shadow-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      <span>📚 Learn</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setShowVerbCategorySelector(true);
-                        setPendingGameMode('conjugation_test');
-                      }}
-                      className="w-full bg-gradient-to-r from-emerald-500 to-green-600 text-white text-sm sm:text-base font-bold py-2 sm:py-3 rounded-xl hover:shadow-lg active:shadow-lg transition-all flex items-center justify-center gap-2"
-                    >
-                      <span>🧪 Test</span>
-                    </button>
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowHistory(true)}
-                  className="w-full bg-gradient-to-r from-indigo-400 to-indigo-600 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">📊 My History</span>
-                </button>
-                <button
-                  onClick={() => setGameMode('achievements')}
-                  className="w-full bg-gradient-to-r from-fuchsia-400 via-rose-400 to-amber-300 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🏆 Achievements & Points</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    const allWords = getAllWords();
-                    const prioritized = getSRSPrioritizedWords(allWords);
-                    const dueWords = prioritized.filter(w => w.isDue);
-
-                    if (dueWords.length === 0) {
-                      alert('🎉 No words due for review! Great job!');
-                      return;
-                    }
-
-                    setNumQuestions(Math.min(dueWords.length, 20));
-                    setPendingGameMode('play');
-                    setShowQuestionSelector(true);
-                  }}
-                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-base sm:text-xl font-bold py-3 sm:py-4 rounded-xl hover:shadow-xl active:shadow-xl transition-all transform active:scale-95 flex items-center justify-center gap-2"
-                >
-                  <span className="text-sm sm:text-xl">🧠 SRS Review ({
-                    getSRSPrioritizedWords(getAllWords()).filter(w => w.isDue).length
-                  } due)</span>
-                </button>
-              </div>
+              <MenuSections
+                openQuestionSelector={openQuestionSelector}
+                setShowFlashcards={setShowFlashcards}
+                setShowGrammarLessons={setShowGrammarLessons}
+                setShowTipsAndTricks={setShowTipsAndTricks}
+                setShowStories={setShowStories}
+                setGameMode={setGameMode}
+                setSelectedConversation={setSelectedConversation}
+                setShowFillBlankStories={setShowFillBlankStories}
+                setShowConjugationOptions={setShowConjugationOptions}
+                showConjugationOptions={showConjugationOptions}
+                setShowVerbCategorySelector={setShowVerbCategorySelector}
+                setPendingGameMode={setPendingGameMode}
+                setShowHistory={setShowHistory}
+                setShowAdaptiveStats={setShowAdaptiveStats}
+                getAdaptiveLearningStats={getAdaptiveLearningStats}
+                selectedCategories={selectedCategories}
+                getAllFailedWordsFromHistory={getAllFailedWordsFromHistory}
+                attemptHistory={attemptHistory}
+                loadWords={loadWords}
+                setReviewMode={setReviewMode}
+                setWordBank={setWordBank}
+                setUsedWords={setUsedWords}
+                setCurrentGameMode={setCurrentGameMode}
+                setGameStartCategory={setGameStartCategory}
+                setScore={setScore}
+                setStreak={setStreak}
+                setQuestionsAnswered={setQuestionsAnswered}
+                setFeedback={setFeedback}
+                setWrongAnswers={setWrongAnswers}
+                setSpellingAnswer={setSpellingAnswer}
+                setNumQuestions={setNumQuestions}
+                setShowQuestionSelector={setShowQuestionSelector}
+                setTranscript={setTranscript}
+                setIsRecording={setIsRecording}
+                generateSpellingQuestion={generateSpellingQuestion}
+                getAllWords={getAllWords}
+                getSRSPrioritizedWords={getSRSPrioritizedWords}
+              />
 
               {/* Info Box - MOBILE OPTIMIZED */}
               <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-orange-50 rounded-xl">
