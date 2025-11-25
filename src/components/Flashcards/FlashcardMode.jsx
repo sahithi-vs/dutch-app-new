@@ -49,9 +49,9 @@ const FlashcardMode = ({
         const isRightSwipe = distance < -minSwipeDistance;
 
         if (isLeftSwipe) {
-            handleAnswer(false); // Don't know
+            handleAnswer(false); // Don't know (swipe left)
         } else if (isRightSwipe) {
-            handleAnswer(true); // Know it
+            handleAnswer(true); // Know it (swipe right)
         }
 
         setTouchStart(null);
@@ -84,12 +84,6 @@ const FlashcardMode = ({
 
     // Handle answer (know it / don't know)
     const handleAnswer = (wasCorrect) => {
-        if (!isFlipped) {
-            // Must flip card first to see answer
-            setIsFlipped(true);
-            return;
-        }
-
         const wordKey = `${currentWord.dutch}_${currentWord.english}`;
         const currentCardData = flashcardData[wordKey] || {
             box: 1,
@@ -175,7 +169,7 @@ const FlashcardMode = ({
 
                 {/* Flashcard */}
                 <div className={`transition-transform duration-300 ${swipeDirection === 'left' ? '-translate-x-full opacity-0' :
-                        swipeDirection === 'right' ? 'translate-x-full opacity-0' : ''
+                    swipeDirection === 'right' ? 'translate-x-full opacity-0' : ''
                     }`}>
                     <FlashcardCard
                         word={currentWord}
@@ -217,12 +211,12 @@ const FlashcardMode = ({
                     <h3 className="text-lg font-bold text-gray-800 mb-4">Session Progress</h3>
                     <div className="grid grid-cols-2 gap-4">
                         <div className="text-center">
-                            <div className="text-3xl font-bold text-green-600">{sessionStats.correct}</div>
-                            <div className="text-sm text-gray-600">Correct</div>
-                        </div>
-                        <div className="text-center">
                             <div className="text-3xl font-bold text-red-600">{sessionStats.incorrect}</div>
                             <div className="text-sm text-gray-600">Incorrect</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl font-bold text-green-600">{sessionStats.correct}</div>
+                            <div className="text-sm text-gray-600">Correct</div>
                         </div>
                     </div>
                 </div>
