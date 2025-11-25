@@ -4173,11 +4173,15 @@ export default function DutchLearningGame() {
   // FLASHCARD DECK SELECTION
   if (showFlashcards && !selectedFlashcardDeck) {
     const allWords = getAllWords();
-    const categories = Object.keys(dutchWordBank);
-
+    const allCategories = Object.keys(dutchWordBank);
+    // Filter categories based on user permissions
+    // Admin sees all categories, regular users only see unlocked ones
+    const availableCategories = isAdmin
+      ? allCategories
+      : allCategories.filter(cat => !isCategoryLocked(cat));
     return (
       <FlashcardDeck
-        categories={['all', ...categories]}
+        categories={['all', ...availableCategories]}
         allWords={allWords}
         flashcardData={flashcardData}
         onSelectDeck={(category, words) => {
