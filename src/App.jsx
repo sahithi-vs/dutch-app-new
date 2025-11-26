@@ -3205,8 +3205,37 @@ export default function DutchLearningGame() {
       });
     }
 
+    // Filter for better quality sentences (5+ words minimum)
+    // Count words in the Dutch part (before parentheses)
+    const qualitySentences = sentences.filter(w => {
+      const dutchPart = w.example.split('(')[0].trim();
+      const wordCount = dutchPart.split(/\s+/).length;
+      return wordCount >= 5;
+    });
+
+    // Get used sentences from localStorage to avoid repetition
+    const usedSentencesKey = `sentenceBuilder_used_${sentenceBuilderCategories.join('_')}`;
+    const usedSentences = JSON.parse(localStorage.getItem(usedSentencesKey) || '[]');
+
+    // Filter out recently used sentences
+    const availableSentences = qualitySentences.filter(w =>
+      !usedSentences.includes(w.example)
+    );
+
+    // If we've used all sentences, reset the tracking
+    const sentencesToUse = availableSentences.length >= numQuestions
+      ? availableSentences
+      : qualitySentences;
+
     // Shuffle and limit sentences
-    const shuffledSentences = sentences.sort(() => Math.random() - 0.5).slice(0, numQuestions);
+    const shuffledSentences = sentencesToUse
+      .sort(() => Math.random() - 0.5)
+      .slice(0, numQuestions);
+
+    // Track these sentences as used
+    const newUsedSentences = shuffledSentences.map(s => s.example);
+    const updatedUsedSentences = [...usedSentences, ...newUsedSentences].slice(-50); // Keep last 50
+    localStorage.setItem(usedSentencesKey, JSON.stringify(updatedUsedSentences));
 
     if (shuffledSentences.length === 0) {
       return (
