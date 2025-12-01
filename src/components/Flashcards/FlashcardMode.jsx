@@ -21,6 +21,8 @@ const FlashcardMode = ({
     const [touchStart, setTouchStart] = useState(null);
     const [touchEnd, setTouchEnd] = useState(null);
     const [swipeDirection, setSwipeDirection] = useState(null);
+    const [swipeOffset, setSwipeOffset] = useState(0); // Track swipe position
+    const [isSwiping, setIsSwiping] = useState(false); // Track if actively swiping
 
     const currentWord = words[currentIndex];
     const progress = ((currentIndex + 1) / words.length) * 100;
@@ -33,16 +35,28 @@ const FlashcardMode = ({
     const onTouchStart = (e) => {
         setTouchEnd(null);
         setTouchStart(e.targetTouches[0].clientX);
+        setIsSwiping(true);
     };
 
     // Handle touch move
     const onTouchMove = (e) => {
-        setTouchEnd(e.targetTouches[0].clientX);
+        if (!touchStart) return;
+
+        const currentTouch = e.targetTouches[0].clientX;
+        setTouchEnd(currentTouch);
+
+        // Calculate swipe offset for visual feedback
+        const offset = currentTouch - touchStart;
+        setSwipeOffset(offset);
     };
 
     // Handle touch end
     const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return;
+        if (!touchStart || !touchEnd) {
+            setIsSwiping(false);
+            setSwipeOffset(0);
+            return;
+        }
 
         const distance = touchStart - touchEnd;
         const isLeftSwipe = distance > minSwipeDistance;
@@ -56,6 +70,8 @@ const FlashcardMode = ({
 
         setTouchStart(null);
         setTouchEnd(null);
+        setSwipeOffset(0);
+        setIsSwiping(false);
     };
 
     // Handle keyboard shortcuts
@@ -79,7 +95,9 @@ const FlashcardMode = ({
 
     // Handle card flip
     const handleFlip = () => {
-        setIsFlipped(!isFlipped);
+        if (!isSwiping) { // Only flip if not swiping
+            setIsFlipped(!isFlipped);
+        }
     };
 
     // Handle answer (know it / don't know)
@@ -129,6 +147,10 @@ const FlashcardMode = ({
         }
     };
 
+    // Calculate swipe indicator opacity and rotation
+    const swipeProgress = Math.min(Math.abs(swipeOffset) / 150, 1);
+    const rotation = swipeOffset / 20; // Slight rotation based on swipe
+
     return (
         <div
             className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 pb-24"
@@ -169,10 +191,48 @@ const FlashcardMode = ({
                     </div>
                 </div>
 
-                {/* Flashcard */}
-                <div className={`transition-transform duration-300 ${swipeDirection === 'left' ? '-translate-x-full opacity-0' :
-                    swipeDirection === 'right' ? 'translate-x-full opacity-0' : ''
-                    }`}>
+                {/* Flashcard with swipe feedback */}
+                <div
+                    className="relative"
+                    style={{
+                        transform: swipeDirection ?
+                            (swipeDirection === 'left' ? 'translateX(-100%)' : 'translateX(100%)') :
+                            `translateX(${swipeOffset}px) rotate(${rotation}deg)`,
+                        transition: swipeDirection ? 'transform 0.3s ease-out' : 'none',
+                        opacity: swipeDirection ? 0 : 1
+                    }}
+                >
+                    {/* Swipe indicators */}
+                    {isSwiping && (
+                        <>
+                            {/* Left swipe indicator (Don't Know - Red X) */}
+                            <div
+                                className="absolute top-1/2 left-8 transform -translate-y-1/2 z-10 pointer-events-none"
+                                style={{
+                                    opacity: swipeOffset < 0 ? swipeProgress : 0,
+                                    scale: swipeOffset < 0 ? 0.5 + (swipeProgress * 0.5) : 0.5
+                                }}
+                            >
+                                <div className="bg-red-500 rounded-full p-6 shadow-2xl">
+                                    <X className="w-12 h-12 text-white" strokeWidth={3} />
+                                </div>
+                            </div>
+
+                            {/* Right swipe indicator (Know It - Green Check) */}
+                            <div
+                                className="absolute top-1/2 right-8 transform -translate-y-1/2 z-10 pointer-events-none"
+                                style={{
+                                    opacity: swipeOffset > 0 ? swipeProgress : 0,
+                                    scale: swipeOffset > 0 ? 0.5 + (swipeProgress * 0.5) : 0.5
+                                }}
+                            >
+                                <div className="bg-green-500 rounded-full p-6 shadow-2xl">
+                                    <Check className="w-12 h-12 text-white" strokeWidth={3} />
+                                </div>
+                            </div>
+                        </>
+                    )}
+
                     <FlashcardCard
                         word={currentWord}
                         isFlipped={isFlipped}

@@ -1,5 +1,5 @@
-export const dutchWordBankA2 = {   
-  'thema_1_verhuizen_part1': [
+export const dutchWordBankA2 = {
+  ' verhuizen_part1': [
     { dutch: 'al', english: 'already', level: 'A2', example: 'Ze is al thuis (She is already home.)' },
     { dutch: 'bevallen', english: 'to give birth', level: 'A2', example: 'Ze is vorige week bevallen (She gave birth last week.)' },
     { dutch: 'de buren', english: 'neighbours', level: 'A2', example: 'De buren zijn erg aardig (The neighbours are very nice.)' },
@@ -52,7 +52,7 @@ export const dutchWordBankA2 = {
     { dutch: 'de hulp', english: 'help', level: 'A2', example: 'Bedankt voor je hulp! (Thanks for your help!)' }
   ],
 
-  'thema_1_verhuizen_part2': [
+  ' verhuizen_part2': [
     { dutch: 'het lawaai', english: 'noise', level: 'A2', example: 'Er is veel lawaai op straat (There is a lot of noise on the street.)' },
     { dutch: 'normaal', english: 'usually', level: 'A2', example: 'Normaal sta ik om 7 uur op (Usually I get up at 7 o\'clock.)' },
     { dutch: 'op tijd', english: 'in time', level: 'A2', example: 'Ik ben altijd op tijd (I am always on time.)' },
@@ -88,7 +88,7 @@ export const dutchWordBankA2 = {
     { dutch: 'zachter', english: 'soft, softer', level: 'A2', example: 'Kun je zachter praten? (Can you speak more softly?)' }
   ],
 
-  'thema_2_nederland_part1': [
+  ' nederland_part1': [
     { dutch: 'het cadeau', english: 'present, gift', level: 'A2', example: 'Ik geef haar een cadeau (I give her a present.)' },
     { dutch: 'de chocola', english: 'chocolate', level: 'A2', example: 'Ik hou van chocola (I love chocolate.)' },
     { dutch: 'hetzelfde', english: 'the same', level: 'A2', example: 'We hebben hetzelfde boek (We have the same book.)' },
@@ -141,7 +141,7 @@ export const dutchWordBankA2 = {
     { dutch: 'prachtig', english: 'beautiful', level: 'A2', example: 'Het is prachtig weer! (It is beautiful weather!)' }
   ],
 
-  'thema_2_nederland_part2': [
+  ' nederland_part2': [
     { dutch: 'regenen', english: 'to rain', level: 'A2', example: 'Het regent hard (It rains hard.)' },
     { dutch: 'de rest', english: 'rest, remaining', level: 'A2', example: 'De rest komt later (The rest comes later.)' },
     { dutch: 'schijnen', english: 'to shine', level: 'A2', example: 'De zon schijnt (The sun shines.)' },
@@ -193,7 +193,7 @@ export const dutchWordBankA2 = {
     { dutch: 'overlijden', english: 'to decease', level: 'A2', example: 'Hij is vorige week overleden (He deceased last week.)' }
   ],
 
-  'thema_2_nederland_part3': [
+  ' nederland_part3': [
     { dutch: 'het stadhuis', english: 'city hall', level: 'A2', example: 'We trouwen in het stadhuis (We marry in the city hall.)' },
     { dutch: 'sterkte', english: 'good luck', level: 'A2', example: 'Sterkte met je examen! (Good luck with your exam!)' },
     { dutch: 'verdrietig', english: 'sad', level: 'A2', example: 'Ze is verdrietig (She is sad.)' },
@@ -214,7 +214,7 @@ export const dutchWordBankA2 = {
     { dutch: 'de top', english: 'top, summit', level: 'A2', example: 'We zijn op de top (We are at the summit.)' }
   ],
 
-  'thema_3_kinderen_part1': [
+  ' kinderen_part1': [
     { dutch: 'de basisschool', english: 'elementary school', level: 'A2', example: 'Mijn kind zit op de basisschool (My child is in elementary school.)' },
     { dutch: 'binnenkort', english: 'soon', level: 'A2', example: 'Binnenkort ga ik verhuizen (Soon I will move.)' },
     { dutch: 'het buitenland', english: 'abroad', level: 'A2', example: 'Ze wonen in het buitenland (They live abroad.)' },
@@ -267,7 +267,7 @@ export const dutchWordBankA2 = {
     { dutch: 'opnemen', english: 'to answer the phone', level: 'A2', example: 'Kun je opnemen? (Can you answer?)' }
   ],
 
-  'thema_3_kinderen_part2': [
+  ' kinderen_part2': [
     { dutch: 'regelen', english: 'to arrange, organize', level: 'A2', example: 'Ik regel het (I arrange it.)' },
     { dutch: 'terugbellen', english: 'to call back', level: 'A2', example: 'Ik bel je terug (I call you back.)' },
     { dutch: 'verliezen', english: 'to lose', level: 'A2', example: 'Ik heb mijn sleutel verloren (I lost my key.)' },
@@ -318,7 +318,7 @@ export const dutchWordBankA2 = {
     { dutch: 'de zorg', english: 'care', level: 'A2', example: 'De zorg is goed (The care is good.)' }
   ],
 
-  'thema_4_winkels_part1': [
+  ' winkels_part1': [
     { dutch: 'aantrekken', english: 'to pull on', level: 'A2', example: 'Ik trek mijn jas aan (I pull on my coat.)' },
     { dutch: 'aanwijzen', english: 'to point out', level: 'A2', example: 'Kun je het aanwijzen? (Can you point it out?)' },
     { dutch: 'de baas', english: 'boss', level: 'A2', example: 'Mijn baas is aardig (My boss is nice.)' },
@@ -370,7 +370,7 @@ export const dutchWordBankA2 = {
     { dutch: 'eens', english: 'once, once again', level: 'A2', example: 'Nog eens proberen (Try once again.)' }
   ],
 
-  'thema_4_winkels_part2': [
+  ' winkels_part2': [
     { dutch: 'het excuus', english: 'apology', level: 'A2', example: 'Mijn excuses! (My apologies!)' },
     { dutch: 'gauw', english: 'soon', level: 'A2', example: 'Tot gauw! (See you soon!)' },
     { dutch: 'geleden', english: 'ago', level: 'A2', example: 'Twee weken geleden (Two weeks ago.)' },
@@ -411,7 +411,7 @@ export const dutchWordBankA2 = {
     { dutch: 'voorstellen', english: 'to propose', level: 'A2', example: 'Ik stel iets voor (I propose something.)' }
   ],
 
-  'thema_5_opleidingen_part1': [
+  ' opleidingen_part1': [
     { dutch: 'het advies', english: 'advice', level: 'A2', example: 'Wat is je advies? (What is your advice?)' },
     { dutch: 'de advocaat', english: 'lawyer', level: 'A2', example: 'Zij is advocaat (She is a lawyer.)' },
     { dutch: 'het hbo', english: 'vocational education (high level)', level: 'A2', example: 'Hij studeert aan het hbo (He studies at vocational college.)' },
@@ -464,7 +464,7 @@ export const dutchWordBankA2 = {
     { dutch: 'schilderen', english: 'to paint', level: 'A2', example: 'Ik schilder de muur (I paint the wall.)' }
   ],
 
-  'thema_5_opleidingen_part2': [
+  ' opleidingen_part2': [
     { dutch: 'slagen', english: 'to succeed', level: 'A2', example: 'Ik ben geslaagd! (I succeeded!)' },
     { dutch: 'spannend', english: 'exciting', level: 'A2', example: 'Het is spannend! (It is exciting!)' },
     { dutch: 'de student', english: 'student', level: 'A2', example: 'Hij is student (He is a student.)' },
@@ -516,7 +516,7 @@ export const dutchWordBankA2 = {
     { dutch: 'een paar', english: 'a few', level: 'A2', example: 'Een paar dagen (A few days.)' }
   ],
 
-  'thema_5_opleidingen_part3': [
+  ' opleidingen_part3': [
     { dutch: 'de toets', english: 'test', level: 'A2', example: 'We hebben een toets (We have a test.)' },
     { dutch: 'het totaal', english: 'total', level: 'A2', example: 'Wat is het totaal? (What is the total?)' },
     { dutch: 'vanmiddag', english: 'this afternoon', level: 'A2', example: 'Vanmiddag heb ik tijd (This afternoon I have time.)' },
@@ -551,7 +551,7 @@ export const dutchWordBankA2 = {
     { dutch: 'winnen', english: 'to win', level: 'A2', example: 'We winnen! (We win!)' }
   ],
 
-  'thema_6_werk_zoeken_part1': [
+  ' werk_zoeken_part1': [
     { dutch: 'bewaren', english: 'to store', level: 'A2', example: 'Bewaar het document (Store the document.)' },
     { dutch: 'het contract', english: 'contract', level: 'A2', example: 'Teken het contract (Sign the contract.)' },
     { dutch: 'de functie', english: 'job', level: 'A2', example: 'Wat is je functie? (What is your job?)' },
@@ -610,7 +610,7 @@ export const dutchWordBankA2 = {
     { dutch: 'volledig', english: 'entire', level: 'A2', example: 'De volledige prijs (The entire price.)' }
   ],
 
-  'thema_6_werk_zoeken_part2': [
+  ' werk_zoeken_part2': [
     { dutch: 'de vrachtwagen', english: 'lorry', level: 'A2', example: 'De vrachtwagen is groot (The lorry is big.)' },
     { dutch: 'creatief', english: 'creative', level: 'A2', example: 'Hij is creatief (He is creative.)' },
     { dutch: 'dat geeft niet', english: 'that doesn\'t matter', level: 'A2', example: 'Dat geeft niet (That doesn\'t matter.)' },
@@ -628,7 +628,7 @@ export const dutchWordBankA2 = {
     { dutch: 'de zaak', english: 'business', level: 'A2', example: 'Hij heeft een eigen zaak (He has his own business.)' }
   ],
 
-  'thema_7_werken_part1': [
+  ' werken_part1': [
     { dutch: 'aan de linkerkant', english: 'to the left', level: 'A2', example: 'Het is aan de linkerkant (It is to the left.)' },
     { dutch: 'aan de rechterkant', english: 'to the right', level: 'A2', example: 'Het is aan de rechterkant (It is to the right.)' },
     { dutch: 'afwassen', english: 'to do the dishes', level: 'A2', example: 'Ik was af (I do the dishes.)' },
@@ -680,7 +680,7 @@ export const dutchWordBankA2 = {
     { dutch: 'geheim', english: 'secret', level: 'A2', example: 'Het is geheim (It is secret.)' }
   ],
 
-  'thema_7_werken_part2': [
+  ' werken_part2': [
     { dutch: 'het loon', english: 'salary', level: 'A2', example: 'Mijn loon is goed (My salary is good.)' },
     { dutch: 'nadenken', english: 'to think about', level: 'A2', example: 'Ik denk erover na (I think about it.)' },
     { dutch: 'officieel', english: 'official', level: 'A2', example: 'Het is officieel (It is official.)' },
@@ -738,7 +738,7 @@ export const dutchWordBankA2 = {
     { dutch: 'wekelijks', english: 'weekly', level: 'A2', example: 'De wekelijkse les (The weekly lesson.)' }
   ],
 
-  'thema_8_gemeente_part1': [
+  ' gemeente_part1': [
     { dutch: 'het afval', english: 'garbage', level: 'A2', example: 'Gooi het afval weg (Throw away the garbage.)' },
     { dutch: 'binnen', english: 'within', level: 'A2', example: 'Binnen twee dagen (Within two days.)' },
     { dutch: 'de eigenaar', english: 'owner', level: 'A2', example: 'Wie is de eigenaar? (Who is the owner?)' },
@@ -799,7 +799,7 @@ export const dutchWordBankA2 = {
     { dutch: 'zitten in', english: 'to be located', level: 'A2', example: 'Het zit in mijn tas (It is located in my bag.)' }
   ],
 
-  'thema_8_gemeente_part2': [
+  ' gemeente_part2': [
     { dutch: 'de aarde', english: 'earth', level: 'A2', example: 'We wonen op de aarde (We live on earth.)' },
     { dutch: 'de bioscoop', english: 'cinema', level: 'A2', example: 'We gaan naar de bioscoop (We go to the cinema.)' },
     { dutch: 'de boete', english: 'penalty', level: 'A2', example: 'Je krijgt een boete (You get a penalty.)' },

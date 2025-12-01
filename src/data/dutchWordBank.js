@@ -1,7 +1,7 @@
 
 // Complete Dutch Word Bank - 1000 Most Common Words (Lessons 1-20)
 export const dutchWordBankA1 = {
-  'thema_1_hallo_part1': [
+  ' hallo_part1': [
     { dutch: 'getrouwd', english: 'married', level: 'A1', example: 'Zij zijn getrouwd (They are married.)' },
     { dutch: 'hallo', english: 'hello', level: 'A1', example: 'Hallo, hoe gaat het? (Hello, how are you?)' },
     { dutch: 'jaar', english: 'year', level: 'A1', example: 'Het jaar is bijna voorbij (The year is almost over.)' },
@@ -49,7 +49,7 @@ export const dutchWordBankA1 = {
     { dutch: 'gaat wel', english: "It's okay", level: 'A1', example: 'Het gaat wel met mij (I am okay.)' },
     { dutch: 'Hoe gaat het?', english: 'How are you?', level: 'A1', example: 'Hoe gaat het met jou? (How are you?)' }
   ],
-  'thema_1_hallo_part2': [
+  ' hallo_part2': [
     { dutch: 'Hoe is het?', english: 'How is it going?', level: 'A1', example: 'Hoe is het met je? (How is it going with you?)' },
     { dutch: 'ook', english: 'also', level: 'A1', example: 'Ik ga ook naar school (I also go to school.)' },
     { dutch: 'niet', english: 'not', level: 'A1', example: 'Dat is niet waar (That is not true.)' },
@@ -96,7 +96,7 @@ export const dutchWordBankA1 = {
     { dutch: 'jij hebt', english: 'you have', level: 'A1', example: 'Jij hebt gelijk (You are right.)' },
     { dutch: 'heb jij?', english: 'do you have?', level: 'A1', example: 'Heb jij een pen? (Do you have a pen?)' }
   ],
-  'thema_2_school_part1': [
+  ' school_part1': [
     { dutch: 'binnen', english: 'inside', level: 'A1', example: 'De kinderen spelen binnen (The children are playing inside.)' },
     { dutch: 'buiten', english: 'outside, outdoors', level: 'A1', example: 'We eten buiten in de tuin (We eat outside in the garden.)' },
     { dutch: 'cursist', english: 'student, pupil', level: 'A1', example: 'De cursist maakt zijn huiswerk (The student does his homework.)' },
@@ -144,7 +144,7 @@ export const dutchWordBankA1 = {
     { dutch: 'tekst', english: 'text', level: 'A1', example: 'Lees de tekst hardop (Read the text aloud.)' },
 
   ],
-  'thema_2_school_part2': [
+  ' school_part2': [
     { dutch: 'weekend', english: 'weekend', level: 'A1', example: 'In het weekend ga ik naar mijn familie (I visit my family on the weekend.)' },
     { dutch: 'maandag', english: 'Monday', level: 'A1', example: 'Maandag begint de school (School starts on Monday.)' },
     { dutch: 'dinsdag', english: 'Tuesday', level: 'A1', example: 'Dinsdag is mijn vrije dag (Tuesday is my day off.)' },
@@ -192,7 +192,7 @@ export const dutchWordBankA1 = {
     { dutch: 'kiezen', english: 'to choose', level: 'A1', example: 'Je mag een boek kiezen (You may choose a book.)' },
 
   ],
-  'thema_2_school_part3': [
+  ' school_part3': [
     { dutch: 'januari', english: 'January', level: 'A1', example: 'Mijn verjaardag is in januari (My birthday is in January.)' },
     { dutch: 'moeten', english: 'to have to, to must', level: 'A1', example: 'Ik moet werken vandaag (I have to work today.)' },
     { dutch: 'typen', english: 'to type', level: 'A1', example: 'Zij typt een e-mail (She types an email.)' },
@@ -240,7 +240,7 @@ export const dutchWordBankA1 = {
     { dutch: 'krijgen', english: 'to get, to receive', level: 'A1', example: 'Ik krijg een brief (I receive a letter.)' },
     { dutch: 'vragen', english: 'to ask', level: 'A1', example: 'Mag ik iets vragen? (May I ask something?)' }
   ],
-  'thema_3_wonen_part1': [
+  ' wonen_part1': [
     { dutch: 'balkon', english: 'balcony', level: 'A1', example: 'We drinken koffie op het balkon (We drink coffee on the balcony.)' },
     { dutch: 'dak', english: 'roof', level: 'A1', example: 'De kat zit op het dak (The cat is on the roof.)' },
     { dutch: 'deur', english: 'door', level: 'A1', example: 'Doe de deur dicht, alsjeblieft (Please close the door.)', emoji: '🚪' },
@@ -287,7 +287,7 @@ export const dutchWordBankA1 = {
     { dutch: 'bruin', english: 'brown', level: 'A1', example: 'De beer is bruin (The bear is brown.)' },
     { dutch: 'geel', english: 'yellow', level: 'A1', example: 'De zon is geel (The sun is yellow.)' }
   ],
-  'thema_3_wonen_part2': [
+  ' wonen_part2': [
     { dutch: 'grijs', english: 'gray', level: 'A1', example: 'De lucht is grijs vandaag (The sky is gray today.)' },
     { dutch: 'groen', english: 'green', level: 'A1', example: 'Het gras is groen (The grass is green.)' },
     { dutch: 'kleur', english: 'color', level: 'A1', example: 'Welke kleur vind je mooi? (Which color do you like?)' },
@@ -342,7 +342,7 @@ export const dutchWordBankA1 = {
     { dutch: 'vinden', english: 'to find', level: 'A1', example: 'Kun je mijn bril vinden? (Can you find my glasses?)' }
   ],
 
-  'thema_4_eten_drinken_part1': [
+  ' eten_drinken_part1': [
     { dutch: 'appel', english: 'apple', level: 'A1', example: 'De appel is rood (The apple is red.)', emoji: '🍎' },
     { dutch: 'bakker', english: 'baker, bakery', level: 'A1', example: 'Ik koop brood bij de bakker (I buy bread at the bakery.)' },
     { dutch: 'boodschappen doen', english: 'to shop, to buy groceries', level: 'A1', example: 'Zij doet boodschappen in de supermarkt (She shops in the supermarket.)' },
@@ -397,7 +397,7 @@ export const dutchWordBankA1 = {
     { dutch: 'soort', english: 'kind, type', level: 'A1', example: 'Welk soort kaas wil je? (Which type of cheese do you want?)' },
     { dutch: 'wortel', english: 'carrot', level: 'A1', example: 'De wortel is oranje (The carrot is orange.)', emoji: '🥕' },
   ],
-  'thema_4_eten_drinken_part2': [
+  ' eten_drinken_part2': [
     { dutch: 'zetten', english: 'to put, to place', level: 'A1', example: 'Zet de pan op het vuur (Put the pot on the fire.)' },
     { dutch: 'altijd', english: 'always', level: 'A1', example: 'Ik drink altijd koffie bij het ontbijt (I always drink coffee at breakfast.)' },
     { dutch: 'bloemkool', english: 'cauliflower', level: 'A1', example: 'Ik kook bloemkool voor het eten (I cook cauliflower for dinner.)' },
@@ -457,7 +457,7 @@ export const dutchWordBankA1 = {
     { dutch: 'pinnen', english: 'to pay with a debit card', level: 'A1', example: 'Kan ik pinnen? (Can I pay with a debit card?)' },
     { dutch: 'want', english: 'because', level: 'A1', example: 'Ik koop appels, want ik hou van fruit (I buy apples because I like fruit.)' }
   ],
-  'thema_5_dokter_part1': [
+  ' dokter_part1': [
     { dutch: 'arm', english: 'arm', level: 'A1', example: 'Mijn arm doet pijn (My arm hurts.)' },
     { dutch: 'been', english: 'leg', level: 'A1', example: 'Zij heeft een lang been (She has a long leg.)' },
     { dutch: 'bil', english: 'buttock', level: 'A1', example: 'Hij valt op zijn bil (He falls on his buttock.)' },
@@ -503,7 +503,7 @@ export const dutchWordBankA1 = {
     { dutch: 'halen', english: 'to get, to fetch', level: 'A1', example: 'Haal het recept op bij de apotheek (Get the prescription at the pharmacy.)' },
     { dutch: 'Ik heb last van', english: 'I suffer from', level: 'A1', example: 'Ik heb last van hoofdpijn (I suffer from headaches.)' },
   ],
-  'thema_5_dokter_part2': [
+  ' dokter_part2': [
     { dutch: 'medicijn', english: 'medicine', level: 'A1', example: 'Neem dit medicijn drie keer per dag (Take this medicine three times a day.)' },
     { dutch: 'probleem', english: 'problem', level: 'A1', example: 'Wat is het probleem? (What is the problem?)' },
     { dutch: 'soms', english: 'sometimes', level: 'A1', example: 'Ik heb soms hoofdpijn (I sometimes have headaches.)' },
@@ -550,7 +550,7 @@ export const dutchWordBankA1 = {
     { dutch: 'poetsen', english: 'to brush', level: 'A1', example: 'Poets je tanden voor het slapen (Brush your teeth before sleeping.)' },
     { dutch: 'vervelend', english: 'tedious, annoying', level: 'A1', example: 'Kiespijn is heel vervelend (Toothache is very annoying.)' },
   ],
-  'thema_6_kleding_part1': [
+  ' kleding_part1': [
     { dutch: 'hemd, overhemd ', english: 'shirt', level: 'A1', example: 'Hij draagt een wit hemd (He wears a white shirt.)' },
     { dutch: 'vullen', english: 'to fill', level: 'A1', example: 'Vul het formulier in (Fill in the form.)' },
     { dutch: 'broek', english: 'pants', level: 'A1', example: 'Ik koop een nieuwe broek (I buy new pants.)' },
@@ -600,7 +600,7 @@ export const dutchWordBankA1 = {
     { dutch: 'heel', english: 'very', level: 'A1', example: 'Deze jas is heel mooi (This jacket is very beautiful.)' },
     { dutch: 'jammer', english: 'pity, shame', level: 'A1', example: "'Wat jammer dat het niet past (What a pity that it doesn't fit.)' " },
   ],
-  'thema_6_kleding_part2': [
+  ' kleding_part2': [
     { dutch: 'oorbel', english: 'earring', level: 'A1', example: 'Zij draagt grote oorbellen (She wears big earrings.)' },
     { dutch: 'ring', english: 'ring', level: 'A1', example: 'Hij geeft haar een ring (He gives her a ring.)' },
     { dutch: 'sieraad', english: 'ornament', level: 'A1', example: 'Zij houdt van mooie sieraden (She loves beautiful ornaments.)' },
@@ -654,7 +654,7 @@ export const dutchWordBankA1 = {
     { dutch: 'wassen', english: 'to wash', level: 'A1', example: 'Ik was mijn kleren elke week (I wash my clothes every week.)' },
     { dutch: 'zelf', english: 'self, myself', level: 'A1', example: 'Ik was mijn kleren zelf (I wash my clothes myself.)' }
   ],
-  'thema_7_reizen_part1': [
+  ' reizen_part1': [
     { dutch: 'auto', english: 'car', level: 'A1', example: 'Ik reis met de auto naar Amsterdam (I travel by car to Amsterdam.)', emoji: '🚗' },
     { dutch: 'boot', english: 'boat', level: 'A1', example: 'We nemen de boot naar Engeland (We take the boat to England.)', emoji: '🚢' },
     { dutch: 'bus', english: 'bus, coach', level: 'A1', example: "'De bus vertrekt om negen uur (The bus departs at nine o'clock.)' ", emoji: '🚌' },
@@ -703,7 +703,7 @@ export const dutchWordBankA1 = {
     { dutch: 'doorgeven', english: 'to pass on', level: 'A1', example: 'Kun je deze boodschap doorgeven? (Can you pass on this message?)' },
   ],
 
-  'thema_7_reizen_part2': [
+  ' reizen_part2': [
     { dutch: 'alvast', english: 'already', level: 'A1', example: 'Ik doe alvast mijn jas aan (I am already putting on my coat.)' },
     { dutch: 'collega', english: 'colleague', level: 'A1', example: 'Mijn collega werkt op kantoor (My colleague works at the office.)' },
     { dutch: 'dus', english: 'so', level: 'A1', example: 'Het regent, dus ik neem een paraplu (It is raining, so I take an umbrella.)' },
@@ -758,7 +758,7 @@ export const dutchWordBankA1 = {
   ],
 
   // Thema 8 - Vrije Tijd (Part 1)
-  'thema_8_vrije_tijd': [
+  ' vrije_tijd': [
     { dutch: 'boerderij', english: 'farm', level: 'A1', example: 'Op de boerderij wonen veel dieren (On the farm live many animals.)' },
     { dutch: 'dier', english: 'animal', level: 'A1', example: 'Mijn favoriete dier is de hond (My favorite animal is the dog.)' },
     { dutch: 'dik', english: 'fat', level: 'A1', example: 'De kat is een beetje dik (The cat is a bit fat.)' },
@@ -807,7 +807,7 @@ export const dutchWordBankA1 = {
   ],
 
   // Thema 8 - Vrije Tijd (Part 2)
-  'thema_8_vrije_tijd_part2': [
+  ' vrije_tijd_part2': [
     { dutch: 'starten', english: 'to start', level: 'A1', example: 'De cursus start volgende week (The course starts next week.)' },
     { dutch: 'postcode', english: 'zip code', level: 'A1', example: 'Mijn postcode is 1234 AB (My zip code is 1234 AB.)' },
     { dutch: 'telefoon', english: 'phone', level: 'A1', example: 'Mijn telefoon ligt op tafel (My phone is on the table.)' },

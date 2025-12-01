@@ -2586,7 +2586,7 @@ export default function DutchLearningGame() {
                 {/* Overview */}
                 <div className="bg-orange-50 rounded-xl p-4 border-2 border-orange-200">
                   <h3 className="text-xl font-bold text-orange-700 mb-3">🎯 Course Overview</h3>
-                  <p className="text-gray-700 mb-2">This is the official <strong>2000+ Most Common Dutch Words</strong> learning course covering A1 🟢 and A2 🔵 and B1, B2 levels.</p>
+                  <p className="text-gray-700 mb-2">This is the   <strong>2000+ Most Common Dutch Words</strong> learning course covering A1 🟢 and A2 🔵 and B1, B2 levels.</p>
                   <div className="mt-3 space-y-2">
                     <p><strong>🟢 A1 Level:</strong> Basic everyday words and phrases</p>
                     <p><strong>🔵 A2 Level:</strong> Intermediate vocabulary (unlocked after completing all A1)</p>
@@ -2596,16 +2596,16 @@ export default function DutchLearningGame() {
                 {/* Learning Path */}
                 <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
                   <h3 className="text-xl font-bold text-blue-700 mb-3">📖 Recommended Learning Path</h3>
-                  {/* NEW: Explicit instruction to select Thema first */}
+                  {/* NEW: Explicit instruction to select   first */}
                   <div className="mb-3 p-3 rounded-lg bg-blue-100 border border-blue-300">
-                    <p className="text-sm text-blue-800 font-semibold">🗂️ Before you start: Select a Thema (category) on the menu, then choose a Learning Mode.</p>
+                    <p className="text-sm text-blue-800 font-semibold">🗂️ Before you start: Select a   (category) on the menu, then choose a Learning Mode.</p>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">1️⃣</span>
                       <div>
-                        <p className="font-bold text-blue-700">Choose a Thema 🗂️</p>
-                        <p className="text-sm text-gray-600">Pick a category (e.g., Thema lessons) from the grid. This sets which words you’ll study.</p>
+                        <p className="font-bold text-blue-700">Choose a Category  🗂️</p>
+                        <p className="text-sm text-gray-600">Pick a category (e.g., lessons) from the grid. This sets which words you’ll study.</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
@@ -5265,7 +5265,18 @@ export default function DutchLearningGame() {
               <div className="text-center mb-6 sm:mb-8">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
                   <div className="flex items-center gap-2 sm:gap-3 bg-blue-100 px-3 sm:px-4 py-2 rounded-lg w-full sm:w-auto">
-                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    {user.picture ? (
+                      <img
+                        src={user.picture}
+                        alt={user.name}
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-blue-300"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+                    <User className={`w-4 h-4 sm:w-5 sm:h-5 text-blue-600 ${user.picture ? 'hidden' : ''}`} />
                     <span className="text-blue-700 font-semibold text-sm sm:text-base truncate">{user.name}</span>
                   </div>
                   <button
@@ -5481,7 +5492,7 @@ export default function DutchLearningGame() {
               <div className="mb-4 sm:mb-6">
                 <div className="flex justify-between items-center mb-3">
                   <label className="block text-gray-700 font-semibold text-sm sm:text-base">
-                    Choose Thema category:
+                    Choose   category:
                   </label>
                   <div className="flex gap-2">
                     {isAdmin && (
@@ -5760,7 +5771,7 @@ export default function DutchLearningGame() {
               {/* Info Box - MOBILE OPTIMIZED */}
               <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-orange-50 rounded-xl">
                 <div className="text-xs sm:text-sm text-gray-600 space-y-1 sm:space-y-2">
-                  <p className="text-center font-bold text-orange-600 mb-2 text-sm sm:text-base">Official "2000+ Dutch Words" Course</p>
+                  <p className="text-center font-bold text-orange-600 mb-2 text-sm sm:text-base"> "2000+ Dutch Words" Course</p>
                   <p><span className="font-bold">🟢 A1:</span> Basic words</p>
                   <p><span className="font-bold">🔵 A2:</span> Intermediate</p>
                   <p className="mt-2 sm:mt-3 text-center font-semibold text-xs sm:text-sm">📚 Learn → ✅ Quiz (Normal) → ✏️ Spelling Mode</p>
@@ -6014,7 +6025,7 @@ export default function DutchLearningGame() {
                     {currentLearnWord.level} • {currentLearnWord.category.replace(/_/g, ' ')}
                   </span>
                 </div>
-                <WordImage word={currentLearnWord} size="large" isAdmin={isAdmin} />
+                {/* <WordImage word={currentLearnWord} size="large" isAdmin={isAdmin} /> */}
                 <div className="mb-6">
                   <div className="flex items-center justify-center gap-3 mb-4">
                     <h2 className="text-4xl sm:text-6xl font-bold text-indigo-600">{currentLearnWord.dutch}</h2>
