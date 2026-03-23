@@ -145,6 +145,14 @@ export default function DutchLearningGame() {
   const [selectedCategories, setSelectedCategories] = useState(['all']);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
   const [selectedStoryKey, setSelectedStoryKey] = useState(null);
+  const [showCategoryDetail, setShowCategoryDetail] = useState(false);
+
+  // Feedback state
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [allFeedback, setAllFeedback] = useState([]);
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+
 
   // Add global styles
   if (typeof document !== 'undefined') {
@@ -256,6 +264,17 @@ export default function DutchLearningGame() {
       }
     }
   }, []);
+
+  // Load all users for admin panel
+  useEffect(() => {
+    console.log('🔐 Admin useEffect triggered. isAdmin:', isAdmin);
+    if (isAdmin) {
+      console.log('👑 Admin detected, calling loadAllUsers()');
+      loadAllUsers();
+      loadAllFeedback();
+    }
+  }, [isAdmin]);
+
 
   // Initialize welcome words when user logs in
   useEffect(() => {
@@ -657,17 +676,24 @@ export default function DutchLearningGame() {
 
 
   const loadAllUsers = () => {
+    console.log('🔍 loadAllUsers called');
     try {
       const usersRef = ref(database, 'users');
+      console.log('📡 Firebase reference created for users');
 
       // Listen for real-time updates
       onValue(usersRef, (snapshot) => {
+        console.log('📊 Firebase snapshot received');
         if (!snapshot.exists()) {
+          console.warn('⚠️ No users data found in Firebase');
           setAllUserStats([]);
           return;
         }
 
         const usersData = snapshot.val();
+        console.log('✅ Users data from Firebase:', usersData);
+        console.log('👥 Number of users:', Object.keys(usersData).length);
+
         const userStatsArray = Object.values(usersData).map(userActivity => ({
           email: userActivity.email,
           name: userActivity.name,
@@ -685,19 +711,103 @@ export default function DutchLearningGame() {
         // Sort by LATEST login first (descending order)
         userStatsArray.sort((a, b) => new Date(b.lastLogin) - new Date(a.lastLogin));
 
+        console.log('📋 Processed user stats array:', userStatsArray);
+
         // Only update state if data actually changed to prevent unnecessary re-renders
         setAllUserStats(prevStats => {
           if (JSON.stringify(prevStats) === JSON.stringify(userStatsArray)) {
+            console.log('ℹ️ User stats unchanged, skipping update');
             return prevStats;
           }
+          console.log('✨ Updating allUserStats state with', userStatsArray.length, 'users');
           return userStatsArray;
         });
       });
     } catch (error) {
-      console.error('Failed to load users:', error);
+      console.error('❌ Failed to load users:', error);
       setAllUserStats([]);
     }
   };
+
+  // Feedback functions
+  const submitFeedback = async () => {
+    if (!user || !feedbackText.trim()) {
+      alert('Please enter your feedback');
+      return;
+    }
+
+    if (feedbackText.length > 500) {
+      alert('Feedback must be 500 characters or less');
+      return;
+    }
+
+    setFeedbackSubmitting(true);
+    try {
+      const timestamp = Date.now();
+      const feedbackRef = ref(database, `feedback/${timestamp}`);
+
+      const feedbackData = {
+        email: user.email,
+        name: user.name,
+        picture: user.picture,
+        feedback: feedbackText.trim(),
+        timestamp: new Date().toISOString(),
+        timestampMs: timestamp
+      };
+
+      await set(feedbackRef, feedbackData);
+
+      console.log('✅ Feedback submitted successfully');
+      alert('Thank you for your feedback! 🎉');
+
+      // Reset form
+      setFeedbackText('');
+      setShowFeedbackModal(false);
+    } catch (error) {
+      console.error('❌ Failed to submit feedback:', error);
+      alert('Failed to submit feedback. Please try again.');
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
+
+  const loadAllFeedback = () => {
+    console.log('📝 loadAllFeedback called');
+    try {
+      const feedbackRef = ref(database, 'feedback');
+
+      onValue(feedbackRef, (snapshot) => {
+        console.log('📊 Feedback snapshot received');
+        if (!snapshot.exists()) {
+          console.warn('⚠️ No feedback found in Firebase');
+          setAllFeedback([]);
+          return;
+        }
+
+        const feedbackData = snapshot.val();
+        console.log('✅ Feedback data from Firebase:', feedbackData);
+
+        const feedbackArray = Object.values(feedbackData).map(item => ({
+          email: item.email,
+          name: item.name,
+          picture: item.picture,
+          feedback: item.feedback,
+          timestamp: item.timestamp,
+          timestampMs: item.timestampMs
+        }));
+
+        // Sort by newest first
+        feedbackArray.sort((a, b) => b.timestampMs - a.timestampMs);
+
+        console.log('📋 Processed feedback array:', feedbackArray.length, 'items');
+        setAllFeedback(feedbackArray);
+      });
+    } catch (error) {
+      console.error('❌ Failed to load feedback:', error);
+      setAllFeedback([]);
+    }
+  };
+
 
   const handleLogout = () => {
     googleLogout();
@@ -1890,6 +2000,7 @@ export default function DutchLearningGame() {
     setGrammarFeedback(null);
     setShowSentenceBuilder(false);
     setSentenceBuilderCategories(['all']);
+    setShowCategoryDetail(false);
   };
 
 
@@ -2387,6 +2498,51 @@ export default function DutchLearningGame() {
 
 
 
+  // Feedback Modal Component
+  const FeedbackModal = () => {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
+          <h2 className="text-2xl font-bold text-indigo-700 mb-4">💬 Send Feedback</h2>
+
+          <textarea
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            placeholder="Share your thoughts, suggestions, or report issues..."
+            className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none resize-none"
+            rows={6}
+            maxLength={500}
+            disabled={feedbackSubmitting}
+          />
+
+          <div className="text-right text-sm text-gray-500 mt-1 mb-4">
+            {feedbackText.length}/500 characters
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                setFeedbackText('');
+                setShowFeedbackModal(false);
+              }}
+              disabled={feedbackSubmitting}
+              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={submitFeedback}
+              disabled={feedbackSubmitting || !feedbackText.trim()}
+              className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {feedbackSubmitting ? 'Sending...' : 'Send Feedback'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Admin Panel Component
   const AdminPanel = () => {
     return (
@@ -2429,7 +2585,42 @@ export default function DutchLearningGame() {
               <div className="text-sm opacity-90">Avg Score</div>
             </div>
           </div>
-
+          {/* Feedback Section */}
+          <div className="mt-8">
+            <h3 className="text-xl font-bold text-gray-800 mb-4">💬 User Feedback</h3>
+            {allFeedback.length === 0 ? (
+              <div className="text-center py-12 text-gray-500">
+                <p>No feedback yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {allFeedback.map((item, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200 hover:border-indigo-300 transition-all">
+                    <div className="flex items-start gap-4">
+                      <img src={item.picture} alt={item.name} className="w-10 h-10 rounded-full" />
+                      <div className="flex-1">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-bold text-gray-800">{item.name}</h4>
+                            <p className="text-xs text-gray-600">{item.email}</p>
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {new Date(item.timestamp).toLocaleString('en-US', {
+                              month: 'short', day: 'numeric', year: 'numeric',
+                              hour: '2-digit', minute: '2-digit', hour12: true
+                            })}
+                          </div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border border-gray-200">
+                          <p className="text-gray-700 whitespace-pre-wrap">{item.feedback}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           {/* Users List */}
           <div>
             <h3 className="text-xl font-bold text-gray-800 mb-4">User Activities</h3>
@@ -2799,6 +2990,11 @@ export default function DutchLearningGame() {
     }
   `}</style>
   );
+
+  // Feedback Modal
+  if (showFeedbackModal) {
+    return <FeedbackModal />;
+  }
 
   // Admin Panel
   if (showAdminPanel && isAdmin) {
@@ -5127,6 +5323,144 @@ export default function DutchLearningGame() {
   // MENU SCREEN - MOBILE OPTIMIZED
   // MENU SCREEN - MOBILE OPTIMIZED
   if (gameMode === 'menu') {
+
+    // CATEGORY DETAIL PAGE - shown when user taps a category (mobile-friendly)
+    if (showCategoryDetail && !showMultiSelect) {
+      const cat = selectedCategories[0];
+      const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
+      const isCompleted = isCategoryCompleted(cat);
+      const progress = getCategoryProgress(cat);
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 p-3 sm:p-4 pb-8">
+          <div className="max-w-2xl mx-auto">
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <button
+                onClick={() => setShowCategoryDetail(false)}
+                className="bg-white/20 hover:bg-white/30 active:bg-white/30 text-white p-2 rounded-xl transition-all flex items-center gap-2"
+              >
+                <ChevronLeft className="w-5 h-5" />
+                <span className="font-semibold text-sm">Back</span>
+              </button>
+              <div className="flex-1">
+                <h1 className="text-xl sm:text-2xl font-bold text-white">
+                  {cat === 'all' ? 'All Lessons' : cat.replace(/_/g, ' ').toUpperCase()}
+                </h1>
+                <p className="text-white/80 text-sm">{wordCount} words {isCompleted ? '🏆 Completed!' : ''}</p>
+              </div>
+            </div>
+
+            {/* Progress card if has any progress */}
+            {(progress.multipleChoice || progress.spelling) && (
+              <div className="bg-white rounded-2xl p-4 mb-4 shadow-lg">
+                <p className="text-sm font-bold text-gray-700 mb-2">Your Progress</p>
+                <div className="flex gap-3">
+                  <div className={`flex-1 p-2 rounded-lg text-center text-xs font-bold ${progress.multipleChoice ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {progress.multipleChoice ? '✅' : '⬜'} Multiple Choice
+                  </div>
+                  <div className={`flex-1 p-2 rounded-lg text-center text-xs font-bold ${progress.spelling ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                    {progress.spelling ? '✅' : '⬜'} Spelling
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="space-y-3 mb-4">
+              <p className="text-white font-bold text-center text-sm mb-1">Choose how to study:</p>
+
+              {/* LEARN */}
+              <button
+                onClick={() => {
+                  setShowCategoryDetail(false);
+                  openQuestionSelector('learn');
+                }}
+                className="w-full bg-white text-blue-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-blue-50 active:bg-blue-50 transition-all"
+              >
+                <span className="text-3xl">📚</span>
+                <div className="text-left flex-1">
+                  <div className="text-base font-bold">Learn Mode</div>
+                  <div className="text-xs text-gray-500">Study words with pronunciation & examples</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-blue-400" />
+              </button>
+
+              {/* MULTIPLE CHOICE */}
+              <button
+                onClick={() => {
+                  setShowCategoryDetail(false);
+                  openQuestionSelector('play');
+                }}
+                className="w-full bg-white text-orange-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-orange-50 active:bg-orange-50 transition-all"
+              >
+                <span className="text-3xl">🎯</span>
+                <div className="text-left flex-1">
+                  <div className="text-base font-bold">Multiple Choice Quiz</div>
+                  <div className="text-xs text-gray-500">Pick the correct Dutch translation</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-orange-400" />
+              </button>
+
+              {/* SPELLING */}
+              <button
+                onClick={() => {
+                  setShowCategoryDetail(false);
+                  openQuestionSelector('spelling');
+                }}
+                className="w-full bg-white text-purple-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-purple-50 active:bg-purple-50 transition-all"
+              >
+                <span className="text-3xl">✏️</span>
+                <div className="text-left flex-1">
+                  <div className="text-base font-bold">Spelling Mode</div>
+                  <div className="text-xs text-gray-500">Type the Dutch word from memory</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-purple-400" />
+              </button>
+
+              {/* FILL IN THE BLANK */}
+              <button
+                onClick={() => {
+                  setShowCategoryDetail(false);
+                  openQuestionSelector('fillblank');
+                }}
+                className="w-full bg-white text-teal-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-teal-50 active:bg-teal-50 transition-all"
+              >
+                <span className="text-3xl">🔤</span>
+                <div className="text-left flex-1">
+                  <div className="text-base font-bold">Fill in the Blank</div>
+                  <div className="text-xs text-gray-500">Complete Dutch sentences</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-teal-400" />
+              </button>
+
+              {/* SPEAKING */}
+              <button
+                onClick={() => {
+                  setShowCategoryDetail(false);
+                  openQuestionSelector('speaking');
+                }}
+                className="w-full bg-white text-rose-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-rose-50 active:bg-rose-50 transition-all"
+              >
+                <span className="text-3xl">🎤</span>
+                <div className="text-left flex-1">
+                  <div className="text-base font-bold">Speaking Test</div>
+                  <div className="text-xs text-gray-500">Pronounce Dutch words aloud</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-rose-400" />
+              </button>
+            </div>
+
+            {/* Tip */}
+            <div className="bg-white/20 rounded-xl p-3 text-center">
+              <p className="text-white text-xs">💡 Recommended path: Learn → Multiple Choice → Spelling</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // VERB CATEGORY SELECTOR
     // VERB CATEGORY SELECTOR
     if (showVerbCategorySelector) {
@@ -5298,6 +5632,14 @@ export default function DutchLearningGame() {
                       Admin Panel
                     </button>
                   )}
+                  {/* Feedback Button */}
+                  <button
+                    onClick={() => setShowFeedbackModal(true)}
+                    className="flex items-center gap-2 bg-indigo-100 hover:bg-indigo-200 active:bg-indigo-200 text-indigo-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
+                  >
+                    💬
+                    Feedback
+                  </button>
                 </div>
                 <h1 className="text-3xl sm:text-5xl font-bold text-orange-600 mb-2">🇳🇱 Leer Nederlands</h1>
                 <p className="text-gray-600 text-sm sm:text-lg">2000+ Most Common Dutch Words - A1 🟢 & A2 🔵</p>
@@ -5612,6 +5954,7 @@ export default function DutchLearningGame() {
                             }
                           } else {
                             setSelectedCategories([cat]);
+                            setShowCategoryDetail(true);
                           }
                         }}
                         disabled={isLocked}
