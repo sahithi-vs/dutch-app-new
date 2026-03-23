@@ -37,6 +37,7 @@ const getTotalWordCount = () => getAllWords().length;
 export default function DutchLearningGame() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showAdminFeedback, setShowAdminFeedback] = useState(false);
   const [allUserStats, setAllUserStats] = useState([]);
 
   // Admin email - CHANGE THIS TO YOUR GOOGLE EMAIL
@@ -1240,12 +1241,16 @@ export default function DutchLearningGame() {
     setShowQuestionSelector(false);
   };
 
-  const startGame = (mode = 'play') => {
+  const startGame = (mode = 'play', customWords = null) => {
     setQuizStartTime(Date.now());
 
     // Check if we should review failed words
     let words;
-    if (reviewFailedWords) {
+    if (customWords && customWords.length > 0) {
+      // Use the provided custom word list (e.g. from Learn mode)
+      words = customWords;
+      setNumQuestions(customWords.length);
+    } else if (reviewFailedWords) {
       // Get failed words from selected categories
       const failedWords = getFailedWords(selectedCategories, mode);
 
@@ -1299,7 +1304,7 @@ export default function DutchLearningGame() {
       }
     }
 
-    if (words.length < numQuestions) {
+    if (!customWords && words.length < numQuestions) {
       alert(`Not enough words in the selected categories. Please select categories with at least ${numQuestions} words or reduce the number of questions.`);
       return;
     }
@@ -2001,6 +2006,8 @@ export default function DutchLearningGame() {
     setShowSentenceBuilder(false);
     setSentenceBuilderCategories(['all']);
     setShowCategoryDetail(false);
+    // Reset collapsible section states so Advanced/Resources/Stats start closed on next visit
+    if (window.__sectionOpenState) window.__sectionOpenState = {};
   };
 
 
@@ -2315,10 +2322,11 @@ export default function DutchLearningGame() {
 
   // Handle flashcard session completion
   const handleFlashcardComplete = (stats) => {
-    // Reset flashcard state
+    // Reset flashcard state and return to category detail
     setSelectedFlashcardDeck(null);
     setFlashcardWords([]);
-    setShowFlashcards(true); // Return to deck selection
+    setShowFlashcards(false);
+    setShowCategoryDetail(true);
 
     // Show completion message
     alert(`Session Complete!\n\nCorrect: ${stats.correct}\nIncorrect: ${stats.incorrect}\n\nGreat work! 🎉`);
@@ -2587,38 +2595,46 @@ export default function DutchLearningGame() {
           </div>
           {/* Feedback Section */}
           <div className="mt-8">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">💬 User Feedback</h3>
-            {allFeedback.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <p>No feedback yet</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {allFeedback.map((item, idx) => (
-                  <div key={idx} className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200 hover:border-indigo-300 transition-all">
-                    <div className="flex items-start gap-4">
-                      <img src={item.picture} alt={item.name} className="w-10 h-10 rounded-full" />
-                      <div className="flex-1">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h4 className="font-bold text-gray-800">{item.name}</h4>
-                            <p className="text-xs text-gray-600">{item.email}</p>
+            <button
+              onClick={() => setShowAdminFeedback(v => !v)}
+              className="flex items-center gap-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2 rounded-xl font-bold mb-4 transition-all"
+            >
+              💬 User Feedback {allFeedback.length > 0 && <span className="bg-indigo-500 text-white text-xs px-2 py-0.5 rounded-full">{allFeedback.length}</span>}
+              <span className="ml-1 text-sm">{showAdminFeedback ? '▲ Hide' : '▼ Show'}</span>
+            </button>
+            {showAdminFeedback && (
+              allFeedback.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <p>No feedback yet</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {allFeedback.map((item, idx) => (
+                    <div key={idx} className="bg-gray-50 rounded-xl p-4 border-2 border-gray-200 hover:border-indigo-300 transition-all">
+                      <div className="flex items-start gap-4">
+                        <img src={item.picture} alt={item.name} className="w-10 h-10 rounded-full" />
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h4 className="font-bold text-gray-800">{item.name}</h4>
+                              <p className="text-xs text-gray-600">{item.email}</p>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {new Date(item.timestamp).toLocaleString('en-US', {
+                                month: 'short', day: 'numeric', year: 'numeric',
+                                hour: '2-digit', minute: '2-digit', hour12: true
+                              })}
+                            </div>
                           </div>
-                          <div className="text-xs text-gray-500">
-                            {new Date(item.timestamp).toLocaleString('en-US', {
-                              month: 'short', day: 'numeric', year: 'numeric',
-                              hour: '2-digit', minute: '2-digit', hour12: true
-                            })}
+                          <div className="bg-white p-3 rounded-lg border border-gray-200">
+                            <p className="text-gray-700 whitespace-pre-wrap">{item.feedback}</p>
                           </div>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border border-gray-200">
-                          <p className="text-gray-700 whitespace-pre-wrap">{item.feedback}</p>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )
             )}
           </div>
           {/* Users List */}
@@ -2864,7 +2880,7 @@ export default function DutchLearningGame() {
                     </div>
                     <div>
                       <p className="font-bold text-purple-600">🎧 Listening Practice</p>
-                      <p className="text-gray-600">Listen to conversations and answer comprehension questions.</p>
+                      <p className="text-gray-600">Listen to audio and answer comprehension questions.</p>
                     </div>
                     <div>
                       <p className="font-bold text-yellow-600">📖 Stories</p>
@@ -2991,9 +3007,44 @@ export default function DutchLearningGame() {
   `}</style>
   );
 
-  // Feedback Modal
+  // Feedback Modal - inlined to prevent textarea losing focus on each keystroke
   if (showFeedbackModal) {
-    return <FeedbackModal />;
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full">
+          <h2 className="text-2xl font-bold text-indigo-700 mb-4">💬 Send Feedback</h2>
+          <textarea
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+            placeholder="Share your thoughts, suggestions, or report issues..."
+            className="w-full p-3 border-2 border-gray-300 rounded-lg focus:border-indigo-500 focus:outline-none resize-none"
+            rows={6}
+            maxLength={500}
+            disabled={feedbackSubmitting}
+            autoFocus
+          />
+          <div className="text-right text-sm text-gray-500 mt-1 mb-4">
+            {feedbackText.length}/500 characters
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={() => { setFeedbackText(''); setShowFeedbackModal(false); }}
+              disabled={feedbackSubmitting}
+              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={submitFeedback}
+              disabled={feedbackSubmitting || !feedbackText.trim()}
+              className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {feedbackSubmitting ? 'Sending...' : 'Send Feedback'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Admin Panel
@@ -3497,7 +3548,15 @@ export default function DutchLearningGame() {
       <div className="min-h-screen bg-gradient-to-br from-yellow-200 via-yellow-400 to-yellow-600 flex items-center justify-center p-3 sm:p-4">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-xl w-full">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-            <h2 className="text-2xl sm:text-3xl font-bold text-yellow-700">📖 Choose a Story</h2>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => { setGameMode('menu'); setShowCategoryDetail(true); }}
+                className="bg-yellow-100 hover:bg-yellow-200 active:bg-yellow-200 p-2 rounded-lg transition-all"
+              >
+                <ChevronLeft className="w-5 h-5 text-yellow-700" />
+              </button>
+              <h2 className="text-2xl sm:text-3xl font-bold text-yellow-700">📖 Reading Test</h2>
+            </div>
             <button
               onClick={handleLogout}
               className="flex items-center gap-2 bg-red-100 hover:bg-red-200 active:bg-red-200 text-red-600 px-3 sm:px-4 py-2 rounded-lg transition-all text-sm"
@@ -3765,6 +3824,7 @@ export default function DutchLearningGame() {
                 setStreak(0);
                 setQuestionsAnswered(0);
                 setFeedback(null);
+                setShowCategoryDetail(true);
               }}
               className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
             >
@@ -3777,8 +3837,8 @@ export default function DutchLearningGame() {
     );
   }
 
-  // Conversations mode - MOBILE OPTIMIZED
-  if (gameMode === 'conversations' && !selectedConversation) {
+  // Listening Test mode - MOBILE OPTIMIZED
+  if (gameMode === 'listening_test' && !selectedConversation) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-200 via-purple-400 to-purple-600 flex items-center justify-center p-3 sm:p-4">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 max-w-xl w-full">
@@ -3793,7 +3853,7 @@ export default function DutchLearningGame() {
             </button>
           </div>
           <p className="text-gray-600 mb-6 text-center text-sm sm:text-base">
-            Listen to Dutch conversations and test your comprehension!
+            Listen to Dutch audio and test your comprehension!
           </p>
           <div className="space-y-3 sm:space-y-4">
             {conversations.map(conversation => (
@@ -3839,7 +3899,7 @@ export default function DutchLearningGame() {
     );
   }
 
-  if (gameMode === 'conversations' && selectedConversation) {
+  if (gameMode === 'listening_test' && selectedConversation) {
     // Conversation quiz results
     if (showConversationQuiz && currentConversationQuestion >= selectedConversation.questions.length) {
       const percentage = Math.round((conversationScore / selectedConversation.questions.length) * 100);
@@ -3882,7 +3942,7 @@ export default function DutchLearningGame() {
                 className="w-full bg-gray-200 text-gray-700 text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-gray-300 active:bg-gray-300 transition-all flex items-center justify-center gap-2"
               >
                 <ChevronLeft className="w-5 h-5" />
-                Back to Conversations
+                Back to Listening Tests
               </button>
             </div>
           </div>
@@ -4166,12 +4226,12 @@ export default function DutchLearningGame() {
               onClick={() => {
                 stopConversation();
                 setSelectedConversation(null);
-                setGameMode('conversations');
+                setGameMode('listening_test');
               }}
               className="w-full bg-purple-400 text-white text-base sm:text-lg font-bold py-3 rounded-xl hover:bg-purple-500 active:bg-purple-500 transition-all flex items-center justify-center gap-2"
             >
               <ChevronLeft className="w-5 h-5" />
-              Back to Conversations
+              Back to Listening Tests
             </button>
             <button
               onClick={() => {
@@ -4395,30 +4455,18 @@ export default function DutchLearningGame() {
     );
   }
 
-  // FLASHCARD DECK SELECTION
+  // FLASHCARD — skip category selector, use already-selected categories directly
   if (showFlashcards && !selectedFlashcardDeck) {
-    const allWords = getAllWords();
-    const allCategories = Object.keys(dutchWordBank);
-    // Filter categories based on user permissions
-    // Admin sees all categories, regular users only see unlocked ones
-    const availableCategories = isAdmin
-      ? allCategories
-      : allCategories.filter(cat => !isCategoryLocked(cat));
-    return (
-      <FlashcardDeck
-        categories={['all', ...availableCategories]}
-        allWords={allWords}
-        flashcardData={flashcardData}
-        onSelectDeck={(category, words) => {
-          setSelectedFlashcardDeck(category);
-          setFlashcardWords(words);
-        }}
-        onBack={() => {
-          setShowFlashcards(false);
-          setGameMode('menu');
-        }}
-      />
-    );
+    const words = loadWords(selectedCategories);
+    const deckLabel = selectedCategories.includes('all')
+      ? 'all'
+      : selectedCategories.join(',');
+    // Directly set the deck and words — re-render will hit the FlashcardMode block
+    setTimeout(() => {
+      setSelectedFlashcardDeck(deckLabel);
+      setFlashcardWords(words);
+    }, 0);
+    return null;
   }
 
   // FLASHCARD REVIEW MODE
@@ -4432,6 +4480,8 @@ export default function DutchLearningGame() {
         onBack={() => {
           setSelectedFlashcardDeck(null);
           setFlashcardWords([]);
+          setShowFlashcards(false);
+          setShowCategoryDetail(true);
         }}
         category={selectedFlashcardDeck}
       />
@@ -5325,20 +5375,70 @@ export default function DutchLearningGame() {
   if (gameMode === 'menu') {
 
     // CATEGORY DETAIL PAGE - shown when user taps a category (mobile-friendly)
-    if (showCategoryDetail && !showMultiSelect) {
+    if (showCategoryDetail) {
       const cat = selectedCategories[0];
       const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
       const isCompleted = isCategoryCompleted(cat);
       const progress = getCategoryProgress(cat);
 
+      const failedWordsMultipleChoice = getAllFailedWordsFromHistory(selectedCategories, 'play');
+      const failedWordsSpelling = getAllFailedWordsFromHistory(selectedCategories, 'spelling');
+      const hasFailedWords = failedWordsMultipleChoice.length > 0 || failedWordsSpelling.length > 0;
+      const adaptiveStats = getAdaptiveLearningStats();
+
+      // Collapsible section component (inline)
+      // Use a module-level map so open state survives parent re-renders
+      if (!window.__sectionOpenState) window.__sectionOpenState = {};
+      const Section = ({ id, emoji, title, color, children, defaultOpen = false }) => {
+        if (window.__sectionOpenState[id] === undefined) {
+          window.__sectionOpenState[id] = defaultOpen;
+        }
+        const [open, setOpen] = React.useState(window.__sectionOpenState[id]);
+        const toggle = () => {
+          const next = !open;
+          window.__sectionOpenState[id] = next;
+          setOpen(next);
+        };
+        return (
+          <div className="mb-3 rounded-2xl overflow-hidden shadow">
+            <button
+              onClick={toggle}
+              className={`w-full flex items-center justify-between px-4 py-3 font-bold text-white text-sm ${color} transition-all`}
+            >
+              <span>{emoji} {title}</span>
+              <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+            </button>
+            {open && (
+              <div className="bg-white/10 p-2 space-y-2">
+                {children}
+              </div>
+            )}
+          </div>
+        );
+      };
+
+      const Btn = ({ emoji, label, sublabel, color, onClick }) => (
+        <button
+          onClick={onClick}
+          className={`w-full bg-white font-bold py-3 px-4 rounded-xl flex items-center gap-3 hover:opacity-90 active:opacity-90 transition-all shadow-sm ${color}`}
+        >
+          <span className="text-xl">{emoji}</span>
+          <div className="text-left flex-1">
+            <div className="text-sm font-bold">{label}</div>
+            {sublabel && <div className="text-xs text-gray-400">{sublabel}</div>}
+          </div>
+          <ChevronRight className="w-4 h-4 opacity-40" />
+        </button>
+      );
+
       return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 p-3 sm:p-4 pb-8">
+        <div className="min-h-screen bg-gradient-to-br from-orange-400 via-orange-500 to-red-500 p-3 sm:p-4 pb-10">
           <div className="max-w-2xl mx-auto">
 
             {/* Header */}
             <div className="flex items-center gap-3 mb-4">
               <button
-                onClick={() => setShowCategoryDetail(false)}
+                onClick={() => { if (window.__sectionOpenState) window.__sectionOpenState = {}; setShowCategoryDetail(false); }}
                 className="bg-white/20 hover:bg-white/30 active:bg-white/30 text-white p-2 rounded-xl transition-all flex items-center gap-2"
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -5352,107 +5452,123 @@ export default function DutchLearningGame() {
               </div>
             </div>
 
-            {/* Progress card if has any progress */}
+            {/* Progress card */}
             {(progress.multipleChoice || progress.spelling) && (
-              <div className="bg-white rounded-2xl p-4 mb-4 shadow-lg">
-                <p className="text-sm font-bold text-gray-700 mb-2">Your Progress</p>
-                <div className="flex gap-3">
-                  <div className={`flex-1 p-2 rounded-lg text-center text-xs font-bold ${progress.multipleChoice ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+              <div className="bg-white rounded-2xl p-3 mb-4 shadow-lg">
+                <p className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">Your Progress</p>
+                <div className="flex gap-2">
+                  <div className={`flex-1 p-2 rounded-lg text-center text-xs font-bold ${progress.multipleChoice ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
                     {progress.multipleChoice ? '✅' : '⬜'} Multiple Choice
                   </div>
-                  <div className={`flex-1 p-2 rounded-lg text-center text-xs font-bold ${progress.spelling ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <div className={`flex-1 p-2 rounded-lg text-center text-xs font-bold ${progress.spelling ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
                     {progress.spelling ? '✅' : '⬜'} Spelling
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Action buttons */}
-            <div className="space-y-3 mb-4">
-              <p className="text-white font-bold text-center text-sm mb-1">Choose how to study:</p>
-
-              {/* LEARN */}
-              <button
-                onClick={() => {
-                  setShowCategoryDetail(false);
-                  openQuestionSelector('learn');
-                }}
-                className="w-full bg-white text-blue-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-blue-50 active:bg-blue-50 transition-all"
-              >
-                <span className="text-3xl">📚</span>
-                <div className="text-left flex-1">
-                  <div className="text-base font-bold">Learn Mode</div>
-                  <div className="text-xs text-gray-500">Study words with pronunciation & examples</div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-blue-400" />
-              </button>
-
-              {/* MULTIPLE CHOICE */}
-              <button
-                onClick={() => {
-                  setShowCategoryDetail(false);
-                  openQuestionSelector('play');
-                }}
-                className="w-full bg-white text-orange-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-orange-50 active:bg-orange-50 transition-all"
-              >
-                <span className="text-3xl">🎯</span>
-                <div className="text-left flex-1">
-                  <div className="text-base font-bold">Multiple Choice Quiz</div>
-                  <div className="text-xs text-gray-500">Pick the correct Dutch translation</div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-orange-400" />
-              </button>
-
-              {/* SPELLING */}
-              <button
-                onClick={() => {
-                  setShowCategoryDetail(false);
-                  openQuestionSelector('spelling');
-                }}
-                className="w-full bg-white text-purple-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-purple-50 active:bg-purple-50 transition-all"
-              >
-                <span className="text-3xl">✏️</span>
-                <div className="text-left flex-1">
-                  <div className="text-base font-bold">Spelling Mode</div>
-                  <div className="text-xs text-gray-500">Type the Dutch word from memory</div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-purple-400" />
-              </button>
-
-              {/* FILL IN THE BLANK */}
-              <button
-                onClick={() => {
-                  setShowCategoryDetail(false);
-                  openQuestionSelector('fillblank');
-                }}
-                className="w-full bg-white text-teal-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-teal-50 active:bg-teal-50 transition-all"
-              >
-                <span className="text-3xl">🔤</span>
-                <div className="text-left flex-1">
-                  <div className="text-base font-bold">Fill in the Blank</div>
-                  <div className="text-xs text-gray-500">Complete Dutch sentences</div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-teal-400" />
-              </button>
-
-              {/* SPEAKING */}
-              <button
-                onClick={() => {
-                  setShowCategoryDetail(false);
-                  openQuestionSelector('speaking');
-                }}
-                className="w-full bg-white text-rose-600 font-bold py-4 px-5 rounded-2xl shadow-lg flex items-center gap-4 hover:bg-rose-50 active:bg-rose-50 transition-all"
-              >
-                <span className="text-3xl">🎤</span>
-                <div className="text-left flex-1">
-                  <div className="text-base font-bold">Speaking Test</div>
-                  <div className="text-xs text-gray-500">Pronounce Dutch words aloud</div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-rose-400" />
-              </button>
+            {/* ── SECTION 1: LEARN & PRACTISE — always open ── */}
+            <div className="mb-3 rounded-2xl overflow-hidden shadow">
+              <div className="w-full flex items-center justify-between px-4 py-3 font-bold text-white text-sm bg-blue-600">
+                <span>📖 Learn &amp; Practise</span>
+              </div>
+              <div className="bg-white/10 p-2 space-y-2">
+                <Btn emoji="📚" label="Learn Mode" sublabel="Study words with pronunciation & examples" color="text-blue-700"
+                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('learn'); }} />
+                <Btn emoji="🃏" label="Flashcards" sublabel="Flip cards with spaced repetition" color="text-indigo-700"
+                  onClick={() => { setShowCategoryDetail(false); setShowFlashcards(true); }} />
+                <Btn emoji="🎯" label="Multiple Choice Quiz" sublabel="Pick the correct Dutch translation" color="text-orange-700"
+                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('play'); }} />
+                <Btn emoji="✏️" label="Spelling Mode" sublabel="Type the Dutch word from memory" color="text-purple-700"
+                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('spelling'); }} />
+                <Btn emoji="📖" label="Reading Test" sublabel="Read Dutch stories & test comprehension" color="text-yellow-700"
+                  onClick={() => { setShowCategoryDetail(false); setGameMode('stories'); }} />
+                {/* Practice Failed Words — only shown if there are any */}
+                {failedWordsSpelling.length > 0 && (
+                  <Btn emoji="🔄" label="Practice Failed Words"
+                    sublabel={`${failedWordsSpelling.length} words from last spelling test`}
+                    color="text-red-600"
+                    onClick={() => {
+                      const words = loadWords(selectedCategories);
+                      const failedFull = failedWordsSpelling.map(fw =>
+                        words.find(w => w.dutch === fw.dutch && w.english === fw.english)
+                      ).filter(Boolean);
+                      if (!failedFull.length) { alert('No failed words to review!'); return; }
+                      setShowCategoryDetail(false);
+                      setWordBank(failedFull); setUsedWords([]);
+                      setGameMode('spelling'); setCurrentGameMode('spelling');
+                      setGameStartCategory(selectedCategories.join(','));
+                      setScore(0); setStreak(0); setQuestionsAnswered(0);
+                      setFeedback(null); setWrongAnswers([]); setSpellingAnswer('');
+                      setNumQuestions(failedFull.length); setReviewMode('failed_words');
+                      setShowQuestionSelector(false);
+                      generateSpellingQuestion(failedFull, []);
+                    }}
+                  />
+                )}
+                {failedWordsMultipleChoice.length >= 4 && (
+                  <Btn emoji="🔁" label="Retry Failed Quiz Words"
+                    sublabel={`${failedWordsMultipleChoice.length} words from last quiz`}
+                    color="text-amber-700"
+                    onClick={() => {
+                      const words = loadWords(selectedCategories);
+                      const failedFull = failedWordsMultipleChoice.map(fw =>
+                        words.find(w => w.dutch === fw.dutch && w.english === fw.english)
+                      ).filter(Boolean);
+                      if (failedFull.length < 4) { alert('Need at least 4 words for Multiple Choice.'); return; }
+                      setShowCategoryDetail(false);
+                      setWordBank(failedFull); setUsedWords([]);
+                      setGameMode('play'); setCurrentGameMode('play');
+                      setGameStartCategory(selectedCategories.join(','));
+                      setScore(0); setStreak(0); setQuestionsAnswered(0);
+                      setFeedback(null); setWrongAnswers([]);
+                      setNumQuestions(failedFull.length); setReviewMode('failed_words');
+                      setShowQuestionSelector(false);
+                      generateQuestion(failedFull, []);
+                    }}
+                  />
+                )}
+              </div>
             </div>
 
-            {/* Tip */}
+            {/* ── SECTION 2: ADVANCED PRACTICE — collapsed ── */}
+            <Section id="advanced" emoji="⚡" title="Advanced Practice" color="bg-violet-600">
+              <Btn emoji="🔤" label="Fill in the Blank" sublabel="Complete Dutch sentences" color="text-teal-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('fillblank'); }} />
+              <Btn emoji="🎤" label="Speaking Test" sublabel="Pronounce Dutch words aloud" color="text-rose-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('speaking'); }} />
+              <Btn emoji="🧩" label="Sentence Builder" sublabel="Build Dutch sentences from words" color="text-green-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('sentencebuilder'); }} />
+              {adaptiveStats && adaptiveStats.wordsThatNeedWork > 0 && (
+                <Btn emoji="🧠" label="Adaptive Practice"
+                  sublabel={`${adaptiveStats.wordsThatNeedWork} words need work · AI-prioritised`}
+                  color="text-red-700"
+                  onClick={() => { setShowCategoryDetail(false); setShowAdaptiveStats(true); }} />
+              )}
+              <Btn emoji="🔄" label="Verb Conjugation" sublabel="Learn & test Dutch verb forms" color="text-cyan-700"
+                onClick={() => { setShowCategoryDetail(false); setPendingGameMode(null); setShowVerbCategorySelector(true); }} />
+            </Section>
+
+            {/* ── SECTION 3: RESOURCES — collapsed ── */}
+            <Section id="resources" emoji="📂" title="Resources" color="bg-emerald-600">
+              <Btn emoji="📝" label="Story Fill-in-Blank" sublabel="Complete story sentences" color="text-emerald-700"
+                onClick={() => { setShowCategoryDetail(false); setShowFillBlankStories(true); }} />
+              <Btn emoji="🎧" label="Listening Test" sublabel="Listen to Dutch dialogues" color="text-violet-700"
+                onClick={() => { setShowCategoryDetail(false); setGameMode('listening_test'); }} />
+              <Btn emoji="📘" label="Grammar Lessons" sublabel="Rules, tips & quizzes" color="text-blue-700"
+                onClick={() => { setShowCategoryDetail(false); setShowGrammarLessons(true); }} />
+              <Btn emoji="💡" label="Tips & Tricks" sublabel="Memory aids & shortcuts" color="text-pink-700"
+                onClick={() => { setShowCategoryDetail(false); setShowTipsAndTricks(true); }} />
+            </Section>
+
+            {/* ── SECTION 4: PROGRESS & STATS — collapsed ── */}
+            <Section id="stats" emoji="📊" title="Progress & Stats" color="bg-gray-600">
+              <Btn emoji="📈" label="Attempt History" sublabel="See all your past quiz results" color="text-gray-700"
+                onClick={() => { setShowCategoryDetail(false); setShowHistory(true); }} />
+              <Btn emoji="🎯" label="Adaptive Stats" sublabel="Words that need the most work" color="text-orange-700"
+                onClick={() => { setShowCategoryDetail(false); setShowAdaptiveStats(true); }} />
+            </Section>
+
             <div className="bg-white/20 rounded-xl p-3 text-center">
               <p className="text-white text-xs">💡 Recommended path: Learn → Multiple Choice → Spelling</p>
             </div>
@@ -5874,12 +5990,20 @@ export default function DutchLearningGame() {
                       </div>
                     ))}
                     {showMultiSelect && selectedCategories.length > 1 && (
-                      <button
-                        onClick={() => setSelectedCategories(['all'])}
-                        className="text-xs text-red-600 hover:text-red-700 font-semibold ml-2"
-                      >
-                        Clear All
-                      </button>
+                      <div className="flex items-center gap-2 ml-auto">
+                        <button
+                          onClick={() => setSelectedCategories(['all'])}
+                          className="text-xs text-red-600 hover:text-red-700 font-semibold"
+                        >
+                          Clear All
+                        </button>
+                        <button
+                          onClick={() => setShowCategoryDetail(true)}
+                          className="flex items-center gap-1 bg-green-500 hover:bg-green-600 active:bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-all"
+                        >
+                          Start <ChevronRight className="w-3 h-3" />
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -6071,57 +6195,13 @@ export default function DutchLearningGame() {
                   </p>
                 </div>
               )}
-              <MenuSections
-                openQuestionSelector={openQuestionSelector}
-                setShowFlashcards={setShowFlashcards}
-                setShowGrammarLessons={setShowGrammarLessons}
-                setShowTipsAndTricks={setShowTipsAndTricks}
-                setShowStories={setShowStories}
-                setGameMode={setGameMode}
-                setSelectedConversation={setSelectedConversation}
-                setShowFillBlankStories={setShowFillBlankStories}
-                setShowConjugationOptions={setShowConjugationOptions}
-                showConjugationOptions={showConjugationOptions}
-                setShowVerbCategorySelector={setShowVerbCategorySelector}
-                setPendingGameMode={setPendingGameMode}
-                setShowHistory={setShowHistory}
-                setShowAdaptiveStats={setShowAdaptiveStats}
-                getAdaptiveLearningStats={getAdaptiveLearningStats}
-                selectedCategories={selectedCategories}
-                getAllFailedWordsFromHistory={getAllFailedWordsFromHistory}
-                attemptHistory={attemptHistory}
-                loadWords={loadWords}
-                setReviewMode={setReviewMode}
-                setWordBank={setWordBank}
-                setUsedWords={setUsedWords}
-                setCurrentGameMode={setCurrentGameMode}
-                setGameStartCategory={setGameStartCategory}
-                setScore={setScore}
-                setStreak={setStreak}
-                setQuestionsAnswered={setQuestionsAnswered}
-                setFeedback={setFeedback}
-                setWrongAnswers={setWrongAnswers}
-                setSpellingAnswer={setSpellingAnswer}
-                setNumQuestions={setNumQuestions}
-                setShowQuestionSelector={setShowQuestionSelector}
-                setTranscript={setTranscript}
-                setIsRecording={setIsRecording}
-                generateSpellingQuestion={generateSpellingQuestion}
-                getAllWords={getAllWords}
-                getSRSPrioritizedWords={getSRSPrioritizedWords}
-              />
-
-              {/* Info Box - MOBILE OPTIMIZED */}
-              <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-orange-50 rounded-xl">
-                <div className="text-xs sm:text-sm text-gray-600 space-y-1 sm:space-y-2">
-                  <p className="text-center font-bold text-orange-600 mb-2 text-sm sm:text-base"> "2000+ Dutch Words" Course</p>
-                  <p><span className="font-bold">🟢 A1:</span> Basic words</p>
-                  <p><span className="font-bold">🔵 A2:</span> Intermediate</p>
-                  <p className="mt-2 sm:mt-3 text-center font-semibold text-xs sm:text-sm">📚 Learn → ✅ Quiz (Normal) → ✏️ Spelling Mode</p>
-                  <p className="mt-2 text-center font-bold text-green-600 text-xs sm:text-sm">🏆 Pass both Quiz + Spelling to complete! (80% on 80% of words)</p>
-                  <p className="text-xs text-gray-500 mt-1 text-center">💡 Spelling Difficulty in Quiz is optional practice</p>
+              {/* Tap a category above to start learning */}
+              {!showMultiSelect && (
+                <div className="mt-4 p-3 bg-orange-50 rounded-xl text-center">
+                  <p className="text-orange-600 font-semibold text-sm">👆 Tap a category above to start learning</p>
+                  <p className="text-gray-500 text-xs mt-1">🟢 A1 Basic · 🔵 A2 Intermediate · 🏆 = Completed</p>
                 </div>
-              </div>
+              )}
             </>
           ) : (
             // Question Selector - MOBILE OPTIMIZED
@@ -6499,7 +6579,7 @@ export default function DutchLearningGame() {
                       onClick={() => {
                         if (confirm('Ready to test yourself?')) {
                           setHasCompletedLearn(true);
-                          startGame();
+                          startGame('play', learnWords);
                         }
                       }}
                       className="px-4 sm:px-6 py-3 bg-green-500 text-white rounded-xl font-bold hover:bg-green-600 active:bg-green-600 transition-all flex items-center gap-2 text-sm sm:text-base"
