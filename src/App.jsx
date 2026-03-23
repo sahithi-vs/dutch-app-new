@@ -2803,44 +2803,50 @@ export default function DutchLearningGame() {
                 {/* Learning Path */}
                 <div className="bg-blue-50 rounded-xl p-4 border-2 border-blue-200">
                   <h3 className="text-xl font-bold text-blue-700 mb-3">📖 Recommended Learning Path</h3>
-                  {/* NEW: Explicit instruction to select   first */}
                   <div className="mb-3 p-3 rounded-lg bg-blue-100 border border-blue-300">
-                    <p className="text-sm text-blue-800 font-semibold">🗂️ Before you start: Select a   (category) on the menu, then choose a Learning Mode.</p>
+                    <p className="text-sm text-blue-800 font-semibold">🗂️ Tap any category tile — a detail page opens with all options organised in dropdown sections.</p>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">1️⃣</span>
                       <div>
-                        <p className="font-bold text-blue-700">Choose a Category  🗂️</p>
-                        <p className="text-sm text-gray-600">Pick a category (e.g., lessons) from the grid. This sets which words you’ll study.</p>
+                        <p className="font-bold text-blue-700">Choose a Category 🗂️</p>
+                        <p className="text-sm text-gray-600">Tap a category tile. Use the ← Back button (top-left) to return, or the 🏠 Home button (bottom) to go to the main menu.</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">2️⃣</span>
                       <div>
-                        <p className="font-bold text-blue-700">Learn Mode 📚</p>
-                        <p className="text-sm text-gray-600">Study words with examples and pronunciation. Take your time!</p>
+                        <p className="font-bold text-blue-700">📖 Learn &amp; Practise — open by default</p>
+                        <p className="text-sm text-gray-600">Contains Learn Mode, Flashcards, Multiple Choice, Spelling, Reading Test and more. Always start with Learn Mode!</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">3️⃣</span>
                       <div>
-                        <p className="font-bold text-orange-700">Multiple Choice Quiz 🎯</p>
-                        <p className="text-sm text-gray-600">Test your knowledge. Need 80%+ on 80% of words to pass!</p>
+                        <p className="font-bold text-violet-700">⚡ Advanced Practice — tap to expand</p>
+                        <p className="text-sm text-gray-600">Fill in the Blank, Speaking Test, Sentence Builder, Adaptive Practice, Verb Conjugation.</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">4️⃣</span>
                       <div>
-                        <p className="font-bold text-purple-700">Spelling Mode ✏️</p>
-                        <p className="text-sm text-gray-600">Master the spelling. Need 80%+ on 80% of words to complete!</p>
+                        <p className="font-bold text-emerald-700">📂 Resources — tap to expand</p>
+                        <p className="text-sm text-gray-600">Story Fill-in-Blank, Listening Test, Grammar Lessons, Tips &amp; Tricks.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">5️⃣</span>
+                      <div>
+                        <p className="font-bold text-gray-700">📊 Progress &amp; Stats — tap to expand</p>
+                        <p className="text-sm text-gray-600">Attempt History and Adaptive Stats to track your weakest words.</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <span className="text-2xl">✅</span>
                       <div>
                         <p className="font-bold text-green-700">Category Completed! 🎉</p>
-                        <p className="text-sm text-gray-600">Both Multiple Choice + Spelling passed = Trophy 🏆</p>
+                        <p className="text-sm text-gray-600">Pass both Multiple Choice + Spelling at 80%+ = Trophy 🏆</p>
                       </div>
                     </div>
                   </div>
@@ -2879,7 +2885,7 @@ export default function DutchLearningGame() {
                       <p className="text-gray-600">Learn and test verb forms in present and past tense.</p>
                     </div>
                     <div>
-                      <p className="font-bold text-purple-600">🎧 Listening Practice</p>
+                      <p className="font-bold text-purple-600">🎧 Listening Test</p>
                       <p className="text-gray-600">Listen to audio and answer comprehension questions.</p>
                     </div>
                     <div>
@@ -2906,13 +2912,15 @@ export default function DutchLearningGame() {
                 <div className="bg-green-50 rounded-xl p-4 border-2 border-green-200">
                   <h3 className="text-xl font-bold text-green-700 mb-3">💡 Pro Tips</h3>
                   <ul className="space-y-2 text-sm text-gray-700">
-                    <li>✓ Use Learn Mode first - don't skip it!</li>
+                    <li>✓ Use Learn Mode first — don't skip it!</li>
+                    <li>✓ Tap a category → detail page opens with all options in dropdowns</li>
+                    <li>✓ Learn &amp; Practise is open by default; Advanced Practice, Resources &amp; Stats are collapsed — tap to expand</li>
+                    <li>✓ Use the ← Back button (top-left) or 🏠 Home button (bottom) to navigate</li>
                     <li>✓ Listen to pronunciation multiple times</li>
-                    <li>✓ Complete 80% of words (not less) for best results</li>
-                    <li>✓ Review failed words using "Practice Failed Words" button</li>
-                    <li>✓ Check "My History" to see your progress</li>
+                    <li>✓ Complete 80% of words for best results</li>
+                    <li>✓ Review failed words using "Practice Failed Words" in Learn &amp; Practise</li>
+                    <li>✓ Check Attempt History in Progress &amp; Stats</li>
                     <li>✓ Use the search bar to quickly find specific words</li>
-                    <li>✓ Spelling Difficulty in Multiple Choice is optional practice</li>
                     <li>✓ Enable microphone for Speaking Test</li>
                   </ul>
                 </div>
@@ -5467,12 +5475,8 @@ export default function DutchLearningGame() {
               </div>
             )}
 
-            {/* ── SECTION 1: LEARN & PRACTISE — always open ── */}
-            <div className="mb-3 rounded-2xl overflow-hidden shadow">
-              <div className="w-full flex items-center justify-between px-4 py-3 font-bold text-white text-sm bg-blue-600">
-                <span>📖 Learn &amp; Practise</span>
-              </div>
-              <div className="bg-white/10 p-2 space-y-2">
+            {/* ── SECTION 1: LEARN & PRACTISE — open by default ── */}
+            <Section id="learn_practise" emoji="📖" title="Learn & Practise" color="bg-blue-600" defaultOpen={true}>
                 <Btn emoji="📚" label="Learn Mode" sublabel="Study words with pronunciation & examples" color="text-blue-700"
                   onClick={() => { setShowCategoryDetail(false); openQuestionSelector('learn'); }} />
                 <Btn emoji="🃏" label="Flashcards" sublabel="Flip cards with spaced repetition" color="text-indigo-700"
@@ -5528,8 +5532,7 @@ export default function DutchLearningGame() {
                     }}
                   />
                 )}
-              </div>
-            </div>
+            </Section>
 
             {/* ── SECTION 2: ADVANCED PRACTICE — collapsed ── */}
             <Section id="advanced" emoji="⚡" title="Advanced Practice" color="bg-violet-600">
@@ -5572,6 +5575,15 @@ export default function DutchLearningGame() {
             <div className="bg-white/20 rounded-xl p-3 text-center">
               <p className="text-white text-xs">💡 Recommended path: Learn → Multiple Choice → Spelling</p>
             </div>
+
+            {/* Home button at bottom */}
+            <button
+              onClick={() => { if (window.__sectionOpenState) window.__sectionOpenState = {}; setShowCategoryDetail(false); goToMenu(); }}
+              className="w-full mt-2 bg-white/20 hover:bg-white/30 active:bg-white/30 text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              <Home className="w-5 h-5" />
+              <span>Home</span>
+            </button>
           </div>
         </div>
       );
