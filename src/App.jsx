@@ -7364,16 +7364,39 @@ export default function DutchLearningGame() {
                   </span>
                 </div>
                 <p className="text-gray-600 mb-2 text-sm sm:text-base">Type the Dutch word for:</p>
-                <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
+                <div className="flex items-center justify-center gap-3 mb-3">
                   <h2 className="text-3xl sm:text-5xl font-bold text-purple-600">{currentWord.english}</h2>
                 </div>
+
+                {/* Example sentence with the Dutch word blanked out */}
+                {currentWord.example && (() => {
+                  const blank = '_'.repeat(currentWord.dutch.length);
+                  const regex = new RegExp(currentWord.dutch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+                  const sentenced = currentWord.example.replace(regex, blank);
+                  return (
+                    <div className="mb-4 mx-auto max-w-sm bg-purple-50 border-2 border-purple-200 rounded-xl p-3 text-left">
+                      <p className="text-xs font-bold text-purple-500 mb-1 uppercase tracking-wide">Fill in the sentence:</p>
+                      <p className="text-sm sm:text-base text-gray-700 italic leading-relaxed">
+                        {sentenced.split(blank).reduce((acc, part, i, arr) => {
+                          acc.push(<span key={`t${i}`}>{part}</span>);
+                          if (i < arr.length - 1) acc.push(
+                            <span key={`b${i}`} className="inline-block border-b-2 border-purple-500 mx-1 text-transparent select-none" style={{minWidth: `${currentWord.dutch.length * 0.65}rem`}}>
+                              {blank}
+                            </span>
+                          );
+                          return acc;
+                        }, [])}
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 <button
                   onClick={() => speakDutch(currentWord.dutch)}
                   className="bg-purple-100 hover:bg-purple-200 active:bg-purple-200 px-4 sm:px-6 py-2 sm:py-3 rounded-xl transition-all inline-flex items-center gap-2 mb-4 sm:mb-6 text-sm sm:text-base"
                 >
                   <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
-                  <span className="text-purple-600 font-semibold">Hear</span>
+                  <span className="text-purple-600 font-semibold">Hear word</span>
                 </button>
               </div>
 
@@ -7418,8 +7441,20 @@ export default function DutchLearningGame() {
                     <div className="mb-3 p-3 bg-white rounded-lg">
                       <p className="text-gray-600 text-xs sm:text-sm mb-1">You wrote:</p>
                       <p className="text-red-600 font-bold text-lg sm:text-xl line-through">{spellingAnswer}</p>
-                      <p className="text-gray-600 text-xs sm:text-sm mt-2 mb-1">Correct:</p>
+                      <p className="text-gray-600 text-xs sm:text-sm mt-2 mb-1">Correct answer:</p>
                       <p className="text-green-600 font-bold text-lg sm:text-xl">{currentWord.dutch}</p>
+                      {currentWord.example && (
+                        <div className="mt-2 pt-2 border-t border-gray-200">
+                          <p className="text-gray-500 text-xs mb-1">Full sentence:</p>
+                          <p className="text-gray-700 text-sm italic">{currentWord.example}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {feedback.correct && currentWord.example && (
+                    <div className="mb-3 p-3 bg-white rounded-lg">
+                      <p className="text-gray-500 text-xs mb-1">Full sentence:</p>
+                      <p className="text-gray-700 text-sm italic">{currentWord.example}</p>
                     </div>
                   )}
 
