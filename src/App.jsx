@@ -23,6 +23,7 @@ import { tipsAndTricks } from './data/tipsAndTricks';
 import FlashcardDeck from './components/Flashcards/FlashcardDeck';
 import FlashcardMode from './components/Flashcards/FlashcardMode';
 import { initializeCard, getCardsDueForReview } from './utils/flashcards';
+import ClickableExample from './components/ClickableExample';
 
 const getAllWords = () => {
   const allWords = [];
@@ -5845,7 +5846,7 @@ export default function DutchLearningGame() {
                               </div>
                               <p className="text-sm sm:text-lg text-gray-700 mb-1">{word.english}</p>
                               {word.example && (
-                                <p className="text-xs sm:text-sm text-gray-500 italic line-clamp-2">{word.example}</p>
+                                <p className="text-xs sm:text-sm text-gray-500 italic line-clamp-2"><ClickableExample example={word.example} allWords={getAllWords()} /></p>
                               )}
                               <p className="text-xs text-gray-400 mt-1">
                                 {word.category.replace(/_/g, ' ').toUpperCase()}
@@ -5895,7 +5896,7 @@ export default function DutchLearningGame() {
                       </div>
                       <p className="text-lg sm:text-xl text-gray-700 font-semibold mb-2 text-center">{welcomeWords[currentWelcomeIndex].english}</p>
                       {welcomeWords[currentWelcomeIndex].example && (
-                        <p className="text-xs sm:text-sm text-gray-600 italic text-center">{welcomeWords[currentWelcomeIndex].example}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 italic text-center"><ClickableExample example={welcomeWords[currentWelcomeIndex].example} allWords={getAllWords()} /></p>
                       )}
                       {/* <div className="mt-2 text-center">
                         <span className={`px-2 py-1 rounded-full text-xs font-bold ${
@@ -6491,7 +6492,7 @@ export default function DutchLearningGame() {
                         <Volume2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                         <span className="text-xs sm:text-sm font-semibold text-blue-600">Example</span>
                       </button>
-                      <p className="mt-2">{currentLearnWord.example}</p>
+                      <p className="mt-2"><ClickableExample example={currentLearnWord.example} allWords={getAllWords()} /></p>
                     </div>
                   </div>
                 </div>
@@ -7184,7 +7185,7 @@ export default function DutchLearningGame() {
                         {wrong.example && (
                           <div className="bg-blue-50 rounded-lg p-2 mt-2">
                             <p className="text-xs text-blue-600 mb-1">Example:</p>
-                            <p className="text-sm text-gray-700 italic">{wrong.example}</p>
+                            <p className="text-sm text-gray-700 italic"><ClickableExample example={wrong.example} allWords={getAllWords()} /></p>
                           </div>
                         )}
 
@@ -7371,29 +7372,38 @@ export default function DutchLearningGame() {
                 {/* Example sentence with the Dutch word blanked out */}
                 {currentWord.example && (() => {
                   const blank = '_'.repeat(currentWord.dutch.length);
-                  // Split into Dutch part and bracketed English part, only blank in Dutch part
+                  const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  // Split into Dutch part and bracketed English translation
                   const bracketMatch = currentWord.example.match(/^(.*?)(\s*\(.*\)\s*)$/s);
                   const dutchPart = bracketMatch ? bracketMatch[1] : currentWord.example;
                   const englishPart = bracketMatch ? bracketMatch[2] : '';
-
-                  let sentenced2;
-                  const isMultiWord = currentWord.dutch.trim().includes(' ');
-                  if (isMultiWord) {
-                    // For multi-word phrases: directly replace the full phrase (case-insensitive)
-                    const escaped = currentWord.dutch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const phraseRegex = new RegExp(escaped, 'gi');
-                    const replaced = dutchPart.replace(phraseRegex, blank);
-                    // If phrase wasn't found verbatim, blank out the entire Dutch part
-                    sentenced2 = (replaced !== dutchPart ? replaced : blank) + englishPart;
-                  } else {
-                    // Single word: use root-based regex as before
-                    const escaped = currentWord.dutch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const root = currentWord.dutch.replace(/(en|de|te|t|d)$/i, '') || currentWord.dutch.slice(0, -1);
-                    const escapedRoot = root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    const pattern = root.length >= 4 ? `${escapedRoot}\\w*` : escaped;
-                    const wordRegex = new RegExp(`\\b(${pattern})\\b`, 'gi');
-                    sentenced2 = dutchPart.replace(wordRegex, blank) + englishPart;
+                  // Build progressively looser patterns to match conjugated/inflected forms:
+                  // 1. Exact word match
+                  // 2. Stem match (strip common Dutch suffixes: en, de, te, t, d, n)
+                  // 3. First-3-letters match (catches zeg→zeggen, kom→komen, begint→beginnen, etc.)
+                  const word = currentWord.dutch;
+                  const stem = word.replace(/(en|nen|den|ten|de|te|dt|t|d|n)$/i, '') || word.slice(0, -1);
+                  const prefix3 = word.slice(0, 3);
+                  const patterns = [
+                    `${escapeRegex(word)}`,                                          // exact
+                    stem.length >= 3 ? `${escapeRegex(stem)}\\w*` : null,           // stem-based
+                    prefix3.length >= 3 ? `${escapeRegex(prefix3)}\\w*` : null,     // first-3-letters
+                  ].filter(Boolean);
+                  let wordRegex = null;
+                  let blankedDutch = null;
+                  for (const pat of patterns) {
+                    const rx = new RegExp(`\\b(${pat})\\b`, 'gi');
+                    if (rx.test(dutchPart)) {
+                      rx.lastIndex = 0;
+                      const result = dutchPart.replace(rx, blank);
+                      if (result.includes(blank)) {
+                        blankedDutch = result;
+                        break;
+                      }
+                    }
                   }
+                  if (!blankedDutch) return null;
+                  const fullSentence = blankedDutch + englishPart;
                   return (
                     <div className="mb-4 mx-auto max-w-sm bg-purple-50 border-2 border-purple-200 rounded-xl p-3 text-left">
                       <div className="flex items-center justify-between mb-1">
@@ -7408,8 +7418,8 @@ export default function DutchLearningGame() {
                         </button>
                       </div>
                       <p className="text-sm sm:text-base text-gray-700 italic leading-relaxed">
-                        {sentenced2.split(blank).reduce((acc, part, i, arr) => {
-                          acc.push(<span key={`t${i}`}>{part}</span>);
+                        {fullSentence.split(blank).reduce((acc, part, i, arr) => {
+                          acc.push(<ClickableExample key={`t${i}`} example={part} allWords={getAllWords()} />);
                           if (i < arr.length - 1) acc.push(
                             <span key={`b${i}`} className="inline-block border-b-2 border-purple-500 mx-1 text-transparent select-none" style={{minWidth: `${currentWord.dutch.length * 0.65}rem`}}>
                               {blank}
@@ -7477,7 +7487,7 @@ export default function DutchLearningGame() {
                       {currentWord.example && (
                         <div className="mt-2 pt-2 border-t border-gray-200">
                           <p className="text-gray-500 text-xs mb-1">Full sentence:</p>
-                          <p className="text-gray-700 text-sm italic">{currentWord.example}</p>
+                          <p className="text-gray-700 text-sm italic"><ClickableExample example={currentWord.example} allWords={getAllWords()} /></p>
                         </div>
                       )}
                     </div>
@@ -7485,7 +7495,7 @@ export default function DutchLearningGame() {
                   {feedback.correct && currentWord.example && (
                     <div className="mb-3 p-3 bg-white rounded-lg">
                       <p className="text-gray-500 text-xs mb-1">Full sentence:</p>
-                      <p className="text-gray-700 text-sm italic">{currentWord.example}</p>
+                      <p className="text-gray-700 text-sm italic"><ClickableExample example={currentWord.example} allWords={getAllWords()} /></p>
                     </div>
                   )}
 
@@ -7529,7 +7539,7 @@ export default function DutchLearningGame() {
                     <div className="mt-4 pt-4 border-t-2 border-rose-200">
                       <p className="text-xs sm:text-sm text-gray-500 mb-2">Example sentence:</p>
                       <p className="text-sm sm:text-base text-gray-700 italic mb-2">
-                        {currentWord.example}
+                        <ClickableExample example={currentWord.example} allWords={getAllWords()} />
                       </p>
                       <button
                         onClick={() => {
@@ -7731,7 +7741,7 @@ export default function DutchLearningGame() {
                       <p className="text-gray-600 text-xs sm:text-sm mt-2 mb-1">Correct:</p>
                       <p className="text-green-600 font-bold text-lg sm:text-xl">{currentWord.dutch}</p>
                       <p className="text-gray-600 text-xs sm:text-sm mt-3 mb-1">Full sentence:</p>
-                      <p className="text-gray-800 font-medium text-sm sm:text-lg">{currentWord.example}</p>
+                      <p className="text-gray-800 font-medium text-sm sm:text-lg"><ClickableExample example={currentWord.example} allWords={getAllWords()} /></p>
                     </div>
                   )}
 

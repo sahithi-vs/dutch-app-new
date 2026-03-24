@@ -1,4 +1,867 @@
 export const stories = [
+
+  
+
+  // ─── GEMEENTE BRIEVEN ────────────────────────────────────────────────────
+  {
+    id: 1,
+    title: '📄 Brief van de Gemeente',
+    text: `Gemeente Amsterdam
+Afdeling Burgerzaken
+Postbus 202, 1000 AE Amsterdam
+
+Datum: 3 maart 2024
+Betreft: Verlenging verblijfsvergunning
+
+Geachte mevrouw Yilmaz,
+
+Uw verblijfsvergunning verloopt op 15 april 2024. U moet uw vergunning op tijd verlengen. Als u dit niet doet, mag u niet meer in Nederland blijven.
+
+Wat moet u doen?
+U moet een afspraak maken bij de IND (Immigratie- en Naturalisatiedienst). Bel naar 088 - 043 04 30 of maak een afspraak via www.ind.nl.
+
+Neem de volgende documenten mee:
+- Uw paspoort
+- Uw huidige verblijfsvergunning
+- Een recente pasfoto
+- Bewijs van inkomen (loonstrook of uitkeringsbrief)
+
+Let op: Maak uw afspraak minimaal 6 weken voor de vervaldatum.
+
+Heeft u vragen? Bel dan naar de gemeente: 14 020, maandag tot en met vrijdag van 08:00 tot 18:00 uur.
+
+Met vriendelijke groet,
+Gemeente Amsterdam`,
+    questions: [
+      { question: "Wanneer verloopt de verblijfsvergunning van mevrouw Yilmaz?", options: ["15 maart", "3 april", "15 april", "3 mei"], correct: "15 april" },
+      { question: "Wat moet mevrouw Yilmaz als eerste doen?", options: ["Naar de gemeente gaan", "Een afspraak maken bij de IND", "Haar paspoort verlengen", "Een brief sturen"], correct: "Een afspraak maken bij de IND" },
+      { question: "Hoeveel weken voor de vervaldatum moet ze een afspraak maken?", options: ["2 weken", "4 weken", "6 weken", "8 weken"], correct: "6 weken" },
+      { question: "Welk document moet ze NIET meenemen?", options: ["Paspoort", "Pasfoto", "Rijbewijs", "Verblijfsvergunning"], correct: "Rijbewijs" }
+    ]
+  },
+
+  {
+    id: 2,
+    title: '📄 Brief: Inschrijving Gemeente',
+    text: `Gemeente Rotterdam
+Stadskantoor, Coolsingel 40
+3011 AD Rotterdam
+
+Datum: 10 januari 2024
+Betreft: Bevestiging inschrijving Basisregistratie Personen (BRP)
+
+Geachte heer Al-Hassan,
+
+Wij bevestigen dat u bent ingeschreven in de Basisregistratie Personen (BRP) van de gemeente Rotterdam.
+
+Uw gegevens:
+Naam: Omar Al-Hassan
+Geboortedatum: 12 augustus 1988
+Adres: Bergselaan 45, 3037 EG Rotterdam
+Inschrijfdatum: 10 januari 2024
+
+Burgerservicenummer (BSN): 123 456 789
+
+Wat kunt u nu doen?
+Met uw BSN kunt u:
+- Een DigiD aanvragen op www.digid.nl
+- Zorgverzekering afsluiten
+- Zich inschrijven bij een huisarts
+- Uw kinderen inschrijven op school
+
+Heeft u een DigiD nodig? Ga dan naar www.digid.nl. U heeft hiervoor uw BSN nodig.
+
+Bewaar deze brief goed. U heeft uw BSN regelmatig nodig.
+
+Met vriendelijke groet,
+Afdeling Burgerzaken Rotterdam`,
+    questions: [
+      { question: "Waar is de heer Al-Hassan ingeschreven?", options: ["Amsterdam", "Den Haag", "Rotterdam", "Utrecht"], correct: "Rotterdam" },
+      { question: "Wat is een BSN?", options: ["Een bankrekeningnummer", "Een burgerservicenummer", "Een belastingnummer", "Een bewijsnummer"], correct: "Een burgerservicenummer" },
+      { question: "Wat kan hij NIET doen met zijn BSN?", options: ["DigiD aanvragen", "Zorgverzekering afsluiten", "Rijbewijs halen", "Huisarts zoeken"], correct: "Rijbewijs halen" },
+      { question: "Waar kan hij een DigiD aanvragen?", options: ["Bij de gemeente", "Op www.digid.nl", "Bij de IND", "Op zijn werk"], correct: "Op www.digid.nl" }
+    ]
+  },
+
+  // ─── VACATURES / WERK ────────────────────────────────────────────────────
+  {
+    id: 3,
+    title: '💼 Vacature: Medewerker Supermarkt',
+    text: `VACATURE
+Albert Heijn – Filiaal Amstelveen
+
+Wij zoeken: Medewerker supermarkt (parttime)
+
+Uren: 16 tot 24 uur per week
+Werktijden: Vroege dienst (07:00–13:00) of late dienst (16:00–22:00)
+Salaris: €12,50 per uur
+Startdatum: Per direct
+
+Wat ga je doen?
+• Producten in de schappen zetten
+• Klanten helpen bij vragen
+• Kassa bedienen
+• De winkel schoon houden
+
+Wat vragen wij?
+• Je bent minimaal 16 jaar oud
+• Je werkt graag in een team
+• Je bent vriendelijk naar klanten
+• Je kunt ook in het weekend werken
+• Je spreekt Nederlands (niveau A2 is voldoende)
+
+Wat bieden wij?
+• Goed salaris met toeslagen in het weekend
+• Reiskostenvergoeding
+• Mogelijkheid om meer uren te werken
+• Gezellige collega's
+
+Interesse?
+Stuur je cv en een korte motivatiebrief naar: werk@ah-amstelveen.nl
+Of kom langs bij de winkel: Amstelveenseweg 88, Amstelveen.
+
+Vragen? Bel: 020 – 456 78 90`,
+    questions: [
+      { question: "Hoeveel uur per week is de baan?", options: ["8 tot 12 uur", "12 tot 16 uur", "16 tot 24 uur", "24 tot 32 uur"], correct: "16 tot 24 uur" },
+      { question: "Wat is het salaris per uur?", options: ["€10,50", "€11,50", "€12,50", "€13,50"], correct: "€12,50" },
+      { question: "Wat is de minimumleeftijd voor deze baan?", options: ["14 jaar", "15 jaar", "16 jaar", "18 jaar"], correct: "16 jaar" },
+      { question: "Hoe kun je solliciteren?", options: ["Alleen telefonisch", "Alleen via e-mail", "Via e-mail of langs de winkel komen", "Alleen op de website"], correct: "Via e-mail of langs de winkel komen" }
+    ]
+  },
+
+  {
+    id: 4,
+    title: '💼 Vacature: Schoonmaker',
+    text: `VACATURE – Schoonmaakbedrijf Sparkle
+
+Functie: Schoonmaker / schoonmaakster
+Locatie: Utrecht en omgeving
+Uren: 20 uur per week (flexibel)
+
+Over de functie:
+U maakt kantoren, scholen en zorginstellingen schoon. U werkt vroeg in de ochtend (06:00–10:00) of 's avonds (18:00–22:00). U werkt zelfstandig of in een klein team.
+
+Vereisten:
+- U bent betrouwbaar en punctueel
+- U heeft rijbewijs B (pré, maar niet verplicht)
+- U spreekt een beetje Nederlands
+- Ervaring is een voordeel, maar niet nodig
+
+Arbeidsvoorwaarden:
+- Salaris: €13,00 per uur
+- Reiskosten worden vergoed
+- Contract voor 6 maanden, daarna mogelijk vast contract
+- Werken op zaterdag geeft 25% toeslag
+
+Hoe solliciteren?
+Bel of app naar: 06 – 12 34 56 78
+Of stuur een e-mail naar: info@sparkle-schoonmaak.nl
+
+Wij reageren binnen 2 werkdagen.`,
+    questions: [
+      { question: "Hoe laat begint de vroege dienst?", options: ["05:00", "06:00", "07:00", "08:00"], correct: "06:00" },
+      { question: "Is ervaring verplicht?", options: ["Ja, altijd", "Ja, minimaal 1 jaar", "Nee, het is een voordeel", "Nee, alleen een rijbewijs is nodig"], correct: "Nee, het is een voordeel" },
+      { question: "Hoeveel toeslag krijg je op zaterdag?", options: ["10%", "15%", "20%", "25%"], correct: "25%" },
+      { question: "Hoe lang is het eerste contract?", options: ["3 maanden", "6 maanden", "1 jaar", "2 jaar"], correct: "6 maanden" }
+    ]
+  },
+
+  // ─── HUURWONINGEN / ADVERTENTIES ─────────────────────────────────────────
+  {
+    id: 5,
+    title: '🏠 Woningadvertentie',
+    text: `TE HUUR – Appartement Utrecht
+
+Adres: Kanaalstraat 12, 3531 CK Utrecht
+Huurprijs: €950 per maand (exclusief gas, water en licht)
+Beschikbaar vanaf: 1 februari 2024
+
+Omschrijving:
+Mooi en licht appartement op de tweede verdieping. Het appartement heeft een woonkamer, een slaapkamer, een moderne keuken en een badkamer. Er is een klein balkon aan de achterkant.
+
+Kenmerken:
+• Oppervlakte: 58 m²
+• Bouwjaar: 2005
+• Verwarming: Centrale verwarming (cv)
+• Geen huisdieren toegestaan
+• Niet geschikt voor studenten
+• Minimale huurperiode: 12 maanden
+
+Locatie:
+Het appartement ligt dicht bij het centrum van Utrecht. Op loopafstand: supermarkt, apotheek en bushalte (lijn 7 en 12). Treinstation Utrecht Centraal is 15 minuten lopen.
+
+Servicekosten: €75 per maand (inclusief internet en schoonmaak trappenhuis)
+
+Interesse?
+Neem contact op met:
+Makelaardij De Vries
+Tel: 030 – 234 56 78
+E-mail: verhuur@devries-makelaars.nl
+
+Bezichtiging mogelijk op afspraak.`,
+    questions: [
+      { question: "Hoeveel is de huurprijs per maand?", options: ["€875", "€950", "€1.025", "€1.100"], correct: "€950" },
+      { question: "Op welke verdieping ligt het appartement?", options: ["Begane grond", "Eerste verdieping", "Tweede verdieping", "Derde verdieping"], correct: "Tweede verdieping" },
+      { question: "Wat is NIET toegestaan in dit appartement?", options: ["Roken", "Huisdieren", "Kinderen", "Muziek"], correct: "Huisdieren" },
+      { question: "Wat is de minimale huurperiode?", options: ["3 maanden", "6 maanden", "12 maanden", "24 maanden"], correct: "12 maanden" }
+    ]
+  },
+
+  // ─── SCHOOL / KINDEROPVANG BRIEVEN ───────────────────────────────────────
+  {
+    id: 6,
+    title: '🏫 Brief van de Basisschool',
+    text: `Basisschool De Regenboog
+Populierenlaan 5, 2613 AX Delft
+Tel: 015 – 123 45 67
+info@deregenboog-delft.nl
+
+Datum: 14 februari 2024
+Betreft: Informatie ouderavond groep 3
+
+Beste ouders en verzorgers,
+
+Wij nodigen u uit voor de ouderavond van groep 3.
+
+Datum: donderdag 29 februari 2024
+Tijd: 19:30 – 21:00 uur
+Locatie: Aula van de school
+
+Onderwerpen:
+• Hoe gaat het met uw kind?
+• De lesstof van dit schooljaar
+• Huiswerk en lezen thuis
+• Vragen en opmerkingen
+
+Let op: Dit is een informatieve avond. Voor een persoonlijk gesprek over uw kind kunt u apart een afspraak maken met de leerkracht.
+
+Aanmelden:
+Wij vragen u om zich aan te melden voor 22 februari via de schoolapp of per e-mail. Dit helpt ons bij de voorbereiding.
+
+Kunt u niet komen? Stuur dan een berichtje naar de leerkracht van uw kind.
+
+Wij hopen u te zien op 29 februari!
+
+Met vriendelijke groet,
+Directie Basisschool De Regenboog`,
+    questions: [
+      { question: "Op welke dag is de ouderavond?", options: ["Maandag", "Dinsdag", "Donderdag", "Vrijdag"], correct: "Donderdag" },
+      { question: "Hoe laat begint de ouderavond?", options: ["18:30", "19:00", "19:30", "20:00"], correct: "19:30" },
+      { question: "Wat moet u doen als u niet kunt komen?", options: ["Niets", "Een berichtje sturen naar de leerkracht", "Bellen naar de directie", "Een brief schrijven"], correct: "Een berichtje sturen naar de leerkracht" },
+      { question: "Voor welke datum moet u zich aanmelden?", options: ["14 februari", "22 februari", "29 februari", "1 maart"], correct: "22 februari" }
+    ]
+  },
+
+  {
+    id: 7,
+    title: '🏫 Brief: Kinderopvang',
+    text: `Kinderopvang Zonnetje
+Dorpsstraat 22, 5611 BK Eindhoven
+
+Datum: 5 maart 2024
+Betreft: Nieuwe tarieven per 1 april 2024
+
+Beste ouders,
+
+Wij informeren u over de nieuwe tarieven per 1 april 2024.
+
+Nieuwe tarieven:
+• Dagopvang (hele dag): €9,20 per uur
+• Buitenschoolse opvang (BSO): €7,85 per uur
+• Flexibele opvang: €10,50 per uur
+
+Kinderopvangtoeslag:
+U kunt kinderopvangtoeslag aanvragen bij de Belastingdienst. Hoeveel toeslag u krijgt, hangt af van uw inkomen. Meer informatie vindt u op www.belastingdienst.nl.
+
+Betaling:
+Het maandbedrag wordt op de 1e van elke maand automatisch afgeschreven van uw rekening. Zorg ervoor dat er voldoende saldo op uw rekening staat.
+
+Heeft u vragen over de nieuwe tarieven? Neem dan contact met ons op via info@kinderopvangzonnetje.nl of bel naar 040 – 321 09 87.
+
+Wij danken u voor uw begrip.
+
+Met vriendelijke groet,
+Het team van Kinderopvang Zonnetje`,
+    questions: [
+      { question: "Wanneer gaan de nieuwe tarieven in?", options: ["1 maart", "5 maart", "1 april", "5 april"], correct: "1 april" },
+      { question: "Hoeveel kost dagopvang per uur?", options: ["€7,85", "€9,20", "€10,50", "€11,00"], correct: "€9,20" },
+      { question: "Waar vraagt u kinderopvangtoeslag aan?", options: ["Bij de gemeente", "Bij de kinderopvang", "Bij de Belastingdienst", "Bij uw werkgever"], correct: "Bij de Belastingdienst" },
+      { question: "Wanneer wordt het maandbedrag afgeschreven?", options: ["Op de 1e van de maand", "Op de 15e van de maand", "Op de laatste dag van de maand", "Op de 5e van de maand"], correct: "Op de 1e van de maand" }
+    ]
+  },
+
+  // ─── MEDISCHE / ZORGBRIEVEN ───────────────────────────────────────────────
+  {
+    id: 8,
+    title: '🏥 Brief van de Huisarts',
+    text: `Huisartsenpraktijk Van den Berg & Smit
+Laan van Meerdervoort 110
+2517 AT Den Haag
+Tel: 070 – 456 78 90
+
+Datum: 20 maart 2024
+Betreft: Herinnering jaarlijkse controle
+
+Geachte mevrouw Bouali,
+
+Het is tijd voor uw jaarlijkse gezondheidscontrole. Wij nodigen u uit voor een afspraak.
+
+Wat wordt er gecontroleerd?
+• Bloeddruk
+• Gewicht en lengte
+• Bloedonderzoek (suiker en cholesterol)
+• Algemene gezondheid
+
+Hoe maakt u een afspraak?
+• Online: www.huisartsvandenbergsmit.nl
+• Telefonisch: 070 – 456 78 90 (maandag t/m vrijdag 08:00–12:00)
+• Via de praktijkapp
+
+Let op: Kom 's ochtends nuchter naar de praktijk als u bloedonderzoek heeft. Dit betekent: niet eten en alleen water drinken.
+
+Wij vragen u om de afspraak minimaal 24 uur van tevoren af te bellen als u niet kunt komen.
+
+Heeft u klachten of vragen voor de controle? Bel gerust naar de praktijk.
+
+Met vriendelijke groet,
+Doktersassistente Praktijk Van den Berg & Smit`,
+    questions: [
+      { question: "Waarvoor schrijft de huisarts deze brief?", options: ["Voor een zieke patiënt", "Voor een jaarlijkse controle", "Voor medicijnen", "Voor een doorverwijzing"], correct: "Voor een jaarlijkse controle" },
+      { question: "Wat betekent 'nuchter' komen?", options: ["Vroeg komen", "Niet eten en alleen water drinken", "Rustig zijn", "Geen medicijnen nemen"], correct: "Niet eten en alleen water drinken" },
+      { question: "Hoe laat kan mevrouw Bouali bellen voor een afspraak?", options: ["08:00–12:00", "08:00–17:00", "09:00–12:00", "10:00–16:00"], correct: "08:00–12:00" },
+      { question: "Hoe lang van tevoren moet ze afbellen als ze niet kan?", options: ["12 uur", "24 uur", "48 uur", "72 uur"], correct: "24 uur" }
+    ]
+  },
+
+  // ─── ZORGVERZEKERING ─────────────────────────────────────────────────────
+  {
+    id: 9,
+    title: '💊 Brief: Zorgverzekering',
+    text: `Zorgverzekeraar Menzis
+Postbus 1234
+9700 AA Groningen
+
+Datum: 15 januari 2024
+Betreft: Uw zorgverzekering 2024 – Eigen risico
+
+Geachte heer Karim,
+
+Welkom bij Menzis! In deze brief leest u belangrijke informatie over uw zorgverzekering in 2024.
+
+Uw polis:
+Polisnummer: MZ-2024-88741
+Pakket: Basis + Aanvullend Tand
+Maandpremie: €138,50
+
+Eigen risico:
+Het verplichte eigen risico in 2024 is €385 per jaar. Dit betekent: de eerste €385 aan zorgkosten betaalt u zelf. Daarna betaalt uw zorgverzekering.
+
+Huisarts en verloskundige: Deze zorg valt niet onder het eigen risico. Die is altijd gratis.
+
+Heeft u recht op zorgtoeslag?
+Als uw inkomen niet te hoog is, kunt u zorgtoeslag krijgen van de Belastingdienst. Controleer dit op www.belastingdienst.nl.
+
+Vergoedingen:
+Uw basisverzekering vergoedt:
+- Huisartsbezoek: volledig vergoed
+- Ziekenhuis: vergoed na eigen risico
+- Medicijnen: vergoed (afhankelijk van het medicijn)
+- Tandarts: alleen voor kinderen tot 18 jaar
+
+Vragen?
+Bel onze klantenservice: 0800 – 356 47 48 (gratis, ma-vr 08:00–20:00)
+Of kijk op www.menzis.nl
+
+Met vriendelijke groet,
+Menzis Zorgverzekering`,
+    questions: [
+      { question: "Hoeveel is de maandpremie?", options: ["€118,50", "€128,50", "€138,50", "€148,50"], correct: "€138,50" },
+      { question: "Wat is het eigen risico in 2024?", options: ["€285", "€335", "€385", "€435"], correct: "€385" },
+      { question: "Wat valt NIET onder het eigen risico?", options: ["Ziekenhuis", "Medicijnen", "Huisarts", "Specialist"], correct: "Huisarts" },
+      { question: "Tot welke leeftijd vergoedt de basisverzekering de tandarts?", options: ["12 jaar", "16 jaar", "18 jaar", "21 jaar"], correct: "18 jaar" }
+    ]
+  },
+
+  // ─── OPENBAAR VERVOER / AANKONDIGINGEN ───────────────────────────────────
+  {
+    id: 10,
+    title: '🚌 Aankondiging NS – Stremming',
+    text: `NS – Reisinformatie
+
+WERKZAAMHEDEN – LET OP GEWIJZIGDE DIENSTREGELING
+
+Wanneer: zaterdag 23 maart en zondag 24 maart 2024
+Traject: Amsterdam Centraal – Utrecht Centraal
+Reden: Onderhoud aan het spoor
+
+Wat betekent dit voor u?
+
+Zaterdag 23 maart:
+• Geen treinen tussen Amsterdam Centraal en Utrecht Centraal
+• Er rijden vervangende bussen (buslijn NS-a)
+• Vertrektijden bussen: zie de NS-app of ns.nl
+• Reistijd met de bus: ca. 55 minuten (normaal 28 minuten per trein)
+
+Zondag 24 maart:
+• 's Ochtends tot 12:00 geen treinen
+• Vanaf 12:00 rijden de treinen weer normaal
+
+Advies:
+• Reken op extra reistijd
+• Kijk voor actuele informatie in de NS-app
+• U kunt ook reizen via Den Haag Centraal (omreizen)
+
+Heeft u vragen? Bel NS Klantenservice: 030 – 751 51 55 (24 uur per dag)
+Of chat via ns.nl
+
+Excuses voor het ongemak.
+NS`,
+    questions: [
+      { question: "Waarom rijden er geen treinen op dit traject?", options: ["Staking", "Slecht weer", "Onderhoud aan het spoor", "Te weinig reizigers"], correct: "Onderhoud aan het spoor" },
+      { question: "Hoe lang duurt de reis met de vervangingsbus?", options: ["28 minuten", "40 minuten", "55 minuten", "70 minuten"], correct: "55 minuten" },
+      { question: "Vanaf hoe laat rijden de treinen op zondag weer?", options: ["08:00", "10:00", "12:00", "14:00"], correct: "12:00" },
+      { question: "Via welke stad kunt u omreizen?", options: ["Rotterdam", "Den Haag", "Leiden", "Haarlem"], correct: "Den Haag" }
+    ]
+  },
+
+  // ─── UITKERING / WERK EN INKOMEN ─────────────────────────────────────────
+  {
+    id: 11,
+    title: '📋 Brief: UWV – WW-uitkering',
+    text: `UWV – Uitvoeringsinstituut Werknemersverzekeringen
+Postbus 58285, 1040 HG Amsterdam
+
+Datum: 1 februari 2024
+Betreft: Beslissing op uw aanvraag WW-uitkering
+
+Geachte mevrouw Özdemir,
+
+Wij hebben uw aanvraag voor een WW-uitkering (werkloosheidsuitkering) ontvangen. Wij hebben uw aanvraag beoordeeld.
+
+Beslissing: U heeft recht op een WW-uitkering.
+
+Uw uitkering:
+Ingangsdatum: 5 februari 2024
+Hoogte uitkering: €1.456 per maand (bruto)
+Duur: maximaal 12 maanden
+
+Uw verplichtingen:
+Om uw uitkering te houden, moet u:
+1. Actief werk zoeken (minimaal 5 sollicitaties per maand)
+2. Uw sollicitaties bijhouden in Mijn UWV
+3. Beschikbaar zijn voor werk
+4. Elke 4 weken uw werkbriefje invullen
+5. Ons direct informeren als u werkt of gaat werken
+
+Let op: Als u werk vindt, kan uw uitkering stoppen of lager worden. Geef dit altijd door!
+
+Bezwaar:
+Bent u het niet eens met deze beslissing? U kunt binnen 6 weken bezwaar maken. Stuur een brief naar bovenstaand adres.
+
+Vragen? Bel: 0900 – 92 94 (ma-vr 08:00-18:00) of kijk op www.uwv.nl
+
+Met vriendelijke groet,
+UWV`,
+    questions: [
+      { question: "Heeft mevrouw Özdemir recht op een WW-uitkering?", options: ["Ja", "Nee", "Misschien", "Nog niet duidelijk"], correct: "Ja" },
+      { question: "Hoeveel sollicitaties moet ze minimaal per maand doen?", options: ["2", "3", "4", "5"], correct: "5" },
+      { question: "Hoe lang is de maximale duur van de uitkering?", options: ["6 maanden", "9 maanden", "12 maanden", "18 maanden"], correct: "12 maanden" },
+      { question: "Binnen hoeveel weken kan ze bezwaar maken?", options: ["2 weken", "4 weken", "6 weken", "8 weken"], correct: "6 weken" }
+    ]
+  },
+
+  // ─── CURSUS / INBURGERING ─────────────────────────────────────────────────
+  {
+    id: 12,
+    title: '📚 Informatie: Inburgeringscursus',
+    text: `ROC Midden Nederland
+Afdeling Inburgering en Taal
+Gyroscoopweg 1, 3543 AD Utrecht
+Tel: 030 – 265 75 00
+info@rocmn.nl
+
+Informatie over de inburgeringscursus
+
+Bent u nieuw in Nederland en wilt u het inburgeringsexamen halen? Wij bieden een cursus aan die u helpt.
+
+Wat leert u?
+• Nederlands lezen, schrijven, spreken en luisteren
+• Kennis over Nederland (KNM)
+• Oriëntatie op de Nederlandse arbeidsmarkt (ONA)
+
+Niveaus: A1, A2, B1, B2
+
+Tijden:
+Ochtendgroep: maandag, woensdag, vrijdag van 09:00 – 12:30
+Avondgroep: dinsdag en donderdag van 18:30 – 21:00
+
+Kosten:
+De cursus is gratis als u een inburgeringsplicht heeft. De DUO (Dienst Uitvoering Onderwijs) betaalt dan de kosten. Vraag dit na bij uw gemeente.
+
+Inschrijven:
+• Kom langs op het ROC
+• Bel naar 030 – 265 75 00
+• Stuur een e-mail met uw naam, geboortedatum en telefoonnummer
+
+Neem mee bij inschrijving:
+- Paspoort of verblijfsvergunning
+- BSN-nummer
+- Beschikking van de gemeente over uw inburgeringsplicht`,
+    questions: [
+      { question: "Op welke dagen is de ochtendgroep?", options: ["Maandag, dinsdag, woensdag", "Maandag, woensdag, vrijdag", "Dinsdag, donderdag, vrijdag", "Elke dag"], correct: "Maandag, woensdag, vrijdag" },
+      { question: "Wie betaalt de cursus als u inburgeringsplicht heeft?", options: ["Uzelf", "De gemeente", "DUO", "Het ROC"], correct: "DUO" },
+      { question: "Tot welk niveau kunt u leren bij dit ROC?", options: ["Alleen A1 en A2", "A1 tot en met B1", "A1 tot en met B2", "Alleen B1 en B2"], correct: "A1 tot en met B2" },
+      { question: "Wat moet u NIET meenemen bij inschrijving?", options: ["Paspoort", "BSN-nummer", "Rijbewijs", "Beschikking van de gemeente"], correct: "Rijbewijs" }
+    ]
+  },
+
+  // ─── NIEUWS / KORTE ARTIKELEN ─────────────────────────────────────────────
+  {
+    id: 13,
+    title: '📰 Nieuwsartikel: Minimum Loon Omhoog',
+    text: `Het Nieuws – Economie
+
+Minimumloon stijgt per 1 juli 2024
+
+Den Haag, 15 maart 2024
+
+Het wettelijk minimumloon in Nederland gaat omhoog per 1 juli 2024. Dit heeft de minister van Sociale Zaken bekendgemaakt.
+
+Nieuwe bedragen:
+• 21 jaar en ouder: €13,27 per uur (was €13,02)
+• 20 jaar: €10,62 per uur
+• 18 jaar: €7,96 per uur
+
+Wat verandert er?
+Werknemers die het minimumloon verdienen, krijgen automatisch meer salaris. Werkgevers moeten dit aanpassen in de salarisadministratie voor 1 juli 2024.
+
+Ook de uitkeringen stijgen:
+De bijstand, de AOW en de WW gaan ook omhoog. Dit is altijd gekoppeld aan het minimumloon.
+
+Vakbond FNV reageert:
+"Wij zijn blij met deze verhoging, maar het is nog niet genoeg," zegt een woordvoerder van vakbond FNV. "Mensen met een laag inkomen hebben het nog steeds moeilijk door de hoge prijzen."
+
+Controleer uw salaris:
+Verdient u het minimumloon? Controleer uw loonstrook na 1 juli. Klopt er iets niet? Neem contact op met uw werkgever of bel de FNV-helpdesk: 0900 – 368 36 83.`,
+    questions: [
+      { question: "Wanneer stijgt het minimumloon?", options: ["1 januari 2024", "1 april 2024", "1 juli 2024", "1 oktober 2024"], correct: "1 juli 2024" },
+      { question: "Hoeveel verdient iemand van 21 jaar na de verhoging per uur?", options: ["€13,02", "€13,27", "€13,52", "€13,77"], correct: "€13,27" },
+      { question: "Wat stijgt mee met het minimumloon?", options: ["Alleen de bijstand", "Alleen de AOW", "De bijstand, AOW en WW", "Niets"], correct: "De bijstand, AOW en WW" },
+      { question: "Wat vindt vakbond FNV van de verhoging?", options: ["Ze zijn er heel blij mee", "Ze zijn blij maar vinden het nog niet genoeg", "Ze zijn tegen de verhoging", "Ze zeggen niets"], correct: "Ze zijn blij maar vinden het nog niet genoeg" }
+    ]
+  },
+
+  // ─── GEMEENTELIJKE DIENSTEN / AANVRAGEN ───────────────────────────────────
+  {
+    id: 14,
+    title: '📋 Aanvraag: Bijzondere Bijstand',
+    text: `Gemeente Den Haag
+Dienst Sociale Zaken
+Spui 70, 2511 BT Den Haag
+
+INFORMATIE – Bijzondere bijstand
+
+Wat is bijzondere bijstand?
+Bijzondere bijstand is extra geld van de gemeente als u een noodzakelijke uitgave niet kunt betalen. Het is bedoeld voor mensen met een laag inkomen.
+
+Waarvoor kunt u bijzondere bijstand aanvragen?
+• Kosten voor de tandarts
+• Schoolkosten voor kinderen
+• Kosten voor een bril
+• Inrichtingskosten (meubels, koelkast, wasmachine)
+• Medische kosten die niet vergoed worden
+
+Wie kan aanvragen?
+U kunt bijzondere bijstand aanvragen als:
+- Uw inkomen niet te hoog is
+- De kosten noodzakelijk zijn
+- U de kosten niet zelf kunt betalen
+
+Hoe vraagt u het aan?
+1. Maak een afspraak via www.denhaag.nl/bijstand
+2. Of bel: 14 070
+3. Neem mee: ID-bewijs, bewijs van inkomen en bewijs van de kosten (rekening/bon)
+
+Hoe lang duurt de aanvraag?
+De gemeente beslist binnen 8 weken. In spoedeisende gevallen binnen 24 uur.
+
+Let op: Bijzondere bijstand is geen lening. U hoeft het geld niet terug te betalen.`,
+    questions: [
+      { question: "Voor wie is bijzondere bijstand bedoeld?", options: ["Voor iedereen", "Voor mensen met een laag inkomen", "Alleen voor werklozen", "Alleen voor ouderen"], correct: "Voor mensen met een laag inkomen" },
+      { question: "Waarvoor kunt u GEEN bijzondere bijstand aanvragen?", options: ["Tandarts", "Bril", "Vakantie", "Schoolkosten"], correct: "Vakantie" },
+      { question: "Binnen hoeveel weken beslist de gemeente normaal?", options: ["2 weken", "4 weken", "8 weken", "12 weken"], correct: "8 weken" },
+      { question: "Moet u bijzondere bijstand terugbetalen?", options: ["Ja, altijd", "Ja, de helft", "Nee, nooit", "Soms"], correct: "Nee, nooit" }
+    ]
+  },
+
+  // ─── FLYER / EVENEMENT ───────────────────────────────────────────────────
+  {
+    id: 15,
+    title: '📣 Flyer: Gratis Taalcafé',
+    text: `GRATIS TAALCAFÉ AMSTERDAM WEST
+
+Wilt u uw Nederlands oefenen in een gezellige sfeer?
+Kom dan naar het Taalcafé!
+
+Waar: Buurtcentrum De Kern, Jan van Galenstraat 323, Amsterdam
+Wanneer: Elke woensdag van 10:00 – 12:00 uur
+Kosten: GRATIS
+Aanmelden: Niet nodig, kom gewoon langs!
+
+Wat is het Taalcafé?
+In het Taalcafé praat u met Nederlanders en andere mensen uit de buurt. Er zijn vrijwilligers die u helpen. U oefent uw spreek- en luistervaardigheid. Iedereen is welkom, ook beginners!
+
+Activiteiten:
+• Gezellig praten over alledaagse onderwerpen
+• Oefenen met uitspraken en zinnen
+• Soms een thema: werk, gezondheid, winkelen
+• Koffie en thee gratis!
+
+Ook aanwezig:
+Medewerkers van Vluchtelingenwerk en Sociale Dienst zijn soms aanwezig voor vragen.
+
+Voor wie?
+• Iedereen die Nederlands oefent
+• Nieuwe inwoners van Amsterdam
+• Alle niveaus welkom (A1 t/m B2)
+
+Meer informatie?
+Bel: 020 – 612 34 56
+Of stuur een app naar: 06 – 23 45 67 89
+Website: www.taalcafe-amsterdamwest.nl`,
+    questions: [
+      { question: "Op welke dag is het Taalcafé?", options: ["Maandag", "Dinsdag", "Woensdag", "Donderdag"], correct: "Woensdag" },
+      { question: "Hoeveel kost het Taalcafé?", options: ["€2,50", "€5,00", "€10,00", "Gratis"], correct: "Gratis" },
+      { question: "Moet u zich van tevoren aanmelden?", options: ["Ja, altijd", "Ja, per e-mail", "Nee, gewoon langskomen", "Nee, maar bellen is handig"], correct: "Nee, gewoon langskomen" },
+      { question: "Voor welke niveaus is het Taalcafé?", options: ["Alleen voor beginners", "Alleen A2 en hoger", "Alle niveaus A1 t/m B2", "Alleen gevorderden"], correct: "Alle niveaus A1 t/m B2" }
+    ]
+  },
+
+  // ─── REGELS / INSTRUCTIES ─────────────────────────────────────────────────
+  {
+    id: 16,
+    title: '📋 Huisregels Appartementencomplex',
+    text: `HUISREGELS – Appartementencomplex "De Merenhoek"
+Beheer: VvE De Merenhoek, Meerweg 1-48, Almere
+
+Beste bewoners,
+
+Om prettig samen te wonen, vragen wij u de volgende regels te volgen:
+
+Geluid:
+• Tussen 22:00 en 07:00 uur geen lawaai
+• Muziek en televisie zacht houden na 22:00 uur
+• Boren en timmeren alleen op werkdagen van 08:00 – 18:00 uur
+
+Vuilnis:
+• Gebruik de containers achter het gebouw
+• Papier en karton in de blauwe container
+• Glas in de glasbak op de parkeerplaats
+• Grof vuil? Maak een afspraak met de gemeente
+
+Lift en trappenhuis:
+• Houd de lift en het trappenhuis schoon
+• Fietsen mogen niet in de hal of het trappenhuis staan
+• De fietsenstalling is gratis voor alle bewoners
+
+Bezoekers en parkeren:
+• Bezoekers mogen maximaal 2 uur gratis parkeren
+• Daarna geldt betaald parkeren
+
+Problemen of klachten?
+• Bel de beheerder: 036 – 544 32 10
+• E-mail: info@merenhoek-vve.nl
+• Spoedeisend (waterlekkage, brand): bel 112
+
+De VvE vergadert elk kwartaal. Alle bewoners zijn welkom.`,
+    questions: [
+      { question: "Tot hoe laat mag u boren op werkdagen?", options: ["16:00 uur", "17:00 uur", "18:00 uur", "20:00 uur"], correct: "18:00 uur" },
+      { question: "In welke container gooit u papier en karton?", options: ["Groene container", "Blauwe container", "Grijze container", "Oranje container"], correct: "Blauwe container" },
+      { question: "Hoe lang mogen bezoekers gratis parkeren?", options: ["30 minuten", "1 uur", "2 uur", "3 uur"], correct: "2 uur" },
+      { question: "Waar mogen fietsen NIET staan?", options: ["In de fietsenstalling", "Achter het gebouw", "In de hal of het trappenhuis", "Op de parkeerplaats"], correct: "In de hal of het trappenhuis" }
+    ]
+  },
+
+  // ─── BELASTING / TOESLAGEN ───────────────────────────────────────────────
+  {
+    id: 17,
+    title: '💶 Brief: Belastingdienst – Toeslagen',
+    text: `Belastingdienst / Toeslagen
+Postbus 2690
+6401 DD Heerlen
+
+Datum: 8 februari 2024
+Betreft: Uw toeslagen 2024
+
+Geachte heer Demirci,
+
+In deze brief leest u welke toeslagen u in 2024 ontvangt.
+
+Uw toeslagen:
+
+1. Huurtoeslag: €312 per maand
+U ontvangt huurtoeslag omdat uw huur €875 per maand is en uw inkomen niet te hoog is.
+
+2. Zorgtoeslag: €127 per maand
+U ontvangt zorgtoeslag voor uw zorgverzekering.
+
+3. Kinderbijslag: U ontvangt geen kinderbijslag. U heeft geen kinderen onder de 18 jaar ingeschreven op uw adres.
+
+Uitbetaling:
+De toeslagen worden elke maand op de 20e bijgeschreven op uw rekening: NL45 INGB 0006 7890 12.
+
+Uw inkomen verandert?
+Heeft u meer of minder gaan verdienen? Geef dit meteen door via Mijn Toeslagen (www.toeslagen.nl). Als u te veel toeslag ontvangt, moet u dit later terugbetalen.
+
+Controleer uw gegevens:
+Kijk op www.toeslagen.nl of uw gegevens (inkomen, huur, verzekering) kloppen. Log in met uw DigiD.
+
+Vragen?
+Bel: 0800 – 0543 (gratis, ma-do 08:00–20:00, vr 08:00–17:00)`,
+    questions: [
+      { question: "Hoeveel huurtoeslag ontvangt de heer Demirci per maand?", options: ["€127", "€232", "€312", "€439"], correct: "€312" },
+      { question: "Op welke datum worden de toeslagen uitbetaald?", options: ["Op de 1e", "Op de 10e", "Op de 20e", "Op de laatste dag"], correct: "Op de 20e" },
+      { question: "Waarom ontvangt hij geen kinderbijslag?", options: ["Zijn inkomen is te hoog", "Hij heeft geen kinderen onder 18 op zijn adres", "Hij heeft geen DigiD", "Hij heeft geen bankrekening"], correct: "Hij heeft geen kinderen onder 18 op zijn adres" },
+      { question: "Wat moet hij doen als zijn inkomen verandert?", options: ["Niets", "Een brief sturen", "Het meteen doorgeven via Mijn Toeslagen", "Wachten tot het einde van het jaar"], correct: "Het meteen doorgeven via Mijn Toeslagen" }
+    ]
+  },
+
+  // ─── APOTHEEK / MEDICIJNEN ────────────────────────────────────────────────
+  {
+    id: 18,
+    title: '💊 Bijsluiter: Medicijnen',
+    text: `BIJSLUITER – Amoxicilline 500 mg capsules
+
+Wat is Amoxicilline?
+Amoxicilline is een antibioticum. Het wordt gebruikt bij bacteriële infecties, zoals keel-, long- en blaasinfecties.
+
+Dosering:
+Volwassenen: 1 capsule, 3 keer per dag (elke 8 uur)
+Kinderen tot 10 jaar: vraag uw arts of apotheker
+
+Hoe gebruikt u dit medicijn?
+• Slik de capsule in zijn geheel door met een glas water
+• U kunt het met of zonder eten innemen
+• Neem het medicijn op vaste tijden (bijv. 08:00, 16:00 en 24:00 uur)
+• Maak de kuur altijd af, ook als u zich beter voelt
+
+Wanneer NIET gebruiken?
+• Als u allergisch bent voor penicilline of amoxicilline
+• Als u nierproblemen heeft, overleg dan eerst met uw arts
+
+Bijwerkingen (niet iedereen heeft dit):
+• Misselijkheid of diarree
+• Huiduitslag (stop dan meteen en bel uw huisarts!)
+• Hoofdpijn
+
+Bewaren:
+• Bewaar op een droge, koele plaats (max. 25°C)
+• Buiten bereik van kinderen bewaren
+• Gebruik niet na de houdbaarheidsdatum
+
+Heeft u vragen? Vraag uw apotheker.`,
+    questions: [
+      { question: "Hoe vaak per dag moet een volwassene de capsule innemen?", options: ["1 keer", "2 keer", "3 keer", "4 keer"], correct: "3 keer" },
+      { question: "Wanneer moet u stoppen met het medicijn en de huisarts bellen?", options: ["Bij hoofdpijn", "Bij misselijkheid", "Bij huiduitslag", "Bij diarree"], correct: "Bij huiduitslag" },
+      { question: "Wat moet u doen als u zich beter voelt?", options: ["Stoppen met het medicijn", "Minder innemen", "De kuur afmaken", "Aan uw arts vragen"], correct: "De kuur afmaken" },
+      { question: "Bij welke temperatuur moet u het medicijn bewaren?", options: ["Max. 15°C", "Max. 20°C", "Max. 25°C", "Max. 30°C"], correct: "Max. 25°C" }
+    ]
+  },
+
+  // ─── SOCIALE HUUR / WACHTLIJST ───────────────────────────────────────────
+  {
+    id: 19,
+    title: '🏠 Brief: Sociale Huurwoning',
+    text: `Woningstichting Portaal
+Communicatielaan 2
+3526 GL Utrecht
+
+Datum: 25 februari 2024
+Betreft: Uw inschrijving sociale huurwoning
+
+Geachte mevrouw Özkan,
+
+Wij bevestigen uw inschrijving als woningzoekende bij Woningstichting Portaal.
+
+Uw gegevens:
+Naam: Fatma Özkan
+Inschrijfdatum: 1 maart 2022
+Inschrijvingsduur: 2 jaar (per 1 maart 2024)
+Uw woningpunten: 48
+
+Hoe werkt het systeem?
+U kunt reageren op beschikbare woningen via www.woningnet.nl. Wie het langst ingeschreven staat én de meeste punten heeft, krijgt de woning.
+
+Wat zijn woningpunten?
+U krijgt punten voor:
+• Jaren inschrijving (1 punt per maand)
+• Urgentie (bijv. door sloop, gezondheid, scheidng)
+• Samenstelling huishouden
+
+Reageren op een woning:
+1. Kijk elke week op woningnet.nl voor nieuwe woningen
+2. Controleer de huurprijs en voorwaarden
+3. Reageer als de woning bij u past
+4. U hoort van ons als u de hoogste positie heeft
+
+Belangrijk:
+• Uw inschrijving verloopt elke 2 jaar. Verleng op tijd via woningnet.nl
+• Als u drie keer een woning weigert, kunt u tijdelijk niet meer reageren
+
+Vragen? Bel: 030 – 287 00 00 (ma-vr 09:00-17:00)`,
+    questions: [
+      { question: "Wanneer is mevrouw Özkan ingeschreven?", options: ["1 maart 2020", "1 maart 2022", "25 februari 2024", "1 maart 2024"], correct: "1 maart 2022" },
+      { question: "Hoeveel woningpunten heeft ze?", options: ["24 punten", "36 punten", "48 punten", "60 punten"], correct: "48 punten" },
+      { question: "Hoe vaak verloopt de inschrijving?", options: ["Elk jaar", "Elke 2 jaar", "Elke 3 jaar", "Elke 5 jaar"], correct: "Elke 2 jaar" },
+      { question: "Wat gebeurt er als u drie keer een woning weigert?", options: ["U verliest alle punten", "U wordt uitgeschreven", "U kunt tijdelijk niet meer reageren", "U moet een boete betalen"], correct: "U kunt tijdelijk niet meer reageren" }
+    ]
+  },
+
+  // ─── RIJBEWIJS / PRAKTISCHE ZAKEN ─────────────────────────────────────────
+  {
+    id: 20,
+    title: '🚗 Informatie: Rijbewijs Omwisselen',
+    text: `Rijksdienst voor het Wegverkeer (RDW)
+www.rdw.nl
+
+Buitenlands rijbewijs omwisselen naar Nederlands rijbewijs
+
+Heeft u een buitenlands rijbewijs? In sommige gevallen kunt u dit omwisselen voor een Nederlands rijbewijs zonder een examen te doen.
+
+Wanneer kunt u omwisselen?
+U kunt uw rijbewijs omwisselen als het land op de lijst van erkende landen staat. Bekijk de lijst op www.rdw.nl.
+
+Landen waarvoor omwisseling mogelijk is (selectie):
+Turkije, Marokko, Suriname, de VS, Canada, Australië en alle EU-landen.
+
+Wat heeft u nodig?
+• Geldig buitenlands rijbewijs
+• Paspoort of verblijfsvergunning
+• Bewijs van inschrijving gemeente (GBA-uittreksel)
+• Foto (pasfoto, recente datum)
+• Betaling: €41,10
+
+Waar kunt u dit doen?
+Bij het CBR (Centraal Bureau Rijvaardigheidsbewijzen) of bij uw gemeente. Maak eerst een afspraak.
+
+Hoe lang duurt het?
+Na uw aanvraag ontvangt u het rijbewijs binnen 10 werkdagen per post.
+
+Let op:
+• Uw buitenlands rijbewijs wordt ingenomen
+• Is uw rijbewijs niet op de lijst? Dan moet u het Nederlandse rijexamen doen
+
+Meer informatie:
+Bel het RDW: 0900 – 073 90 39 (ma-vr 08:00-17:30)
+Of kijk op www.rdw.nl`,
+    questions: [
+      { question: "Wanneer hoeft u geen examen te doen bij het omwisselen?", options: ["Nooit", "Als uw land op de lijst van erkende landen staat", "Altijd als u een rijbewijs heeft", "Als u meer dan 5 jaar rijbewijs heeft"], correct: "Als uw land op de lijst van erkende landen staat" },
+      { question: "Hoeveel kost het omwisselen?", options: ["€25,50", "€31,10", "€41,10", "€51,10"], correct: "€41,10" },
+      { question: "Binnen hoeveel werkdagen ontvangt u het nieuwe rijbewijs?", options: ["5 werkdagen", "10 werkdagen", "15 werkdagen", "20 werkdagen"], correct: "10 werkdagen" },
+      { question: "Wat gebeurt er met uw buitenlands rijbewijs?", options: ["U houdt het zelf", "Het wordt terugestuurd naar het buitenland", "Het wordt ingenomen", "Het wordt gekopieerd"], correct: "Het wordt ingenomen" }
+    ]
+  },
+
   {
     id: 7,
     title: "Een Dag bij de Kapper",
