@@ -7371,13 +7371,31 @@ export default function DutchLearningGame() {
                 {/* Example sentence with the Dutch word blanked out */}
                 {currentWord.example && (() => {
                   const blank = '_'.repeat(currentWord.dutch.length);
-                  const regex = new RegExp(currentWord.dutch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-                  const sentenced = currentWord.example.replace(regex, blank);
+                  const escaped = currentWord.dutch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  const root = currentWord.dutch.replace(/(en|de|te|t|d)$/i, '') || currentWord.dutch.slice(0, -1);
+                  const escapedRoot = root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  const pattern = root.length >= 4 ? `${escapedRoot}\\w*` : escaped;
+                  const wordRegex = new RegExp(`\\b(${pattern})\\b`, 'gi');
+                  // Split into Dutch part and bracketed English part, only blank in Dutch part
+                  const bracketMatch = currentWord.example.match(/^(.*?)(\s*\(.*\)\s*)$/s);
+                  const dutchPart = bracketMatch ? bracketMatch[1] : currentWord.example;
+                  const englishPart = bracketMatch ? bracketMatch[2] : '';
+                  const sentenced2 = dutchPart.replace(wordRegex, blank) + englishPart;
                   return (
                     <div className="mb-4 mx-auto max-w-sm bg-purple-50 border-2 border-purple-200 rounded-xl p-3 text-left">
-                      <p className="text-xs font-bold text-purple-500 mb-1 uppercase tracking-wide">Fill in the sentence:</p>
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-bold text-purple-500 uppercase tracking-wide">Fill in the sentence:</p>
+                        <button
+                          type="button"
+                          onClick={() => speakDutch(currentWord.example.replace(/\s*\([^)]+\)\s*/g, '').trim())}
+                          className="bg-purple-100 hover:bg-purple-200 active:bg-purple-200 p-1.5 rounded-lg transition-all flex items-center gap-1"
+                        >
+                          <Volume2 className="w-3.5 h-3.5 text-purple-600" />
+                          <span className="text-purple-600 font-semibold text-xs">Hear</span>
+                        </button>
+                      </div>
                       <p className="text-sm sm:text-base text-gray-700 italic leading-relaxed">
-                        {sentenced.split(blank).reduce((acc, part, i, arr) => {
+                        {sentenced2.split(blank).reduce((acc, part, i, arr) => {
                           acc.push(<span key={`t${i}`}>{part}</span>);
                           if (i < arr.length - 1) acc.push(
                             <span key={`b${i}`} className="inline-block border-b-2 border-purple-500 mx-1 text-transparent select-none" style={{minWidth: `${currentWord.dutch.length * 0.65}rem`}}>
