@@ -7371,16 +7371,29 @@ export default function DutchLearningGame() {
                 {/* Example sentence with the Dutch word blanked out */}
                 {currentWord.example && (() => {
                   const blank = '_'.repeat(currentWord.dutch.length);
-                  const escaped = currentWord.dutch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                  const root = currentWord.dutch.replace(/(en|de|te|t|d)$/i, '') || currentWord.dutch.slice(0, -1);
-                  const escapedRoot = root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                  const pattern = root.length >= 4 ? `${escapedRoot}\\w*` : escaped;
-                  const wordRegex = new RegExp(`\\b(${pattern})\\b`, 'gi');
                   // Split into Dutch part and bracketed English part, only blank in Dutch part
                   const bracketMatch = currentWord.example.match(/^(.*?)(\s*\(.*\)\s*)$/s);
                   const dutchPart = bracketMatch ? bracketMatch[1] : currentWord.example;
                   const englishPart = bracketMatch ? bracketMatch[2] : '';
-                  const sentenced2 = dutchPart.replace(wordRegex, blank) + englishPart;
+
+                  let sentenced2;
+                  const isMultiWord = currentWord.dutch.trim().includes(' ');
+                  if (isMultiWord) {
+                    // For multi-word phrases: directly replace the full phrase (case-insensitive)
+                    const escaped = currentWord.dutch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const phraseRegex = new RegExp(escaped, 'gi');
+                    const replaced = dutchPart.replace(phraseRegex, blank);
+                    // If phrase wasn't found verbatim, blank out the entire Dutch part
+                    sentenced2 = (replaced !== dutchPart ? replaced : blank) + englishPart;
+                  } else {
+                    // Single word: use root-based regex as before
+                    const escaped = currentWord.dutch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const root = currentWord.dutch.replace(/(en|de|te|t|d)$/i, '') || currentWord.dutch.slice(0, -1);
+                    const escapedRoot = root.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const pattern = root.length >= 4 ? `${escapedRoot}\\w*` : escaped;
+                    const wordRegex = new RegExp(`\\b(${pattern})\\b`, 'gi');
+                    sentenced2 = dutchPart.replace(wordRegex, blank) + englishPart;
+                  }
                   return (
                     <div className="mb-4 mx-auto max-w-sm bg-purple-50 border-2 border-purple-200 rounded-xl p-3 text-left">
                       <div className="flex items-center justify-between mb-1">
