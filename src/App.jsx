@@ -170,9 +170,10 @@ export default function DutchLearningGame() {
           user-select: none !important;
         }
         
-        input, textarea {
+        input, textarea, .selectable-text {
           -webkit-user-select: text !important;
           user-select: text !important;
+          -webkit-touch-callout: default !important;
         }
         
         body, html, #root {
@@ -3660,7 +3661,7 @@ export default function DutchLearningGame() {
                 <span className="text-xl sm:text-2xl">📖</span>
                 <h3 className="text-lg sm:text-xl font-bold text-yellow-700">{selectedStory.title}</h3>
               </div>
-              <div className="max-w-none text-gray-700 max-h-48 sm:max-h-72 overflow-y-auto p-3 sm:p-4 bg-white rounded-lg text-base sm:text-lg leading-relaxed" style={{ whiteSpace: 'pre-line', lineHeight: '1.7' }}>
+              <div className="selectable-text max-w-none text-gray-700 max-h-48 sm:max-h-72 overflow-y-auto p-3 sm:p-4 bg-white rounded-lg text-base sm:text-lg leading-relaxed" style={{ whiteSpace: 'pre-line', lineHeight: '1.7' }}>
                 {selectedStory.text}
               </div>
             </div>
@@ -5478,61 +5479,61 @@ export default function DutchLearningGame() {
 
             {/* ── SECTION 1: LEARN & PRACTISE — open by default ── */}
             <Section id="learn_practise" emoji="📖" title="Learn & Practise" color="bg-blue-600" defaultOpen={true}>
-                <Btn emoji="📚" label="Learn Mode" sublabel="Study words with pronunciation & examples" color="text-blue-700"
-                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('learn'); }} />
-                <Btn emoji="🃏" label="Flashcards" sublabel="Flip cards with spaced repetition" color="text-indigo-700"
-                  onClick={() => { setShowCategoryDetail(false); setShowFlashcards(true); }} />
-                <Btn emoji="🎯" label="Multiple Choice Quiz" sublabel="Pick the correct Dutch translation" color="text-orange-700"
-                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('play'); }} />
-                <Btn emoji="✏️" label="Spelling Mode" sublabel="Type the Dutch word from memory" color="text-purple-700"
-                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('spelling'); }} />
-                <Btn emoji="📖" label="Reading Test" sublabel="Read Dutch stories & test comprehension" color="text-yellow-700"
-                  onClick={() => { setShowCategoryDetail(false); setGameMode('stories'); }} />
-                {/* Practice Failed Words — only shown if there are any */}
-                {failedWordsSpelling.length > 0 && (
-                  <Btn emoji="🔄" label="Practice Failed Words"
-                    sublabel={`${failedWordsSpelling.length} words from last spelling test`}
-                    color="text-red-600"
-                    onClick={() => {
-                      const words = loadWords(selectedCategories);
-                      const failedFull = failedWordsSpelling.map(fw =>
-                        words.find(w => w.dutch === fw.dutch && w.english === fw.english)
-                      ).filter(Boolean);
-                      if (!failedFull.length) { alert('No failed words to review!'); return; }
-                      setShowCategoryDetail(false);
-                      setWordBank(failedFull); setUsedWords([]);
-                      setGameMode('spelling'); setCurrentGameMode('spelling');
-                      setGameStartCategory(selectedCategories.join(','));
-                      setScore(0); setStreak(0); setQuestionsAnswered(0);
-                      setFeedback(null); setWrongAnswers([]); setSpellingAnswer('');
-                      setNumQuestions(failedFull.length); setReviewMode('failed_words');
-                      setShowQuestionSelector(false);
-                      generateSpellingQuestion(failedFull, []);
-                    }}
-                  />
-                )}
-                {failedWordsMultipleChoice.length >= 4 && (
-                  <Btn emoji="🔁" label="Retry Failed Quiz Words"
-                    sublabel={`${failedWordsMultipleChoice.length} words from last quiz`}
-                    color="text-amber-700"
-                    onClick={() => {
-                      const words = loadWords(selectedCategories);
-                      const failedFull = failedWordsMultipleChoice.map(fw =>
-                        words.find(w => w.dutch === fw.dutch && w.english === fw.english)
-                      ).filter(Boolean);
-                      if (failedFull.length < 4) { alert('Need at least 4 words for Multiple Choice.'); return; }
-                      setShowCategoryDetail(false);
-                      setWordBank(failedFull); setUsedWords([]);
-                      setGameMode('play'); setCurrentGameMode('play');
-                      setGameStartCategory(selectedCategories.join(','));
-                      setScore(0); setStreak(0); setQuestionsAnswered(0);
-                      setFeedback(null); setWrongAnswers([]);
-                      setNumQuestions(failedFull.length); setReviewMode('failed_words');
-                      setShowQuestionSelector(false);
-                      generateQuestion(failedFull, []);
-                    }}
-                  />
-                )}
+              <Btn emoji="📚" label="Learn Mode" sublabel="Study words with pronunciation & examples" color="text-blue-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('learn'); }} />
+              <Btn emoji="🃏" label="Flashcards" sublabel="Flip cards with spaced repetition" color="text-indigo-700"
+                onClick={() => { setShowCategoryDetail(false); setShowFlashcards(true); }} />
+              <Btn emoji="🎯" label="Multiple Choice Quiz" sublabel="Pick the correct Dutch translation" color="text-orange-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('play'); }} />
+              <Btn emoji="✏️" label="Spelling Mode" sublabel="Type the Dutch word from memory" color="text-purple-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('spelling'); }} />
+              <Btn emoji="📖" label="Reading Test" sublabel="Read Dutch stories & test comprehension" color="text-yellow-700"
+                onClick={() => { setShowCategoryDetail(false); setGameMode('stories'); }} />
+              {/* Practice Failed Words — only shown if there are any */}
+              {failedWordsSpelling.length > 0 && (
+                <Btn emoji="🔄" label="Practice Failed Words"
+                  sublabel={`${failedWordsSpelling.length} words from last spelling test`}
+                  color="text-red-600"
+                  onClick={() => {
+                    const words = loadWords(selectedCategories);
+                    const failedFull = failedWordsSpelling.map(fw =>
+                      words.find(w => w.dutch === fw.dutch && w.english === fw.english)
+                    ).filter(Boolean);
+                    if (!failedFull.length) { alert('No failed words to review!'); return; }
+                    setShowCategoryDetail(false);
+                    setWordBank(failedFull); setUsedWords([]);
+                    setGameMode('spelling'); setCurrentGameMode('spelling');
+                    setGameStartCategory(selectedCategories.join(','));
+                    setScore(0); setStreak(0); setQuestionsAnswered(0);
+                    setFeedback(null); setWrongAnswers([]); setSpellingAnswer('');
+                    setNumQuestions(failedFull.length); setReviewMode('failed_words');
+                    setShowQuestionSelector(false);
+                    generateSpellingQuestion(failedFull, []);
+                  }}
+                />
+              )}
+              {failedWordsMultipleChoice.length >= 4 && (
+                <Btn emoji="🔁" label="Retry Failed Quiz Words"
+                  sublabel={`${failedWordsMultipleChoice.length} words from last quiz`}
+                  color="text-amber-700"
+                  onClick={() => {
+                    const words = loadWords(selectedCategories);
+                    const failedFull = failedWordsMultipleChoice.map(fw =>
+                      words.find(w => w.dutch === fw.dutch && w.english === fw.english)
+                    ).filter(Boolean);
+                    if (failedFull.length < 4) { alert('Need at least 4 words for Multiple Choice.'); return; }
+                    setShowCategoryDetail(false);
+                    setWordBank(failedFull); setUsedWords([]);
+                    setGameMode('play'); setCurrentGameMode('play');
+                    setGameStartCategory(selectedCategories.join(','));
+                    setScore(0); setStreak(0); setQuestionsAnswered(0);
+                    setFeedback(null); setWrongAnswers([]);
+                    setNumQuestions(failedFull.length); setReviewMode('failed_words');
+                    setShowQuestionSelector(false);
+                    generateQuestion(failedFull, []);
+                  }}
+                />
+              )}
             </Section>
 
             {/* ── SECTION 2: ADVANCED PRACTICE — collapsed ── */}
@@ -7421,7 +7422,7 @@ export default function DutchLearningGame() {
                         {fullSentence.split(blank).reduce((acc, part, i, arr) => {
                           acc.push(<ClickableExample key={`t${i}`} example={part} allWords={getAllWords()} />);
                           if (i < arr.length - 1) acc.push(
-                            <span key={`b${i}`} className="inline-block border-b-2 border-purple-500 mx-1 text-transparent select-none" style={{minWidth: `${currentWord.dutch.length * 0.65}rem`}}>
+                            <span key={`b${i}`} className="inline-block border-b-2 border-purple-500 mx-1 text-transparent select-none" style={{ minWidth: `${currentWord.dutch.length * 0.65}rem` }}>
                               {blank}
                             </span>
                           );
