@@ -1,5 +1,5 @@
 // IMPORTANT: Update this VERSION each time you deploy
-const VERSION = '1.0.9'; // Change this on every deployment!
+const VERSION = '1.2.0'; // Change this on every deployment!
 const CACHE_NAME = `dutch-learning-${VERSION}`;
 
 // Assets to cache immediately on install
@@ -82,12 +82,12 @@ self.addEventListener('fetch', (event) => {
             console.log('📱 Serving from cache:', request.url);
             return cachedResponse;
           }
-          
+
           // If not in cache and it's a navigation request, return index.html
           if (request.mode === 'navigate') {
             return caches.match('/index.html');
           }
-          
+
           // Otherwise return a generic offline response
           return new Response('Offline - Resource not available', {
             status: 503,

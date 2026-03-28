@@ -1,3 +1,70 @@
+// Organized verb conjugations by category
+export const verbCategories = {
+  "Essential Verbs": ["zijn", "hebben", "worden", "kunnen", "moeten", "willen", "zullen", "mogen"],
+  
+  "Movement Verbs": ["gaan", "komen", "lopen", "rijden", "vliegen", "rennen", "zwemmen", "vallen", "springen", "staan", "zitten", "liggen"],
+  
+  "Communication Verbs": ["zeggen", "spreken", "praten", "vragen", "antwoorden", "vertellen", "roepen", "luisteren", "bellen"],
+  
+  "Perception Verbs": ["zien", "kijken", "horen", "voelen", "ruiken", "proeven"],
+  
+  "Cognitive Verbs": ["denken", "weten", "kennen", "begrijpen", "geloven", "vergeten", "herinneren", "leren", "studeren"],
+  
+  "Action Verbs": ["doen", "maken", "geven", "nemen", "krijgen", "brengen", "houden", "leggen", "zetten", "pakken", "werken", "gebruiken", "spelen"],
+  
+  "Daily Life Verbs": ["eten", "drinken", "slapen", "wonen", "leven", "koken", "wassen", "schoonmaken", "douchen", "kopen", "verkopen", "betalen"],
+  
+  "Opening/Closing Verbs": ["openen", "sluiten", "beginnen", "eindigen", "stoppen"],
+  
+  "Writing/Reading Verbs": ["schrijven", "lezen", "tekenen"],
+  
+  "Emotion Verbs": ["houden van", "lachen", "huilen", "hopen", "vrezen"],
+  
+  "Search Verbs": ["vinden", "zoeken", "verliezen", "winnen"],
+  
+  "Help & Try Verbs": ["helpen", "proberen", "veranderen", "blijven", "gebeuren", "schijnen"],
+  
+  "Weather Verbs": ["regenen", "sneeuwen", "groeien", "bloeien"],
+  
+  "Interaction Verbs": ["ontmoeten", "bezoeken", "uitnodigen", "feliciteren", "groeten", "bedanken"],
+  
+  "Creation Verbs": ["bouwen", "breken", "vernietigen", "repareren"],
+  
+  "Clothing Verbs": ["dragen", "aandoen", "uitdoen"],
+  
+  "Technology Verbs": ["versturen", "ontvangen", "downloaden", "uploaden", "printen"],
+  
+  "Teaching Verbs": ["onderwijzen", "uitleggen", "oefenen", "herhalen"],
+  
+  "Permission Verbs": ["toestaan", "verbieden"],
+  
+  "Possession Verbs": ["bezitten", "behoren"],
+  
+  "Comparison Verbs": ["lijken", "vergelijken"],
+  
+  "Time Verbs": ["duren", "wachten", "haasten"],
+  
+  "Health Verbs": ["ademen", "leven", "sterven", "genezen", "pijn doen"],
+  
+  "Measurement Verbs": ["tellen", "meten", "wegen"],
+  
+  "Planning Verbs": ["voorbereiden", "plannen", "organiseren"],
+  
+  "Decision Verbs": ["kiezen", "beslissen", "verkiezen"],
+  
+  "Contact Verbs": ["raken", "drukken", "trekken", "duwen"],
+  
+  "Sound & Light Verbs": ["schijnen", "branden", "zingen", "fluiten"],
+  
+  "Conflict Verbs": ["vechten", "slaan", "beschermen"],
+  
+  "Visibility Verbs": ["verschijnen", "verdwijnen", "tonen", "verbergen"],
+  
+  "Achievement Verbs": ["bereiken", "slagen", "falen"],
+  
+  "Cleaning Verbs": ["poetsen", "vegen", "strijken", "verzorgen"]
+};
+
 export const verbConjugations1 = {
   // Essential verbs
   "zijn": {
@@ -769,4 +836,21 @@ export const verbConjugations = {
   ...verbConjugations1,
 
 };
+
+
+// Helper function to get verbs by category
+export const getVerbsByCategory = (category) => {
+  if (category === 'all') {
+    return Object.keys(verbConjugations);
+  }
+  return verbCategories[category] || [];
+};
+
+// Helper function to get all categories
+export const getAllVerbCategories = () => {
+  return ['all', ...Object.keys(verbCategories)];
+};
+
+
+
 // Total: 120+ verbs with present and past tense conjugations
