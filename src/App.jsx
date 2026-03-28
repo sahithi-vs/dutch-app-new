@@ -1405,14 +1405,14 @@ export default function DutchLearningGame() {
       }
     }
 
-    const availableWords = selectedCategory === 'all'
+    const availableWords = (selectedCategories.includes('all') || selectedCategories.length === 0)
       ? getTotalWordCount()
-      : (dutchWordBank[selectedCategory]?.length || 0);
+      : selectedCategories.reduce((sum, cat) => sum + (dutchWordBank[cat]?.length || 0), 0);
 
     // For fillblank mode, check actual available words with examples
     let maxQuestions = availableWords;
     if (pendingGameMode === 'fillblank') {
-      const words = loadWords(selectedCategory);
+      const words = loadWords(selectedCategories);
       const wordsWithValidExamples = words.filter(w => {
         if (!w.example) return false;
         const exampleLower = w.example.toLowerCase();
@@ -1626,17 +1626,19 @@ export default function DutchLearningGame() {
 
     const correct = availableWords[Math.floor(Math.random() * availableWords.length)];
 
-    const regex = new RegExp(`\\b${correct.dutch}\\b`, 'gi');
     let sentence = correct.example.replace(/\s*\([^)]+\)\s*/g, '').trim();
     let blankCreated = false;
 
-    sentence = sentence.replace(regex, (match) => {
-      if (!blankCreated) {
-        blankCreated = true;
-        return '____';
-      }
-      return match;
-    });
+    // Use indexOf instead of \b regex to handle Dutch special chars
+    const dutchWord = correct.dutch;
+    const sentenceLower = sentence.toLowerCase();
+    const wordLower = dutchWord.toLowerCase();
+    const idx = sentenceLower.indexOf(wordLower);
+
+    if (idx !== -1) {
+      sentence = sentence.slice(0, idx) + '____' + sentence.slice(idx + dutchWord.length);
+      blankCreated = true;
+    }
 
     if (!blankCreated) {
       return generateFillBlankQuestion(words, [...used, correct]);
