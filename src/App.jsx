@@ -3479,24 +3479,35 @@ export default function DutchLearningGame() {
       return wordCount >= 5;
     });
 
-    // Get used sentences from localStorage to avoid repetition
+    // Deduplicate by example text to prevent same sentence appearing twice
+    const seenExamples = new Set();
+    const uniqueSentences = qualitySentences.filter(w => {
+      if (seenExamples.has(w.example)) return false;
+      seenExamples.add(w.example);
+      return true;
+    });
+
+    // Get used sentences from localStorage to avoid repetition across sessions
     const usedSentencesKey = `sentenceBuilder_used_${sentenceBuilderCategories.join('_')}`;
     const usedSentences = JSON.parse(localStorage.getItem(usedSentencesKey) || '[]');
 
     // Filter out recently used sentences
-    const availableSentences = qualitySentences.filter(w =>
+    const availableSentences = uniqueSentences.filter(w =>
       !usedSentences.includes(w.example)
     );
 
     // If we've used all sentences, reset the tracking
     const sentencesToUse = availableSentences.length >= numQuestions
       ? availableSentences
-      : qualitySentences;
+      : uniqueSentences;
 
-    // Shuffle and limit sentences
-    const shuffledSentences = sentencesToUse
-      .sort(() => Math.random() - 0.5)
-      .slice(0, numQuestions);
+    // Fisher-Yates shuffle for a proper random order (no duplicates)
+    const toShuffle = [...sentencesToUse];
+    for (let i = toShuffle.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [toShuffle[i], toShuffle[j]] = [toShuffle[j], toShuffle[i]];
+    }
+    const shuffledSentences = toShuffle.slice(0, numQuestions);
 
     // Track these sentences as used
     const newUsedSentences = shuffledSentences.map(s => s.example);
