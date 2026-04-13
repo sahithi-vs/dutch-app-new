@@ -6535,13 +6535,26 @@ export default function DutchLearningGame() {
                       <p className="text-gray-600 mb-3 text-sm sm:text-base">
                         💡 Practice spelling: <span className="font-bold text-purple-700">{currentLearnWord.english}</span>
                       </p>
-                      <input
-                        type="text"
-                        value={practiceInput}
-                        onChange={(e) => setPracticeInput(e.target.value)}
-                        placeholder="Type the Dutch word here..."
-                        className="w-full p-3 sm:p-4 text-lg sm:text-xl text-center font-semibold border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
-                      />
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const isCorrect = practiceInput.toLowerCase().trim() === currentLearnWord.dutch.toLowerCase();
+                        if (isCorrect) {
+                          setPracticeInput('');
+                          setShowPracticeBox(false);
+                          if (learnIndex < learnWords.length - 1) {
+                            setLearnIndex(learnIndex + 1);
+                          }
+                        }
+                      }}>
+                        <input
+                          type="text"
+                          value={practiceInput}
+                          onChange={(e) => setPracticeInput(e.target.value)}
+                          placeholder="Type the Dutch word here..."
+                          className="w-full p-3 sm:p-4 text-lg sm:text-xl text-center font-semibold border-2 border-purple-300 rounded-xl focus:border-purple-500 focus:outline-none"
+                          autoFocus
+                        />
+                      </form>
 
                       {practiceInput.trim() && (
                         <div className="mt-3">
@@ -6549,7 +6562,7 @@ export default function DutchLearningGame() {
                             <div className="bg-green-100 p-3 rounded-lg">
                               <p className="text-green-700 font-bold flex items-center justify-center gap-2">
                                 <Check className="w-5 h-5" />
-                                Perfect! You got it right!
+                                Perfect! Press Enter to continue →
                               </p>
                             </div>
                           ) : (
