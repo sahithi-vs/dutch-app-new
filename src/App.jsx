@@ -146,6 +146,7 @@ export default function DutchLearningGame() {
   const [fillBlankThemeFilter, setFillBlankThemeFilter] = useState('all');
   const [selectedCategories, setSelectedCategories] = useState([Object.keys(dutchWordBank)[0] || 'greetings']);
   const [showMultiSelect, setShowMultiSelect] = useState(false);
+  const [selectedCategoryGroup, setSelectedCategoryGroup] = useState(null); // which group popup is open
   const [selectedStoryKey, setSelectedStoryKey] = useState(null);
   const [showCategoryDetail, setShowCategoryDetail] = useState(false);
 
@@ -1207,6 +1208,61 @@ export default function DutchLearningGame() {
 
   const categories = Object.keys(dutchWordBank);
 
+  // These categories are collapsed into group-buttons on the home page
+  const WORD_GROUPS = {
+    Verbs: {
+      emoji: '🏃',
+      color: '#10b981',
+      lightColor: '#f0fdf4',
+      borderColor: '#6ee7b7',
+      description: 'Action & helper verbs',
+      keys: [
+        'verbs_daily_actions_and_basic',
+        'verbs_movement_and_position',
+        'verbs_learning_and_communication',
+        'verbs_food_health_and_daily_life',
+        'verbs_thinking_feeling_and_state',
+        'verbs_objects_shopping_and_actions',
+      ],
+    },
+    Adjectives: {
+      emoji: '🌟',
+      color: '#f59e0b',
+      lightColor: '#fffbeb',
+      borderColor: '#fcd34d',
+      description: 'Descriptive words',
+      keys: [
+        'adjectives_size_shape_and_measurement',
+        'temperature_weather_and_condition',
+        'speed_distance_and_time',
+        'personality_intelligence_and_behavior',
+        'feelings_emotions_and_health',
+        'quality_opinion_and_difficulty',
+        'food_color_and_appearance',
+        'social_status_and_success',
+      ],
+    },
+    Prepositions: {
+      emoji: '📍',
+      color: '#8b5cf6',
+      lightColor: '#f5f3ff',
+      borderColor: '#c4b5fd',
+      description: 'Place, time & direction',
+      keys: [
+        'Prepositions_of_Place',
+        'Direction_Prepositions',
+        'Time_Prepositions',
+        'Common_Prepositions_And_Connections',
+        'Coordinating_Conjunctions',
+        'Subordinating_Conjunctions',
+        'Question_And_Location_Words',
+        'Degree_And_Common_Usage_Words',
+        'Comparison_And_Reference_Words'
+      ],
+    },
+  };
+  const GROUPED_KEYS = new Set(Object.values(WORD_GROUPS).flatMap(g => g.keys));
+
   const loadWords = (categories) => {
     let words = [];
 
@@ -1422,9 +1478,14 @@ export default function DutchLearningGame() {
       maxQuestions = wordsWithValidExamples.length;
     }
 
-    if (numQuestions < 10 || numQuestions > maxQuestions) {
-      alert(`Please select between 10 and ${maxQuestions} questions.`);
-      return;
+    if (pendingGameMode !== 'learn' && (numQuestions < 10 || numQuestions > maxQuestions)) {
+      if (maxQuestions < 10) {
+        // Category has fewer than 10 words — just use all of them
+        setNumQuestions(maxQuestions);
+      } else {
+        alert(`Please select between 10 and ${maxQuestions} questions.`);
+        return;
+      }
     }
 
     if (pendingGameMode === 'learn') {
@@ -2005,6 +2066,7 @@ export default function DutchLearningGame() {
     setReviewFailedWords(false);
     setShowMultiSelect(false); // ADD THIS
     setSelectedCategories([Object.keys(dutchWordBank)[0]]); // ADD THIS
+    setSelectedCategoryGroup(null);
     setReviewMode(null); //
     setShowAdaptiveStats(false);
     stopConversation();
@@ -5499,61 +5561,61 @@ export default function DutchLearningGame() {
 
             {/* ── SECTION 1: LEARN & PRACTISE — open by default ── */}
             <Section id="learn_practise" emoji="📖" title="Learn & Practise" color="bg-blue-600" defaultOpen={true}>
-                <Btn emoji="📚" label="Learn Mode" sublabel="Study words with pronunciation & examples" color="text-blue-700"
-                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('learn'); }} />
-                <Btn emoji="🃏" label="Flashcards" sublabel="Flip cards with spaced repetition" color="text-indigo-700"
-                  onClick={() => { setShowCategoryDetail(false); setShowFlashcards(true); }} />
-                <Btn emoji="🎯" label="Multiple Choice Quiz" sublabel="Pick the correct Dutch translation" color="text-orange-700"
-                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('play'); }} />
-                <Btn emoji="✏️" label="Spelling Mode" sublabel="Type the Dutch word from memory" color="text-purple-700"
-                  onClick={() => { setShowCategoryDetail(false); openQuestionSelector('spelling'); }} />
-                <Btn emoji="📖" label="Reading Test" sublabel="Read Dutch stories & test comprehension" color="text-yellow-700"
-                  onClick={() => { setShowCategoryDetail(false); setGameMode('stories'); }} />
-                {/* Practice Failed Words — only shown if there are any */}
-                {failedWordsSpelling.length > 0 && (
-                  <Btn emoji="🔄" label="Practice Failed Words"
-                    sublabel={`${failedWordsSpelling.length} words from last spelling test`}
-                    color="text-red-600"
-                    onClick={() => {
-                      const words = loadWords(selectedCategories);
-                      const failedFull = failedWordsSpelling.map(fw =>
-                        words.find(w => w.dutch === fw.dutch && w.english === fw.english)
-                      ).filter(Boolean);
-                      if (!failedFull.length) { alert('No failed words to review!'); return; }
-                      setShowCategoryDetail(false);
-                      setWordBank(failedFull); setUsedWords([]);
-                      setGameMode('spelling'); setCurrentGameMode('spelling');
-                      setGameStartCategory(selectedCategories.join(','));
-                      setScore(0); setStreak(0); setQuestionsAnswered(0);
-                      setFeedback(null); setWrongAnswers([]); setSpellingAnswer('');
-                      setNumQuestions(failedFull.length); setReviewMode('failed_words');
-                      setShowQuestionSelector(false);
-                      generateSpellingQuestion(failedFull, []);
-                    }}
-                  />
-                )}
-                {failedWordsMultipleChoice.length >= 4 && (
-                  <Btn emoji="🔁" label="Retry Failed Quiz Words"
-                    sublabel={`${failedWordsMultipleChoice.length} words from last quiz`}
-                    color="text-amber-700"
-                    onClick={() => {
-                      const words = loadWords(selectedCategories);
-                      const failedFull = failedWordsMultipleChoice.map(fw =>
-                        words.find(w => w.dutch === fw.dutch && w.english === fw.english)
-                      ).filter(Boolean);
-                      if (failedFull.length < 4) { alert('Need at least 4 words for Multiple Choice.'); return; }
-                      setShowCategoryDetail(false);
-                      setWordBank(failedFull); setUsedWords([]);
-                      setGameMode('play'); setCurrentGameMode('play');
-                      setGameStartCategory(selectedCategories.join(','));
-                      setScore(0); setStreak(0); setQuestionsAnswered(0);
-                      setFeedback(null); setWrongAnswers([]);
-                      setNumQuestions(failedFull.length); setReviewMode('failed_words');
-                      setShowQuestionSelector(false);
-                      generateQuestion(failedFull, []);
-                    }}
-                  />
-                )}
+              <Btn emoji="📚" label="Learn Mode" sublabel="Study words with pronunciation & examples" color="text-blue-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('learn'); }} />
+              <Btn emoji="🃏" label="Flashcards" sublabel="Flip cards with spaced repetition" color="text-indigo-700"
+                onClick={() => { setShowCategoryDetail(false); setShowFlashcards(true); }} />
+              <Btn emoji="🎯" label="Multiple Choice Quiz" sublabel="Pick the correct Dutch translation" color="text-orange-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('play'); }} />
+              <Btn emoji="✏️" label="Spelling Mode" sublabel="Type the Dutch word from memory" color="text-purple-700"
+                onClick={() => { setShowCategoryDetail(false); openQuestionSelector('spelling'); }} />
+              <Btn emoji="📖" label="Reading Test" sublabel="Read Dutch stories & test comprehension" color="text-yellow-700"
+                onClick={() => { setShowCategoryDetail(false); setGameMode('stories'); }} />
+              {/* Practice Failed Words — only shown if there are any */}
+              {failedWordsSpelling.length > 0 && (
+                <Btn emoji="🔄" label="Practice Failed Words"
+                  sublabel={`${failedWordsSpelling.length} words from last spelling test`}
+                  color="text-red-600"
+                  onClick={() => {
+                    const words = loadWords(selectedCategories);
+                    const failedFull = failedWordsSpelling.map(fw =>
+                      words.find(w => w.dutch === fw.dutch && w.english === fw.english)
+                    ).filter(Boolean);
+                    if (!failedFull.length) { alert('No failed words to review!'); return; }
+                    setShowCategoryDetail(false);
+                    setWordBank(failedFull); setUsedWords([]);
+                    setGameMode('spelling'); setCurrentGameMode('spelling');
+                    setGameStartCategory(selectedCategories.join(','));
+                    setScore(0); setStreak(0); setQuestionsAnswered(0);
+                    setFeedback(null); setWrongAnswers([]); setSpellingAnswer('');
+                    setNumQuestions(failedFull.length); setReviewMode('failed_words');
+                    setShowQuestionSelector(false);
+                    generateSpellingQuestion(failedFull, []);
+                  }}
+                />
+              )}
+              {failedWordsMultipleChoice.length >= 4 && (
+                <Btn emoji="🔁" label="Retry Failed Quiz Words"
+                  sublabel={`${failedWordsMultipleChoice.length} words from last quiz`}
+                  color="text-amber-700"
+                  onClick={() => {
+                    const words = loadWords(selectedCategories);
+                    const failedFull = failedWordsMultipleChoice.map(fw =>
+                      words.find(w => w.dutch === fw.dutch && w.english === fw.english)
+                    ).filter(Boolean);
+                    if (failedFull.length < 4) { alert('Need at least 4 words for Multiple Choice.'); return; }
+                    setShowCategoryDetail(false);
+                    setWordBank(failedFull); setUsedWords([]);
+                    setGameMode('play'); setCurrentGameMode('play');
+                    setGameStartCategory(selectedCategories.join(','));
+                    setScore(0); setStreak(0); setQuestionsAnswered(0);
+                    setFeedback(null); setWrongAnswers([]);
+                    setNumQuestions(failedFull.length); setReviewMode('failed_words');
+                    setShowQuestionSelector(false);
+                    generateQuestion(failedFull, []);
+                  }}
+                />
+              )}
             </Section>
 
             {/* ── SECTION 2: ADVANCED PRACTICE — collapsed ── */}
@@ -6068,7 +6130,8 @@ export default function DutchLearningGame() {
                 )}
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-64 sm:max-h-96 overflow-y-auto p-2 bg-gray-50 rounded-xl">
-                  {categories.map(cat => {
+                  {/* NORMAL CATEGORY TILES — everything that is NOT in a group */}
+                  {categories.filter(cat => !GROUPED_KEYS.has(cat)).map(cat => {
                     const wordCount = cat === 'all' ? getTotalWordCount() : (dutchWordBank[cat]?.length || 0);
                     const hasA1 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A1');
                     const hasA2 = cat !== 'all' && dutchWordBank[cat]?.some(w => w.level === 'A2');
@@ -6186,6 +6249,45 @@ export default function DutchLearningGame() {
                       </button>
                     );
                   })}
+                  {/* GROUP BUTTONS for Verbs / Adjectives / Prepositions — at the end */}
+                  {Object.entries(WORD_GROUPS).map(([groupName, group]) => {
+                    const totalWords = group.keys.reduce((sum, k) => sum + (dutchWordBank[k]?.length || 0), 0);
+                    const completedCount = group.keys.filter(k => isCategoryCompleted(k)).length;
+                    const allDone = completedCount === group.keys.length;
+                    const anySelected = group.keys.some(k => selectedCategories.includes(k));
+                    return (
+                      <button
+                        key={groupName}
+                        onClick={() => setSelectedCategoryGroup(groupName)}
+                        style={{
+                          backgroundColor: anySelected ? group.color : group.lightColor,
+                          border: `2px solid ${group.borderColor}`,
+                          WebkitTapHighlightColor: 'transparent',
+                          touchAction: 'manipulation',
+                        }}
+                        className="p-2 sm:p-3 rounded-xl text-left transition-all active:scale-95 hover:shadow-md relative"
+                      >
+                        {allDone && (
+                          <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
+                            <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                          </div>
+                        )}
+                        {anySelected && !allDone && (
+                          <div className="absolute -top-1 -left-1 bg-red-500 rounded-full px-1.5 py-0.5 shadow z-10">
+                            <span className="text-white text-[10px] font-bold">✓</span>
+                          </div>
+                        )}
+                        <div className="text-lg mb-0.5">{group.emoji}</div>
+                        <div className="font-bold text-xs sm:text-sm" style={{ color: anySelected ? '#fff' : group.color }}>{groupName}</div>
+                        <div className="mt-1 text-xs" style={{ color: anySelected ? 'rgba(255,255,255,0.8)' : '#6b7280' }}>
+                          {totalWords} words · {completedCount}/{group.keys.length} done
+                        </div>
+                        <div className="mt-1 text-[10px] font-semibold" style={{ color: anySelected ? 'rgba(255,255,255,0.9)' : group.color }}>
+                          Tap to expand ›
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {showMultiSelect && selectedCategories.length > 1 && !selectedCategories.includes('all') && (
@@ -6203,7 +6305,6 @@ export default function DutchLearningGame() {
                   </div>
                 )}
 
-                {/* 🆕 NEW: Admin info message */}
                 {isAdmin && (
                   <div className="mt-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
                     <p className="text-purple-700 text-xs sm:text-sm text-center font-semibold">
@@ -6212,6 +6313,129 @@ export default function DutchLearningGame() {
                   </div>
                 )}
               </div>
+
+              {/* ── GROUP SUB-CATEGORY MODAL ── */}
+              {selectedCategoryGroup && WORD_GROUPS[selectedCategoryGroup] && (
+                <div
+                  className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+                  onClick={() => setSelectedCategoryGroup(null)}
+                >
+                  <div
+                    className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-4 sm:p-6 max-h-[80vh] overflow-y-auto"
+                    onClick={e => e.stopPropagation()}
+                  >
+                    {/* Modal header */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">{WORD_GROUPS[selectedCategoryGroup].emoji}</span>
+                        <div>
+                          <h3 className="font-bold text-lg" style={{ color: WORD_GROUPS[selectedCategoryGroup].color }}>
+                            {selectedCategoryGroup}
+                          </h3>
+                          <p className="text-xs text-gray-500">{WORD_GROUPS[selectedCategoryGroup].description}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedCategoryGroup(null)}
+                        className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-all"
+                      >
+                        <X className="w-4 h-4 text-gray-600" />
+                      </button>
+                    </div>
+
+                    {/* Sub-category tiles */}
+                    <div className="grid grid-cols-2 gap-2">
+                      {WORD_GROUPS[selectedCategoryGroup].keys.map(cat => {
+                        const wordCount = dutchWordBank[cat]?.length || 0;
+                        const isCompleted = isCategoryCompleted(cat);
+                        const progress = getCategoryProgress(cat);
+                        const hasPartialProgress = ((progress.multipleChoice || progress.spelling) && !isCompleted);
+                        const isLocked = isCategoryLocked(cat);
+                        const isSelected = selectedCategories.includes(cat);
+
+                        return (
+                          <button
+                            key={cat}
+                            onClick={() => {
+                              if (isLocked) {
+                                alert('🔒 Complete previous categories first to unlock this one.');
+                                return;
+                              }
+                              if (showMultiSelect) {
+                                setSelectedCategories(prev => {
+                                  const withoutAll = prev.filter(c => c !== 'all');
+                                  if (prev.includes(cat)) {
+                                    const updated = withoutAll.filter(c => c !== cat);
+                                    return updated.length === 0 ? [Object.keys(dutchWordBank)[0]] : updated;
+                                  } else {
+                                    return [...withoutAll, cat];
+                                  }
+                                });
+                              } else {
+                                setSelectedCategories([cat]);
+                                setSelectedCategoryGroup(null);
+                                setShowCategoryDetail(true);
+                              }
+                            }}
+                            disabled={isLocked}
+                            style={{
+                              WebkitTapHighlightColor: 'transparent',
+                              touchAction: 'manipulation',
+                              backgroundColor: isLocked ? '#d1d5db' : isSelected ? (isCompleted ? '#16a34a' : hasPartialProgress ? '#eab308' : WORD_GROUPS[selectedCategoryGroup].color) : (isCompleted ? '#22c55e' : hasPartialProgress ? '#facc15' : '#ffffff'),
+                              color: isLocked ? '#6b7280' : (isSelected || isCompleted || hasPartialProgress) ? '#ffffff' : '#374151',
+                              border: isLocked ? 'none' : isSelected ? `3px solid #dc2626` : isCompleted ? '2px solid #16a34a' : hasPartialProgress ? '2px solid #eab308' : `1px solid ${WORD_GROUPS[selectedCategoryGroup].borderColor}`,
+                              opacity: isLocked ? 0.6 : 1,
+                              cursor: isLocked ? 'not-allowed' : 'pointer',
+                            }}
+                            className="p-2 sm:p-3 rounded-xl font-medium text-xs relative text-left transition-all"
+                          >
+                            {isSelected && (
+                              <div className="absolute -top-1 -left-1 bg-red-500 rounded-full px-1.5 py-0.5 shadow z-10">
+                                <span className="text-white text-[10px] font-bold">✓</span>
+                              </div>
+                            )}
+                            {isLocked && !isAdmin && (
+                              <div className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1">
+                                <span className="text-white text-xs">🔒</span>
+                              </div>
+                            )}
+                            {isAdmin && isLocked && (
+                              <div className="absolute -top-1 -right-1 bg-purple-500 rounded-full p-1">
+                                <span className="text-white text-xs">👑</span>
+                              </div>
+                            )}
+                            {isCompleted && (
+                              <div className="absolute -top-1 -right-1 bg-yellow-400 rounded-full p-0.5 sm:p-1">
+                                <Trophy className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                              </div>
+                            )}
+                            {!isCompleted && hasPartialProgress && (
+                              <div className="absolute -top-1 -right-1 bg-blue-400 rounded-full px-1 sm:px-1.5 py-0.5">
+                                <span className="text-white text-xs font-bold">
+                                  {progress.multipleChoice ? '✓' : ''}{progress.spelling ? '✓' : ''}
+                                </span>
+                              </div>
+                            )}
+                            <div className="font-bold text-xs sm:text-sm">{cat.replace(/_/g, ' ').toUpperCase()}</div>
+                            <div className="opacity-75 mt-1 text-xs">{wordCount} words</div>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Multi-select confirm button */}
+                    {showMultiSelect && selectedCategories.some(c => WORD_GROUPS[selectedCategoryGroup].keys.includes(c)) && (
+                      <button
+                        onClick={() => { setSelectedCategoryGroup(null); setShowCategoryDetail(true); }}
+                        className="w-full mt-4 bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2"
+                      >
+                        Start with selected <ChevronRight className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* A1 Progress Indicator */}
               {!areAllA1CategoriesCompleted() && (
@@ -6516,6 +6740,29 @@ export default function DutchLearningGame() {
                       <p className="mt-2"><ClickableExample example={currentLearnWord.example} allWords={getAllWords()} /></p>
                     </div>
                   </div>
+
+                  {currentLearnWord.forms && (
+                    <div className="mt-3 mx-auto max-w-xs bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                      <p className="text-xs font-bold text-emerald-600 uppercase tracking-wide mb-2">Verb Forms</p>
+                      <div className="flex justify-center gap-2 flex-wrap">
+                        {currentLearnWord.forms.split(',').map((form, i) => {
+                          const labels = ['ik', 'hij/zij', 'verleden'];
+                          return (
+                            <div key={i} className="flex flex-col items-center">
+                              <span className="text-xs text-emerald-500 font-medium mb-0.5">{labels[i] || ''}</span>
+                              <button
+                                onClick={() => speakDutch(form.trim())}
+                                className="bg-white border border-emerald-300 hover:bg-emerald-100 active:bg-emerald-100 text-emerald-800 font-semibold text-sm sm:text-base px-3 py-1.5 rounded-lg transition-all flex items-center gap-1"
+                              >
+                                {form.trim()}
+                                <Volume2 className="w-3 h-3 text-emerald-400" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* PRACTICE TYPING BOX - OPTIONAL */}
@@ -7455,7 +7702,7 @@ export default function DutchLearningGame() {
                         {fullSentence.split(blank).reduce((acc, part, i, arr) => {
                           acc.push(<ClickableExample key={`t${i}`} example={part} allWords={getAllWords()} />);
                           if (i < arr.length - 1) acc.push(
-                            <span key={`b${i}`} className="inline-block border-b-2 border-purple-500 mx-1 text-transparent select-none" style={{minWidth: `${currentWord.dutch.length * 0.65}rem`}}>
+                            <span key={`b${i}`} className="inline-block border-b-2 border-purple-500 mx-1 text-transparent select-none" style={{ minWidth: `${currentWord.dutch.length * 0.65}rem` }}>
                               {blank}
                             </span>
                           );
