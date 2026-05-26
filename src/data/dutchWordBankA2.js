@@ -830,5 +830,7 @@ export const dutchWordBankA2 = {
     { dutch: 'de verf', english: 'paint', level: 'A2', example: 'We hebben verf nodig (We need paint.)' },
     { dutch: 'vriezen', english: 'to freeze', level: 'A2', example: 'Het water vriest (The water freezes.)' },
     { dutch: 'de vuilnisbak', english: 'bin', level: 'A2', example: 'Gooi het in de vuilnisbak (Throw it in the bin.)' }
-  ]
+  ],
+
+  
 };
